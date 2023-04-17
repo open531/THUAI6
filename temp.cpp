@@ -163,57 +163,58 @@ int CalculateDesire(int i, int j)
 		}
 	return res;
 }
-MapNode* generateDesire(ITrickerAPI& api)
+MapNode* generateDesire(IStudentAPI& api)
 {
-	auto self = api.GetSelfInfo();
-	MapNode* t = &conplace[0][0];
-	memset(desire, 0, sizeof(desire));
-	auto props = api.GetProps();
-	//std::cout << "props are" << props.size()<<std::endl;
-	for (int i = 0; i < props.size(); i++)
-	{
-		switch (props[i]->type) {
-			//case(THUAI6::PropType::CPU):
-			//	for (int xi = props[i]->x / 1000 - 1; xi < props[i]->x / 1000 + 3; xi++)
-			//	{
-			//		for (int yi = props[i]->y / 1000 - 1; yi < props[i]->y / 1000 + 3; yi++)
-			//		{
-			//			if (xi >= 0 && yi >= 0 && xi < 50 && yi < 50) desire[xi][yi] += 200 * props[i]->size;
-			//		}
-			//	}
-			//	break;
-			//}
-		}
-		//std::cout << "getpropsok" << std::endl;
-		//auto bots = api.GetRobots();
-		//for (int i = 0; i < bots.size(); i++)
-		//{
-		//	if (bots[i]->teamID == self->teamID)
-		//	{
-		//		desire[bots[i]->x / 1000][bots[i]->y / 1000] += 100;
-		//	}
-		//}
-		//std::cout << "getbotsok" << std::endl;
-		if (hasInitMap)
-		{
-			for (int i = 0; i < 50; i++)
-				for (int j = 0; j < 50; j++)
-				{
-					desire[i][j] += CalculateDesire(i, j);
-					desire[i][j] -= std::abs(self->x / 1000 - i) + std::abs(self->y / 1000 - j);
-					if (desire[i][j] > desire[t->x][t->y])
-					{
-						t = &conplace[i][j];
-					}
-				}
-		}
-		return t;
-	}
+	//auto self = api.GetSelfInfo();
+	//MapNode* t = &conplace[0][0];
+	//memset(desire, 0, sizeof(desire));
+	//auto props = api.GetProps();
+	////std::cout << "props are" << props.size()<<std::endl;
+	//for (int i = 0; i < props.size(); i++)
+	//{
+	//	switch (props[i]->type) {
+	//		case(THUAI6::PropType::CPU):
+	//			for (int xi = props[i]->x / 1000 - 1; xi < props[i]->x / 1000 + 3; xi++)
+	//			{
+	//				for (int yi = props[i]->y / 1000 - 1; yi < props[i]->y / 1000 + 3; yi++)
+	//				{
+	//					if (xi >= 0 && yi >= 0 && xi < 50 && yi < 50) desire[xi][yi] += 200 * props[i]->size;
+	//				}
+	//			}
+	//			break;
+	//		}
+	//	}
+	//	//std::cout << "getpropsok" << std::endl;
+	//	//auto bots = api.GetRobots();
+	//	//for (int i = 0; i < bots.size(); i++)
+	//	//{
+	//	//	if (bots[i]->teamID == self->teamID)
+	//	//	{
+	//	//		desire[bots[i]->x / 1000][bots[i]->y / 1000] += 100;
+	//	//	}
+	//	//}
+	//	//std::cout << "getbotsok" << std::endl;
+	//	if (hasInitMap)
+	//	{
+	//		for (int i = 0; i < 50; i++)
+	//			for (int j = 0; j < 50; j++)
+	//			{
+	//				desire[i][j] += CalculateDesire(i, j);
+	//				desire[i][j] -= std::abs(self->x / 1000 - i) + std::abs(self->y / 1000 - j);
+	//				if (desire[i][j] > desire[t->x][t->y])
+	//				{
+	//					t = &conplace[i][j];
+	//				}
+	//			}
+	//	}
+	//	return t;
+	//}
 }
-void ContinueMyPath(std::shared_ptr<const THUAI6::Student> self, ITrickerAPI& api)
+void ContinueMyPath(std::shared_ptr<const THUAI6::Student> self, IStudentAPI& api)
 {
-	MapNode* maxdesire = generateDesire(api);
-	BFSed = BFS((int)self->x / 1000, (int)self->y / 1000, maxdesire->x, maxdesire->y);
+	//MapNode* maxdesire = generateDesire(api);
+	//BFSed = BFS((int)self->x / 1000, (int)self->y / 1000, maxdesire->x, maxdesire->y);
+	BFSed = BFS((int)self->x / 1000, (int)self->y / 1000, 48, 48);
 	//optim(hasBeenTo, dest);
 	hasBeenTo = 1;
 	//for (MapNode* p = hasBeenTo; p < dest; p++) std::printf("->%d,%d", p->x, p->y);
@@ -224,7 +225,7 @@ void ContinueMyPath(std::shared_ptr<const THUAI6::Student> self, ITrickerAPI& ap
 	}
 	Goto(api, path[hasBeenTo]->x, path[hasBeenTo]->y);
 }
-bool setDest(ITrickerAPI& api, int dest_X, int dest_Y)
+bool setDest(IStudentAPI& api, int dest_X, int dest_Y)
 {
 	//if (BFSed) return true;
 	auto self = api.GetSelfInfo();
@@ -234,7 +235,7 @@ bool setDest(ITrickerAPI& api, int dest_X, int dest_Y)
 	//BFSed = true;
 	return true;
 }
-void GoToDest(ITrickerAPI& api)
+void GoToDest(IStudentAPI& api)
 {
 	auto self = api.GetSelfInfo();
 	if (std::abs(lastX - (int)api.GetSelfInfo()->x) + std::abs(lastY - (int)api.GetSelfInfo()->y) < 100)
