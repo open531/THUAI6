@@ -17,18 +17,12 @@ struct MapNode
 };
 static MapNode* path[2500];
 // static int sorroundbeento = 0;
-// static int hasBeenTo = 1;
+static int hasBeenTo = 1;
 static MapNode* dest;
 static MapNode conplace[50][50];
 // static MapNode* Sorroundpath[100] = { &conplace[19][20],&conplace[21][31],&conplace[31][29],&conplace[28][17], &conplace[19][19],&conplace[19][30],&conplace[28][26],&conplace[27][18] };
 static bool BFSed = false;
 // static MapNode* pastDest;
-
-int hasBeenTo = 0;
-
-//bool isDoor3Open = false;
-//bool isDoor5Open = false;
-//bool isDoor6Open = false;
 
 bool BFS(int x1, int y1, int x2, int y2)
 {
@@ -143,88 +137,88 @@ bool RangeAt(int x1, int y1, int x2, int y2)
 	if (std::abs(x1 - 1000 * x2 - 500) + std::abs(y1 - 1000 * y2 - 500) < 10000) return true;
 	return false;
 }
-int CalculateDesire(int i, int j)
-{
-	int ii, jj, res = 0;
-	for (ii = i - 1; ii < i + 2; ii++)
-		for (jj = j - 1; jj < j + 2; jj++)
-		{
-			if (ii < 0 || ii>49 || jj < 0 || jj>49) continue;
-			switch (map[ii][jj])
-			{
-			case THUAI6::PlaceType::Wall:
-				break;
-			case THUAI6::PlaceType::Grass:
-				res += 15;
-				break;
-			default:
-				res += 10;
-			}
-		}
-	return res;
-}
-MapNode* generateDesire(IStudentAPI& api)
-{
-	//auto self = api.GetSelfInfo();
-	//MapNode* t = &conplace[0][0];
-	//memset(desire, 0, sizeof(desire));
-	//auto props = api.GetProps();
-	////std::cout << "props are" << props.size()<<std::endl;
-	//for (int i = 0; i < props.size(); i++)
-	//{
-	//	switch (props[i]->type) {
-	//		case(THUAI6::PropType::CPU):
-	//			for (int xi = props[i]->x / 1000 - 1; xi < props[i]->x / 1000 + 3; xi++)
-	//			{
-	//				for (int yi = props[i]->y / 1000 - 1; yi < props[i]->y / 1000 + 3; yi++)
-	//				{
-	//					if (xi >= 0 && yi >= 0 && xi < 50 && yi < 50) desire[xi][yi] += 200 * props[i]->size;
-	//				}
-	//			}
-	//			break;
-	//		}
-	//	}
-	//	//std::cout << "getpropsok" << std::endl;
-	//	//auto bots = api.GetRobots();
-	//	//for (int i = 0; i < bots.size(); i++)
-	//	//{
-	//	//	if (bots[i]->teamID == self->teamID)
-	//	//	{
-	//	//		desire[bots[i]->x / 1000][bots[i]->y / 1000] += 100;
-	//	//	}
-	//	//}
-	//	//std::cout << "getbotsok" << std::endl;
-	//	if (hasInitMap)
-	//	{
-	//		for (int i = 0; i < 50; i++)
-	//			for (int j = 0; j < 50; j++)
-	//			{
-	//				desire[i][j] += CalculateDesire(i, j);
-	//				desire[i][j] -= std::abs(self->x / 1000 - i) + std::abs(self->y / 1000 - j);
-	//				if (desire[i][j] > desire[t->x][t->y])
-	//				{
-	//					t = &conplace[i][j];
-	//				}
-	//			}
-	//	}
-	//	return t;
-	//}
-}
-void ContinueMyPath(std::shared_ptr<const THUAI6::Student> self, IStudentAPI& api)
-{
-	//MapNode* maxdesire = generateDesire(api);
-	//BFSed = BFS((int)self->x / 1000, (int)self->y / 1000, maxdesire->x, maxdesire->y);
-	BFSed = BFS((int)self->x / 1000, (int)self->y / 1000, 48, 48);
-	//optim(hasBeenTo, dest);
-	hasBeenTo = 1;
-	//for (MapNode* p = hasBeenTo; p < dest; p++) std::printf("->%d,%d", p->x, p->y);
-	if (arriveAt(self->x, self->y, path[hasBeenTo]->x, path[hasBeenTo]->y))
-	{
-		//std::printf("arriveat %d,%d\n", hasBeenTo->x, hasBeenTo->y);
-		hasBeenTo++;
-	}
-	Goto(api, path[hasBeenTo]->x, path[hasBeenTo]->y);
-}
+//int CalculateDesire(int i, int j)
+//{
+//	int ii, jj, res = 0;
+//	for (ii = i - 1; ii < i + 2; ii++)
+//		for (jj = j - 1; jj < j + 2; jj++)
+//		{
+//			if (ii < 0 || ii>49 || jj < 0 || jj>49) continue;
+//			switch (map[ii][jj])
+//			{
+//			case THUAI6::PlaceType::Wall:
+//				break;
+//			case THUAI6::PlaceType::Grass:
+//				res += 15;
+//				break;
+//			default:
+//				res += 10;
+//			}
+//		}
+//	return res;
+//}
+//MapNode* generateDesire(IStudentAPI& api)
+//{
+//	//auto self = api.GetSelfInfo();
+//	//MapNode* t = &conplace[0][0];
+//	//memset(desire, 0, sizeof(desire));
+//	//auto props = api.GetProps();
+//	////std::cout << "props are" << props.size()<<std::endl;
+//	//for (int i = 0; i < props.size(); i++)
+//	//{
+//	//	switch (props[i]->type) {
+//	//		case(THUAI6::PropType::CPU):
+//	//			for (int xi = props[i]->x / 1000 - 1; xi < props[i]->x / 1000 + 3; xi++)
+//	//			{
+//	//				for (int yi = props[i]->y / 1000 - 1; yi < props[i]->y / 1000 + 3; yi++)
+//	//				{
+//	//					if (xi >= 0 && yi >= 0 && xi < 50 && yi < 50) desire[xi][yi] += 200 * props[i]->size;
+//	//				}
+//	//			}
+//	//			break;
+//	//		}
+//	//	}
+//	//	//std::cout << "getpropsok" << std::endl;
+//	//	//auto bots = api.GetRobots();
+//	//	//for (int i = 0; i < bots.size(); i++)
+//	//	//{
+//	//	//	if (bots[i]->teamID == self->teamID)
+//	//	//	{
+//	//	//		desire[bots[i]->x / 1000][bots[i]->y / 1000] += 100;
+//	//	//	}
+//	//	//}
+//	//	//std::cout << "getbotsok" << std::endl;
+//	//	if (hasInitMap)
+//	//	{
+//	//		for (int i = 0; i < 50; i++)
+//	//			for (int j = 0; j < 50; j++)
+//	//			{
+//	//				desire[i][j] += CalculateDesire(i, j);
+//	//				desire[i][j] -= std::abs(self->x / 1000 - i) + std::abs(self->y / 1000 - j);
+//	//				if (desire[i][j] > desire[t->x][t->y])
+//	//				{
+//	//					t = &conplace[i][j];
+//	//				}
+//	//			}
+//	//	}
+//	//	return t;
+//	//}
+//}
+//void ContinueMyPath(std::shared_ptr<const THUAI6::Student> self, IStudentAPI& api)
+//{
+//	//MapNode* maxdesire = generateDesire(api);
+//	//BFSed = BFS((int)self->x / 1000, (int)self->y / 1000, maxdesire->x, maxdesire->y);
+//	BFSed = BFS((int)self->x / 1000, (int)self->y / 1000, 48, 48);
+//	//optim(hasBeenTo, dest);
+//	hasBeenTo = 1;
+//	//for (MapNode* p = hasBeenTo; p < dest; p++) std::printf("->%d,%d", p->x, p->y);
+//	if (arriveAt(self->x, self->y, path[hasBeenTo]->x, path[hasBeenTo]->y))
+//	{
+//		//std::printf("arriveat %d,%d\n", hasBeenTo->x, hasBeenTo->y);
+//		hasBeenTo++;
+//	}
+//	Goto(api, path[hasBeenTo]->x, path[hasBeenTo]->y);
+//}
 bool setDest(IStudentAPI& api, int dest_X, int dest_Y)
 {
 	//if (BFSed) return true;
