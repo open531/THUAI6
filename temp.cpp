@@ -1,14 +1,14 @@
-// static bool hasInitMap = false;
-// static bool IHaveArrived = false;
+static bool hasInitMap = false;
+static bool IHaveArrived = false;
 // static status BotStatus = status::initial;
 // static status LastStatus = status::reset;
 static THUAI6::PlaceType map[50][50];
 static int vis[50][50];
-// static int desire[50][50];
+static int desire[50][50];
 // static int danger[50][50];
 // static int wantmovethere[50][50];
 // static int CPUMap[50][50];
-// static int lastX = 0, lastY = 0;
+static int lastX = 0, lastY = 0;
 static int steps;
 // static int lastFrameCount = 0;
 struct MapNode
@@ -23,6 +23,12 @@ static MapNode conplace[50][50];
 // static MapNode* Sorroundpath[100] = { &conplace[19][20],&conplace[21][31],&conplace[31][29],&conplace[28][17], &conplace[19][19],&conplace[19][30],&conplace[28][26],&conplace[27][18] };
 static bool BFSed = false;
 // static MapNode* pastDest;
+
+int hasBeenTo = 0;
+
+//bool isDoor3Open = false;
+//bool isDoor5Open = false;
+//bool isDoor6Open = false;
 
 bool BFS(int x1, int y1, int x2, int y2)
 {
@@ -136,4 +142,117 @@ bool RangeAt(int x1, int y1, int x2, int y2)
 {
 	if (std::abs(x1 - 1000 * x2 - 500) + std::abs(y1 - 1000 * y2 - 500) < 10000) return true;
 	return false;
+}
+int CalculateDesire(int i, int j)
+{
+	int ii, jj, res = 0;
+	for (ii = i - 1; ii < i + 2; ii++)
+		for (jj = j - 1; jj < j + 2; jj++)
+		{
+			if (ii < 0 || ii>49 || jj < 0 || jj>49) continue;
+			switch (map[ii][jj])
+			{
+			case THUAI6::PlaceType::Wall:
+				break;
+			case THUAI6::PlaceType::Grass:
+				res += 15;
+				break;
+			default:
+				res += 10;
+			}
+		}
+	return res;
+}
+MapNode* generateDesire(ITrickerAPI& api)
+{
+	auto self = api.GetSelfInfo();
+	MapNode* t = &conplace[0][0];
+	memset(desire, 0, sizeof(desire));
+	auto props = api.GetProps();
+	//std::cout << "props are" << props.size()<<std::endl;
+	for (int i = 0; i < props.size(); i++)
+	{
+		switch (props[i]->type) {
+			//case(THUAI6::PropType::CPU):
+			//	for (int xi = props[i]->x / 1000 - 1; xi < props[i]->x / 1000 + 3; xi++)
+			//	{
+			//		for (int yi = props[i]->y / 1000 - 1; yi < props[i]->y / 1000 + 3; yi++)
+			//		{
+			//			if (xi >= 0 && yi >= 0 && xi < 50 && yi < 50) desire[xi][yi] += 200 * props[i]->size;
+			//		}
+			//	}
+			//	break;
+			//}
+		}
+		//std::cout << "getpropsok" << std::endl;
+		//auto bots = api.GetRobots();
+		//for (int i = 0; i < bots.size(); i++)
+		//{
+		//	if (bots[i]->teamID == self->teamID)
+		//	{
+		//		desire[bots[i]->x / 1000][bots[i]->y / 1000] += 100;
+		//	}
+		//}
+		//std::cout << "getbotsok" << std::endl;
+		if (hasInitMap)
+		{
+			for (int i = 0; i < 50; i++)
+				for (int j = 0; j < 50; j++)
+				{
+					desire[i][j] += CalculateDesire(i, j);
+					desire[i][j] -= std::abs(self->x / 1000 - i) + std::abs(self->y / 1000 - j);
+					if (desire[i][j] > desire[t->x][t->y])
+					{
+						t = &conplace[i][j];
+					}
+				}
+		}
+		return t;
+	}
+}
+void ContinueMyPath(std::shared_ptr<const THUAI6::Student> self, ITrickerAPI& api)
+{
+	MapNode* maxdesire = generateDesire(api);
+	BFSed = BFS((int)self->x / 1000, (int)self->y / 1000, maxdesire->x, maxdesire->y);
+	//optim(hasBeenTo, dest);
+	hasBeenTo = 1;
+	//for (MapNode* p = hasBeenTo; p < dest; p++) std::printf("->%d,%d", p->x, p->y);
+	if (arriveAt(self->x, self->y, path[hasBeenTo]->x, path[hasBeenTo]->y))
+	{
+		//std::printf("arriveat %d,%d\n", hasBeenTo->x, hasBeenTo->y);
+		hasBeenTo++;
+	}
+	Goto(api, path[hasBeenTo]->x, path[hasBeenTo]->y);
+}
+bool setDest(ITrickerAPI& api, int dest_X, int dest_Y)
+{
+	//if (BFSed) return true;
+	auto self = api.GetSelfInfo();
+	bool success = BFS((int)(self->x / 1000), (int)(self->y / 1000), dest_X, dest_Y);
+	if (!success) return false;
+	hasBeenTo = 1;
+	//BFSed = true;
+	return true;
+}
+void GoToDest(ITrickerAPI& api)
+{
+	auto self = api.GetSelfInfo();
+	if (std::abs(lastX - (int)api.GetSelfInfo()->x) + std::abs(lastY - (int)api.GetSelfInfo()->y) < 100)
+	{
+		//lastX = api.GetSelfInfo()->x;
+		//lastY = api.GetSelfInfo()->y;
+		api.Move(200, std::rand());
+		return;
+	}
+	//lastX = api.GetSelfInfo()->x;
+	//lastY = api.GetSelfInfo()->y;
+	if (arriveAt(self->x, self->y, path[hasBeenTo]->x, path[hasBeenTo]->y))
+	{
+		if (path[hasBeenTo] != dest) hasBeenTo++;
+		else
+		{
+			IHaveArrived = true;
+		}
+	}
+	if (!IHaveArrived) Goto(api, path[hasBeenTo]->x, path[hasBeenTo]->y);
 }
