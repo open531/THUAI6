@@ -2,7 +2,7 @@ static bool hasInitMap = false;
 static bool IHaveArrived = false;
 // static status BotStatus = status::initial;
 // static status LastStatus = status::reset;
-static THUAI6::PlaceType map[50][50];
+static unsigned char map[50][50];
 static int vis[50][50];
 static int desire[50][50];
 // static int danger[50][50];
@@ -24,6 +24,18 @@ static MapNode conplace[50][50];
 static bool BFSed = false;
 // static MapNode* pastDest;
 
+void InitMap(IAPI& api)
+{
+	int i, j;
+	for (i = 0; i < 50; i++)
+		for (j = 0; j < 50; j++)
+		{
+			map[i][j] = (unsigned char)api.GetPlaceType(i, j);
+			conplace[i][j].x = i;
+			conplace[i][j].y = j;
+		}
+	api.Wait();
+}
 bool BFS(int x1, int y1, int x2, int y2)
 {
 	if (BFSed) return true;
@@ -43,9 +55,9 @@ bool BFS(int x1, int y1, int x2, int y2)
 		{
 			for (j = t->y - 1; j < t->y + 2; j++)
 			{
-				if (i < 0 || i>49 || j < 0 || j>49 || map[i][j] == THUAI6::PlaceType::Wall
-					|| map[i - 1][j] == THUAI6::PlaceType::Wall || map[i + 1][j] == THUAI6::PlaceType::Wall ||
-					map[i][j - 1] == THUAI6::PlaceType::Wall || map[i][j + 1] == THUAI6::PlaceType::Wall) continue;
+				if (i < 0 || i>49 || j < 0 || j>49 || map[i][j] == 2U
+					|| map[i - 1][j] == 2U || map[i + 1][j] == 2U ||
+					map[i][j - 1] == 2U || map[i][j + 1] == 2U) continue;
 				if (vis[i][j] == 0)
 				{
 					vis[i][j] = vis[t->x][t->y] + 1;
@@ -77,7 +89,7 @@ existdeal:
 				bool find = false;
 				for (j = t->y - 1; j < t->y + 2; j++)
 				{
-					if (i < 0 || i>49 || j < 0 || j>49 || map[i][j] == THUAI6::PlaceType::Wall) continue;
+					if (i < 0 || i>49 || j < 0 || j>49 || map[i][j] == 2U) continue;
 					if (vis[i][j] == tv)
 					{
 						path[tv] = &conplace[i][j];
@@ -146,7 +158,7 @@ bool RangeAt(int x1, int y1, int x2, int y2)
 //			if (ii < 0 || ii>49 || jj < 0 || jj>49) continue;
 //			switch (map[ii][jj])
 //			{
-//			case THUAI6::PlaceType::Wall:
+//			case 2U:
 //				break;
 //			case THUAI6::PlaceType::Grass:
 //				res += 15;
