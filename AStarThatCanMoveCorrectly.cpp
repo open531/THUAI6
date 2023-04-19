@@ -22,13 +22,24 @@ extern const THUAI6::TrickerType trickerType = THUAI6::TrickerType::Assassin;
 
 //可以在AI.cpp内部声明变量与函数
 
-static bool hasInitMap;
+struct Node
+{
+	int x;
+	int y;
+	int parentX;
+	int parentY;
+	float gCost;
+	float hCost;
+	float fCost;
+};
+
+static bool HasInitMap;
 static unsigned char Map[50][50];
 static unsigned char Access[50][50];
 
 void InitMap(IStudentAPI& api)
 {
-	int32_t i, j;
+	int i, j;
 	for (i = 0; i < 50; i++)
 	{
 		for (j = 0; j < 50; j++)
@@ -52,7 +63,7 @@ void InitMap(IStudentAPI& api)
 			case 8U:	// Door3
 			case 9U:	// Door5
 			case 10U:	// Door6
-				Access[i][j] = api.IsDoorOpen(i, j) ? 2U : 0U;
+				Access[i][j] = 2U;
 				break;
 			default:
 				Access[i][j] = 2U;
@@ -62,16 +73,22 @@ void InitMap(IStudentAPI& api)
 	}
 }
 
-struct Node
+void UpdateDoor(IStudentAPI& api)
 {
-	int y;
-	int x;
-	int parentX;
-	int parentY;
-	float gCost;
-	float hCost;
-	float fCost;
-};
+	int sx = api.GetSelfInfo()->x / 1000;
+	int sy = api.GetSelfInfo()->y / 1000;
+	int i, j;
+	for (i = sx - 2; i <= sx + 2; i++)
+	{
+		for (j = sy - 2; j <= sy + 2; j++)
+		{
+			if (Map[i][j] == 8U || Map[i][j] == 9U || Map[i][j] == 10U)
+			{
+				Access[i][j] = api.IsDoorOpen(i, j) ? 2U : 0U;
+			}
+		}
+	}
+}
 
 inline bool operator < (const Node& lhs, const Node& rhs)
 {
@@ -426,10 +443,10 @@ void AI::play(IStudentAPI& api)
 
 	// 公共操作
 
-	if (!hasInitMap)
+	if (!HasInitMap)
 	{
 		InitMap(api);
-		hasInitMap = true;
+		HasInitMap = true;
 	}
 	if (this->playerID == 0)
 	{
