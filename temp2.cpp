@@ -351,7 +351,7 @@ void MoveDest(IStudentAPI& api, std::vector<Node> UsablePath)
 	int sx = api.GetSelfInfo()->x;
 	int sy = api.GetSelfInfo()->y;
 	int tx, ty;
-	if (UsablePath.size() >= 3 && IsValidWithoutWindows(sx, sy) && IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y) && IsValidWithoutWindows(sx, UsablePath[2].y) && IsValidWithoutWindows(UsablePath[2].x, sy))
+	if (UsablePath.size() >= 3 && IsValidWithoutWindows(sx / 1000, sy / 1000) && IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y) && IsValidWithoutWindows(sx / 1000, UsablePath[2].y) && IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
 	{
 		tx = UsablePath[2].x * 1000 + 500;
 		ty = UsablePath[2].y * 1000 + 500;
@@ -379,7 +379,7 @@ void MoveDest(ITrickerAPI& api, std::vector<Node> UsablePath)
 	int sx = api.GetSelfInfo()->x;
 	int sy = api.GetSelfInfo()->y;
 	int tx, ty;
-	if (UsablePath.size() >= 3 && IsValidWithoutWindows(sx, sy) && IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y) && IsValidWithoutWindows(sx, UsablePath[2].y) && IsValidWithoutWindows(UsablePath[2].x, sy))
+	if (UsablePath.size() >= 3 && IsValidWithoutWindows(sx / 1000, sy / 1000) && IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y) && IsValidWithoutWindows(sx / 1000, UsablePath[2].y) && IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
 	{
 		tx = UsablePath[2].x * 1000 + 500;
 		ty = UsablePath[2].y * 1000 + 500;
