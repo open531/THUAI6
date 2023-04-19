@@ -36,22 +36,22 @@ void InitMap(IStudentAPI& api)
 			Map[i][j] = (unsigned char)api.GetPlaceType(i, j);
 			switch (Map[i][j])
 			{
-			case 2U://Wall
-			case 4U://ClassRoom
-			case 5U://Gate
-			case 6U://HiddenGate
-			case 11U://Chest
+			case 2U:	// Wall
+			case 4U:	// ClassRoom
+			case 5U:	// Gate
+			case 6U:	// HiddenGate
+			case 11U:	// Chest
 				Access[i][j] = 0U;
 				break;
-			case 3U://Grass
+			case 3U:	// Grass
 				Access[i][j] = 3U;
 				break;
-			case 7U://Window
+			case 7U:	// Window
 				Access[i][j] = 1U;
 				break;
-			case 8U://Door3
-			case 9U://Door5
-			case 10U://Door6
+			case 8U:	// Door3
+			case 9U:	// Door5
+			case 10U:	// Door6
 				Access[i][j] = api.IsDoorOpen(i, j) ? 2U : 0U;
 				break;
 			default:
@@ -190,18 +190,9 @@ std::vector<Node> AStarWithoutWindows(Node src, Node dest)
 		x = node.x;
 		y = node.y;
 		ClosedList[x][y] = true;
-		bool IsAtOpenSpace = true;
 		for (int newX = -1; newX <= 1; newX++) {
 			for (int newY = -1; newY <= 1; newY++) {
-				if (!IsValidWithoutWindows(x + newX, y + newY))
-				{
-					IsAtOpenSpace = false;
-				}
-			}
-		}
-		for (int newX = -1; newX <= 1; newX++) {
-			for (int newY = -1; newY <= 1; newY++) {
-				if (!IsAtOpenSpace && newX != 0 && newY != 0) continue;
+				if (newX != 0 && newY != 0) continue;
 				double gNew, hNew, fNew;
 				if (IsValidWithoutWindows(x + newX, y + newY)) {
 					if (IsDestination(x + newX, y + newY, dest))
@@ -291,18 +282,9 @@ std::vector<Node> AStarWithWindows(Node src, Node dest)
 		x = node.x;
 		y = node.y;
 		ClosedList[x][y] = true;
-		bool IsAtOpenSpace = true;
 		for (int newX = -1; newX <= 1; newX++) {
 			for (int newY = -1; newY <= 1; newY++) {
-				if (!IsValidWithWindows(x + newX, y + newY))
-				{
-					IsAtOpenSpace = false;
-				}
-			}
-		}
-		for (int newX = -1; newX <= 1; newX++) {
-			for (int newY = -1; newY <= 1; newY++) {
-				if (!IsAtOpenSpace && newX != 0 && newY != 0) continue;
+				if (newX != 0 && newY != 0) continue;
 				double gNew, hNew, fNew;
 				if (IsValidWithWindows(x + newX, y + newY)) {
 					if (IsDestination(x + newX, y + newY, dest))
@@ -366,10 +348,19 @@ Node GetSelfNode(ITrickerAPI& api)
 void MoveDest(IStudentAPI& api, std::vector<Node> UsablePath)
 {
 	if (UsablePath.size() < 2) return;
-	int tx = UsablePath[1].x * 1000 + 500;
-	int ty = UsablePath[1].y * 1000 + 500;
 	int sx = api.GetSelfInfo()->x;
 	int sy = api.GetSelfInfo()->y;
+	int tx, ty;
+	if (UsablePath.size() >= 3 && IsValidWithoutWindows(sx, sy) && IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y) && IsValidWithoutWindows(sx, UsablePath[2].y) && IsValidWithoutWindows(UsablePath[2].x, sy))
+	{
+		tx = UsablePath[2].x * 1000 + 500;
+		ty = UsablePath[2].y * 1000 + 500;
+	}
+	else
+	{
+		tx = UsablePath[1].x * 1000 + 500;
+		ty = UsablePath[1].y * 1000 + 500;
+	}
 	int dx = tx - sx;
 	int dy = ty - sy;
 	if (Map[tx / 1000][ty / 1000] != 7U)
@@ -384,10 +375,20 @@ void MoveDest(IStudentAPI& api, std::vector<Node> UsablePath)
 
 void MoveDest(ITrickerAPI& api, std::vector<Node> UsablePath)
 {
-	int tx = UsablePath[1].x * 1000 + 500;
-	int ty = UsablePath[1].y * 1000 + 500;
+	if (UsablePath.size() < 2) return;
 	int sx = api.GetSelfInfo()->x;
 	int sy = api.GetSelfInfo()->y;
+	int tx, ty;
+	if (UsablePath.size() >= 3 && IsValidWithoutWindows(sx, sy) && IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y) && IsValidWithoutWindows(sx, UsablePath[2].y) && IsValidWithoutWindows(UsablePath[2].x, sy))
+	{
+		tx = UsablePath[2].x * 1000 + 500;
+		ty = UsablePath[2].y * 1000 + 500;
+	}
+	else
+	{
+		tx = UsablePath[1].x * 1000 + 500;
+		ty = UsablePath[1].y * 1000 + 500;
+	}
 	int dx = tx - sx;
 	int dy = ty - sy;
 	if (Map[tx / 1000][ty / 1000] != 7U)
@@ -430,20 +431,6 @@ void AI::play(IStudentAPI& api)
 		InitMap(api);
 		hasInitMap = true;
 	}
-	// for (int i = 0; i < 50; i++) {
-	//     for (int j = 0; j < 50; j++)
-	//     {
-	//         if (api.IsDoorOpen(i, j)) std::cerr << i << ' ' << j;
-	//         assert(!api.IsDoorOpen(i, j));
-			 //std::cerr << int(Map[i][j]) << ' ';
-	//     }
-	//     std::cerr << std::endl;
-	// }
-	 //for (int i = 0; i < 50; i++) {
-	 //    for (int j = 0; j < 50; j++)
-	 //        std::cerr << int(Access[i][j]) << ' ';
-	 //    std::cerr << std::endl;
-	 //}
 	if (this->playerID == 0)
 	{
 		GoToWithWindows(api, { 48, 48 });
