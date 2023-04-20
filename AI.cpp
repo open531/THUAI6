@@ -499,6 +499,10 @@ void Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 		}
 	}
 	MoveTo(Classroom[minNum], WithWindows);
+	for (int i = 0; i < Classroom.size(); i++)
+	{
+		Access[Classroom[i].x][Classroom[i].y] = 0U;
+	}
 }
 
 template<typename IFooAPI>
@@ -539,6 +543,10 @@ void Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
 		}
 	}
 	MoveTo(Gate[minNum], WithWindows);
+	for (int i = 0; i < Gate.size(); i++)
+	{
+		Access[Gate[i].x][Gate[i].y] = 0U;
+	}
 }
 
 template<typename IFooAPI>
@@ -579,6 +587,10 @@ void Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
 		}
 	}
 	MoveTo(Chest[minNum], WithWindows);
+	for (int i = 0; i < Chest.size(); i++)
+	{
+		Access[Chest[i].x][Chest[i].y] = 0U;
+	}
 }
 
 template<typename IFooAPI>
