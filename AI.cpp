@@ -8,20 +8,20 @@
 #include <queue>
 #include <algorithm>
 
-// Îª¼ÙÔòplay()ÆÚ¼äÈ·±£ÓÎÏ·×´Ì¬²»¸üĞÂ£¬ÎªÕæÔòÖ»±£Ö¤ÓÎÏ·×´Ì¬ÔÚµ÷ÓÃÏà¹Ø·½·¨Ê±²»¸üĞÂ
+// ä¸ºå‡åˆ™play()æœŸé—´ç¡®ä¿æ¸¸æˆçŠ¶æ€ä¸æ›´æ–°ï¼Œä¸ºçœŸåˆ™åªä¿è¯æ¸¸æˆçŠ¶æ€åœ¨è°ƒç”¨ç›¸å…³æ–¹æ³•æ—¶ä¸æ›´æ–°
 extern const bool asynchronous = false;
 
-// Ñ¡ÊÖĞèÒªÒÀ´Î½«player0µ½player4µÄÖ°ÒµÔÚÕâÀï¶¨Òå
+// é€‰æ‰‹éœ€è¦ä¾æ¬¡å°†player0åˆ°player4çš„èŒä¸šåœ¨è¿™é‡Œå®šä¹‰
 
 extern const std::array<THUAI6::StudentType, 4> studentType = {
-	THUAI6::StudentType::Athlete,
+	THUAI6::StudentType::StraightAStudent,
 	THUAI6::StudentType::Teacher,
 	THUAI6::StudentType::StraightAStudent,
 	THUAI6::StudentType::Sunshine };
 
 extern const THUAI6::TrickerType trickerType = THUAI6::TrickerType::Assassin;
 
-//¿ÉÒÔÔÚAI.cppÄÚ²¿ÉùÃ÷±äÁ¿Óëº¯Êı
+//å¯ä»¥åœ¨AI.cppå†…éƒ¨å£°æ˜å˜é‡ä¸å‡½æ•°
 
 class Point
 {
@@ -52,8 +52,10 @@ public:
 static bool HasInitMap;
 static unsigned char Map[50][50];
 static unsigned char Access[50][50];
+static std::vector<Point> Classroom;
 static std::vector<Point> Gate;
-static std::vector<Point> Homework;
+static std::vector<Point> OpenGate;
+static std::vector<Point> Chest;
 
 void InitMap(IStudentAPI& api)
 {
@@ -67,7 +69,7 @@ void InitMap(IStudentAPI& api)
 			{
 			case 2U:	// Wall
 			case 6U:	// HiddenGate
-			case 11U:	// Chest
+
 				Access[i][j] = 0U;
 				break;
 			case 3U:	// Grass
@@ -83,11 +85,15 @@ void InitMap(IStudentAPI& api)
 				break;
 			case 4U:	// ClassRoom
 				Access[i][j] = 0U;
-				Homework.emplace_back(Point(i, j));
+				Classroom.emplace_back(Point(i, j));
 				break;
 			case 5U:	// Gate
 				Access[i][j] = 0U;
 				Gate.emplace_back(Point(i, j));
+				break;
+			case 11U:	// Chest
+				Access[i][j] = 0U;
+				Chest.emplace_back(Point(i, j));
 				break;
 			default:
 				Access[i][j] = 2U;
@@ -328,27 +334,82 @@ template<typename IFooAPI>
 class Utilities
 {
 private:
-	const IFooAPI &API;
+	const IFooAPI& API;
+	Point TEMP;
 public:
 	Utilities(IFooAPI api) : API(api) {}
 
-	// void Update(Point Door, bool State);			//¸üĞÂµØÍ¼ĞÅÏ¢£¬±ÈÈçÃÅºÍÒş²ØĞ£ÃÅ£¬ĞèÒªÔ¼¶¨infoµÄ¸ñÊ½
-	void MoveTo(Point Dest, bool WithWindows);		// ÍùÄ¿µÄµØ¶¯Ò»¶¯
-	// void MoveToAccurate(Point Dest);
+	// void Update(Point Door, bool State);			//æ›´æ–°åœ°å›¾ä¿¡æ¯ï¼Œæ¯”å¦‚é—¨å’Œéšè—æ ¡é—¨ï¼Œéœ€è¦çº¦å®šinfoçš„æ ¼å¼
+	void UpdateClassroom();
+	void UpdateGate();
+	void UpdateChest();
+	void UpdateDoor();
+	void MoveTo(Point Dest, bool WithWindows);		// å¾€ç›®çš„åœ°åŠ¨ä¸€åŠ¨
 	bool NearPoint(Point P, int level = 1);
-	// level=0ÅĞ¶Ïµ±Ç°ÊÇ·ñÔÚ¸Ã¸ñ×ÓÉÏ£¬1ÅĞ¶ÏÊÇ·ñÔÚ¸ñ×ÓÉÏ»òÖÜÎ§4¸ñ£¬2ÅĞ¶ÏÊÇ·ñÔÚ¸ñ×ÓÉÏ»òÖÜÎ§8¸ñ
-	void MoveToNearestGate(bool WithWindows);		// Íù×î½üµÄĞ£ÃÅÅÔ±ß¶¯Ò»¶¯
-	bool NearGate();								// ÒÑ¾­ÔÚĞ£ÃÅÅÔ±ßÁËÂğ£¿
-	void MoveToNearestHomework(bool WithWindows);	// Íù×î½üµÄ×÷ÒµµÄ·½Ïò¶¯Ò»¶¯
-	bool NearHomework();							// ÒÑ¾­ÔÚ×÷ÒµÅÔ±ßÁËÂğ£¿
-	int EstimateTime(Point Dest);					// È¥Ä¿µÄµØµÄÔ¤¹ÀÊ±¼ä
+	// level=0åˆ¤æ–­å½“å‰æ˜¯å¦åœ¨è¯¥æ ¼å­ä¸Šï¼Œ1åˆ¤æ–­æ˜¯å¦åœ¨æ ¼å­ä¸Šæˆ–å‘¨å›´4æ ¼ï¼Œ2åˆ¤æ–­æ˜¯å¦åœ¨æ ¼å­ä¸Šæˆ–å‘¨å›´8æ ¼
+	void MoveToNearestClassroom(bool WithWindows);	// å¾€æœ€è¿‘çš„ä½œä¸šçš„æ–¹å‘åŠ¨ä¸€åŠ¨
+	bool NearClassroom();							// å·²ç»åœ¨ä½œä¸šæ—è¾¹äº†å—ï¼Ÿ
+	void MoveToNearestGate(bool WithWindows);		// å¾€æœ€è¿‘çš„æ ¡é—¨æ—è¾¹åŠ¨ä¸€åŠ¨
+	bool NearGate();								// å·²ç»åœ¨æ ¡é—¨æ—è¾¹äº†å—ï¼Ÿ
+	void MoveToNearestChest(bool WithWindows);		// å¾€æœ€è¿‘çš„ç®±å­çš„æ–¹å‘åŠ¨ä¸€åŠ¨
+	bool NearChest();								// å·²ç»åœ¨ç®±å­æ—è¾¹äº†å—ï¼Ÿ
+	int EstimateTime(Point Dest);					// å»ç›®çš„åœ°çš„é¢„ä¼°æ—¶é—´
+	void DirectLearning(bool WithWindows);			// å‰å¾€æœ€è¿‘çš„ä½œä¸šå¹¶å­¦ä¹ 
+	void DirectOpeningChest(bool WithWindows);		// å‰å¾€æœ€è¿‘çš„ç®±å­å¹¶å¼€ç®±
 };
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::UpdateClassroom()
+{
+	int Size = Classroom.size();
+	for (int i = 0; i < Size; i++)
+	{
+		if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) >= 10000000)
+		{
+			Map[Classroom[i].x][Classroom[i].y] = 2U;
+			Classroom.erase(Classroom.begin() + i);
+			i--; Size--;
+		}
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::UpdateGate()
+{
+	int Size = Gate.size();
+	for (int i = 0; i < Size; i++)
+	{
+		if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 10000000)
+		{
+			Map[Gate[i].x][Gate[i].y] = 12U;
+			OpenGate.emplace_back(Point(Gate[i].x, Gate[i].y));
+			Gate.erase(Gate.begin() + i);
+			i--; Size--;
+		}
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::UpdateChest()
+{
+	int Size = Chest.size();
+	for (int i = 0; i < Size; i++)
+	{
+		if (API.GetChestProgress(Chest[i].x, Chest[i].y) >= 10000000)
+		{
+			Map[Chest[i].x][Chest[i].y] = 2U;
+			Chest.erase(Chest.begin() + i);
+			i--; Size--;
+		}
+	}
+}
 
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
+	bool IsStuck = (sx == TEMP.x && sy == TEMP.y);
 	std::vector<Node> UsablePath;
 	if (WithWindows) UsablePath = astar.AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
 	else UsablePath = astar.AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
@@ -373,12 +434,23 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	int dy = ty - sy;
 	if (Map[tx / 1000][ty / 1000] != 7U)
 	{
-		API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
+		if (!IsStuck)
+		{
+			API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
+		}
+		else
+		{
+			time_t t;
+			srand((unsigned)time(&t));
+			API.Move(100 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed,
+				atan2(dy, dx) + rand());
+		}
 	}
 	else
 	{
 		API.SkipWindow();
 	}
+	TEMP.x = sx; TEMP.y = sy;
 }
 
 template<typename IFooAPI>
@@ -400,12 +472,63 @@ bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
 }
 
 template<typename IFooAPI>
+void Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
+{
+	int minDistance = INT_MAX;
+	int minNum = 0;
+	int Distance = INT_MAX;
+	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
+	for (int i = 0; i < Classroom.size(); i++)
+	{
+		if (!NearClassroom())
+		{
+			Access[Classroom[i].x][Classroom[i].y] = 2U;
+		}
+		else
+		{
+			Access[Classroom[i].x][Classroom[i].y] = 0U;
+		}
+	}
+	for (int i = 0; i < Classroom.size(); i++)
+	{
+		Distance = astar.AStarWithWindows(Self, Classroom[i]).size();
+		if (Distance < minDistance)
+		{
+			minDistance = Distance;
+			minNum = i;
+		}
+	}
+	MoveTo(Classroom[minNum], WithWindows);
+}
+
+template<typename IFooAPI>
+bool Utilities<typename IFooAPI>::NearClassroom()
+{
+	for (int i = 0; i < Classroom.size(); i++)
+	{
+		if (NearPoint(Classroom[i], 2)) return true;
+	}
+	return false;
+}
+
+template<typename IFooAPI>
 void Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
 {
 	int minDistance = INT_MAX;
 	int minNum = 0;
 	int Distance = INT_MAX;
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
+	for (int i = 0; i < Gate.size(); i++)
+	{
+		if (!NearGate())
+		{
+			Access[Gate[i].x][Gate[i].y] = 2U;
+		}
+		else
+		{
+			Access[Gate[i].x][Gate[i].y] = 0U;
+		}
+	}
 	for (int i = 0; i < Gate.size(); i++)
 	{
 		Distance = astar.AStarWithWindows(Self, Gate[i]).size();
@@ -429,30 +552,41 @@ bool Utilities<typename IFooAPI>::NearGate()
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::MoveToNearestHomework(bool WithWindows)
+void Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
 {
 	int minDistance = INT_MAX;
 	int minNum = 0;
 	int Distance = INT_MAX;
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
-	for (int i = 0; i < Homework.size(); i++)
+	for (int i = 0; i < Chest.size(); i++)
 	{
-		Distance = astar.AStarWithWindows(Self, Homework[i]).size();
+		if (!NearChest())
+		{
+			Access[Chest[i].x][Chest[i].y] = 2U;
+		}
+		else
+		{
+			Access[Chest[i].x][Chest[i].y] = 0U;
+		}
+	}
+	for (int i = 0; i < Chest.size(); i++)
+	{
+		Distance = astar.AStarWithWindows(Self, Chest[i]).size();
 		if (Distance < minDistance)
 		{
 			minDistance = Distance;
 			minNum = i;
 		}
 	}
-	MoveTo(Homework[minNum], WithWindows);
+	MoveTo(Chest[minNum], WithWindows);
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::NearHomework()
+bool Utilities<typename IFooAPI>::NearChest()
 {
-	for (int i = 0; i < Homework.size(); i++)
+	for (int i = 0; i < Chest.size(); i++)
 	{
-		if (NearPoint(Homework[i], 2)) return true;
+		if (NearPoint(Chest[i], 2)) return true;
 	}
 	return false;
 }
@@ -467,13 +601,41 @@ int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
 	return Time;
 }
 
-/* ĞÅÏ¢Ğ­Òé
-ĞÅÏ¢Í·£¨info[0]£©
-MapUpdate µØÍ¼¸üĞÂ
-TrickerInfo µ·µ°¹íĞÅÏ¢
-NeedHelp ÇëÇóÖ§Ô®
-	info[1-2]£º×ø±ê
-WantTool ÇëÇó»ñÈ¡µÀ¾ß£¨¿ÉÄÜĞèÒª·´À¡£¿²»È»Ì«Ô¶ÁËÅÜÈ¥²»»®Ëã£©
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
+{
+	UpdateClassroom();
+	if (!NearClassroom())
+	{
+		MoveToNearestClassroom(true);
+	}
+	else
+	{
+		API.StartLearning();
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
+{
+	UpdateChest();
+	if (!NearChest())
+	{
+		MoveToNearestChest(true);
+	}
+	else
+	{
+		API.StartOpenChest();
+	}
+}
+
+/* ä¿¡æ¯åè®®
+ä¿¡æ¯å¤´ï¼ˆinfo[0]ï¼‰
+MapUpdate åœ°å›¾æ›´æ–°
+TrickerInfo æ£è›‹é¬¼ä¿¡æ¯
+NeedHelp è¯·æ±‚æ”¯æ´
+	info[1-2]ï¼šåæ ‡
+WantTool è¯·æ±‚è·å–é“å…·ï¼ˆå¯èƒ½éœ€è¦åé¦ˆï¼Ÿä¸ç„¶å¤ªè¿œäº†è·‘å»ä¸åˆ’ç®—ï¼‰
 */
 #define MapUpdate 0x01
 #define TrickerInfo 0x02
@@ -527,25 +689,25 @@ T Decoder::ReadInfo()
 	return *T;
 }
 
-/* ÈËÎï×´Ì¬
-CantMove ¶¯µ¯²»µÃ£¨³ÁÃÔ/Ç°ºóÒ¡/±ÏÒµ¡­¡­£©
-Default Ä¬ÈÏ
-DoHomework È¥Ğ´×÷Òµ/ÔÚĞ´×÷Òµ
-OpenGate È¥¿ªĞ£ÃÅ/ÔÚ¿ªĞ£ÃÅ
-OpenChest È¥¿ªÏä×Ó/ÔÚ¿ªÏä×Ó
-Danger Ó¦¶ÔÎ£ÏÕ
-Rousing »½ĞÑÄ³ÈË
-Encouraging ÃãÀøÄ³ÈË
-Picking È¥¼ñµÀ¾ß
-ÒÔÉÏÊÇËùÓĞ½ÇÉ«ÆÕ±éÓµÓĞµÄ×´Ì¬£¬ÆäËû×´Ì¬ĞèÒª×ÔĞĞ¶¨Òå£¬½¨Òé´Ó0x80¿ªÊ¼
-±ÈÈçÔË¶¯Ô±¿ÉÒÔ¶¨ÒåÒ»¸ö×´Ì¬½ĞÕıÃæÓ²¸Õ£¬ÀÏÊ¦¿ÉÒÔ¶¨ÒåÒ»¸ö×´Ì¬½ĞÑ²Âß£¨ÊÔÍ¼ÔÚÊÓÒ°ÄÚ¸ú×Åµ·µ°¹í£©£¬µÈµÈ
-»ù±¾Âß¼­¾ÍÊÇÃ¿´ÎAI::Play¶¼»á¸ù¾İĞÅÏ¢À´¾ö¶¨Î¬³Öµ±Ç°×´Ì¬»¹ÊÇÌøµ½ÁíÒ»¸ö×´Ì¬£¨ÀàËÆÓÚÍ¼Áé»úÄ£ÄâË¼Î¬£©
-ĞèÒªÒ»Ğ©¿Õ¼ä´¢´æ±ØÒªµÄĞÅÏ¢£¬¿ÉÄÜ»áÓÃµ½Í¨ĞÅ
-»òĞí¿ÉÒÔ¸ø¸÷ÖÖ×´Ì¬·Ö¸öÀà»òÕßÓÅÏÈ¼¶£¬·½±ãĞ´´úÂë
+/* äººç‰©çŠ¶æ€
+CantMove åŠ¨å¼¹ä¸å¾—ï¼ˆæ²‰è¿·/å‰åæ‘‡/æ¯•ä¸šâ€¦â€¦ï¼‰
+Default é»˜è®¤
+DoClassroom å»å†™ä½œä¸š/åœ¨å†™ä½œä¸š
+OpenGate å»å¼€æ ¡é—¨/åœ¨å¼€æ ¡é—¨
+OpenChest å»å¼€ç®±å­/åœ¨å¼€ç®±å­
+Danger åº”å¯¹å±é™©
+Rousing å”¤é†’æŸäºº
+Encouraging å‹‰åŠ±æŸäºº
+Picking å»æ¡é“å…·
+ä»¥ä¸Šæ˜¯æ‰€æœ‰è§’è‰²æ™®éæ‹¥æœ‰çš„çŠ¶æ€ï¼Œå…¶ä»–çŠ¶æ€éœ€è¦è‡ªè¡Œå®šä¹‰ï¼Œå»ºè®®ä»0x80å¼€å§‹
+æ¯”å¦‚è¿åŠ¨å‘˜å¯ä»¥å®šä¹‰ä¸€ä¸ªçŠ¶æ€å«æ­£é¢ç¡¬åˆšï¼Œè€å¸ˆå¯ä»¥å®šä¹‰ä¸€ä¸ªçŠ¶æ€å«å·¡é€»ï¼ˆè¯•å›¾åœ¨è§†é‡å†…è·Ÿç€æ£è›‹é¬¼ï¼‰ï¼Œç­‰ç­‰
+åŸºæœ¬é€»è¾‘å°±æ˜¯æ¯æ¬¡AI::Playéƒ½ä¼šæ ¹æ®ä¿¡æ¯æ¥å†³å®šç»´æŒå½“å‰çŠ¶æ€è¿˜æ˜¯è·³åˆ°å¦ä¸€ä¸ªçŠ¶æ€ï¼ˆç±»ä¼¼äºå›¾çµæœºæ¨¡æ‹Ÿæ€ç»´ï¼‰
+éœ€è¦ä¸€äº›ç©ºé—´å‚¨å­˜å¿…è¦çš„ä¿¡æ¯ï¼Œå¯èƒ½ä¼šç”¨åˆ°é€šä¿¡
+æˆ–è®¸å¯ä»¥ç»™å„ç§çŠ¶æ€åˆ†ä¸ªç±»æˆ–è€…ä¼˜å…ˆçº§ï¼Œæ–¹ä¾¿å†™ä»£ç 
 */
 #define CantMove 0x00
 #define Default 0x10
-#define DoHomework 0x11
+#define DoClassroom 0x11
 #define OpenGate 0x12
 #define OpenChest 0x13
 #define Danger 0x14
@@ -558,8 +720,7 @@ void AI::play(IStudentAPI& api)
 
 	static Utilities<IStudentAPI&> Helper(api);
 
-	// ¹«¹²²Ù×÷
-
+	// å…¬å…±æ“ä½œ
 	if (!HasInitMap)
 	{
 		InitMap(api);
@@ -567,23 +728,24 @@ void AI::play(IStudentAPI& api)
 	}
 	if (this->playerID == 0)
 	{
-		Helper.MoveTo(Point(48,48), true);
-		// Íæ¼Ò0Ö´ĞĞ²Ù×÷
+		Helper.DirectOpeningChest(true);
+
+		// ç©å®¶0æ‰§è¡Œæ“ä½œ
 	}
 	else if (this->playerID == 1)
 	{
-		// Íæ¼Ò1Ö´ĞĞ²Ù×÷
+		// ç©å®¶1æ‰§è¡Œæ“ä½œ
 	}
 	else if (this->playerID == 2)
 	{
-		// Íæ¼Ò2Ö´ĞĞ²Ù×÷
+		// ç©å®¶2æ‰§è¡Œæ“ä½œ
 	}
 	else if (this->playerID == 3)
 	{
-		// Íæ¼Ò3Ö´ĞĞ²Ù×÷
+		// ç©å®¶3æ‰§è¡Œæ“ä½œ
 	}
-	//µ±È»¿ÉÒÔĞ´³Éif (this->playerID == 2||this->playerID == 3)Ö®ÀàµÄ²Ù×÷
-	// ¹«¹²²Ù×÷
+	//å½“ç„¶å¯ä»¥å†™æˆif (this->playerID == 2||this->playerID == 3)ä¹‹ç±»çš„æ“ä½œ
+	// å…¬å…±æ“ä½œ
 }
 
 void AI::play(ITrickerAPI& api)
