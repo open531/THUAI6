@@ -656,10 +656,10 @@ void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority,
 			int dx = (API.GetProps()[i]->x - API.GetSelfInfo()->x) / 1000;
 			int dy = (API.GetProps()[i]->y - API.GetSelfInfo()->y) / 1000;
 			int Distance = sqrt(dx * dx + dy * dy);
-			PropValue.emplace_back(Distance * DistanceInfluence + Priority[API.GetProps()[i]->type] * PropInfluence);
+			PropValue.emplace_back(Distance * DistanceInfluence + Priority[(int)API.GetProps()[i]->type] * PropInfluence);
 			if (PropValue[i] >= MaxValue)
 			{
-				MaxValue = PropValue;
+				MaxValue = PropValue[i];
 				MaxNum = i;
 			}
 		}
