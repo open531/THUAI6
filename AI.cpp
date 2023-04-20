@@ -103,9 +103,8 @@ void InitMap(IStudentAPI& api)
 	}
 }
 
-class AStar
+namespace AStar
 {
-public:
 	bool IsValidWithoutWindows(int x, int y) { return (bool)(Access[x][y] / 2); }
 	bool IsValidWithWindows(int x, int y) { return (bool)Access[x][y]; }
 	static bool IsDestination(int x, int y, Node dest)
@@ -328,7 +327,7 @@ public:
 			return empty;
 		}
 	}
-}astar;
+};
 
 template<typename IFooAPI>
 class Utilities
@@ -336,6 +335,7 @@ class Utilities
 private:
 	const IFooAPI& API;
 	Point TEMP;
+	std::vector<THUAI6::PropType> Inventory;
 public:
 	Utilities(IFooAPI api) : API(api) {}
 
@@ -356,6 +356,8 @@ public:
 	int EstimateTime(Point Dest);					// 去目的地的预估时间
 	void DirectLearning(bool WithWindows);			// 前往最近的作业并学习
 	void DirectOpeningChest(bool WithWindows);		// 前往最近的箱子并开箱
+	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 捡与使用道具
+	bool IsViewable(Point Src, Point Dest, int ViewRange);			// 判断两个位置是否可视
 };
 
 template<typename IFooAPI>
@@ -411,16 +413,16 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	int sy = API.GetSelfInfo()->y;
 	bool IsStuck = (sx == TEMP.x && sy == TEMP.y);
 	std::vector<Node> UsablePath;
-	if (WithWindows) UsablePath = astar.AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
-	else UsablePath = astar.AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
+	if (WithWindows) UsablePath = AStar::AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
+	else UsablePath = AStar::AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
 	if (UsablePath.size() < 2) return;
 	int tx, ty;
 	if (UsablePath.size() >= 3
-		&& astar.IsValidWithoutWindows(sx / 1000, sy / 1000)
-		&& astar.IsValidWithoutWindows(UsablePath[1].x, UsablePath[1].y)
-		&& astar.IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y)
-		&& astar.IsValidWithoutWindows(sx / 1000, UsablePath[2].y)
-		&& astar.IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
+		&& AStar::IsValidWithoutWindows(sx / 1000, sy / 1000)
+		&& AStar::IsValidWithoutWindows(UsablePath[1].x, UsablePath[1].y)
+		&& AStar::IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y)
+		&& AStar::IsValidWithoutWindows(sx / 1000, UsablePath[2].y)
+		&& AStar::IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
 	{
 		tx = UsablePath[2].x * 1000 + 500;
 		ty = UsablePath[2].y * 1000 + 500;
@@ -491,7 +493,7 @@ void Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 	}
 	for (int i = 0; i < Classroom.size(); i++)
 	{
-		Distance = astar.AStarWithWindows(Self, Classroom[i]).size();
+		Distance = AStar::AStarWithWindows(Self, Classroom[i]).size();
 		if (Distance < minDistance)
 		{
 			minDistance = Distance;
@@ -535,7 +537,7 @@ void Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
 	}
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		Distance = astar.AStarWithWindows(Self, Gate[i]).size();
+		Distance = AStar::AStarWithWindows(Self, Gate[i]).size();
 		if (Distance < minDistance)
 		{
 			minDistance = Distance;
@@ -579,7 +581,7 @@ void Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
 	}
 	for (int i = 0; i < Chest.size(); i++)
 	{
-		Distance = astar.AStarWithWindows(Self, Chest[i]).size();
+		Distance = AStar::AStarWithWindows(Self, Chest[i]).size();
 		if (Distance < minDistance)
 		{
 			minDistance = Distance;
@@ -607,7 +609,7 @@ template<typename IFooAPI>
 int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
 {
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
-	int Distance = astar.AStarWithWindows(Self, Dest).size();
+	int Distance = AStar::AStarWithWindows(Self, Dest).size();
 	int Speed = API.GetSelfInfo()->speed;
 	int Time = Distance * 1000 / Speed;
 	return Time;
@@ -639,6 +641,72 @@ void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
 	{
 		API.StartOpenChest();
 	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows)
+{
+	if (Inventory.size() < 3)
+	{
+		int MaxValue = 0, MaxNum = 0;
+		std::vector<std::shared_ptr<const THUAI6::Prop>> ViewableProps = API.GetProps();
+		std::vector<int> PropValue;
+		for (int i = 0; i < ViewableProps.size(); i++)
+		{
+			int dx = (API.GetProps()[i]->x - API.GetSelfInfo()->x) / 1000;
+			int dy = (API.GetProps()[i]->y - API.GetSelfInfo()->y) / 1000;
+			int Distance = sqrt(dx * dx + dy * dy);
+			PropValue.emplace_back(Distance * DistanceInfluence + Priority[API.GetProps()[i]->type] * PropInfluence);
+			if (PropValue[i] >= MaxValue)
+			{
+				MaxValue = PropValue;
+				MaxNum = i;
+			}
+		}
+		MoveTo(Point(ViewableProps[MaxNum]->x, ViewableProps[MaxNum]->y), WithWindows);
+		API.PickProp(ViewableProps[MaxNum]->type);
+	}
+}
+
+template<typename IFooAPI>
+bool Utilities<typename IFooAPI>::IsViewable(Point Src, Point Dest, int ViewRange)
+{
+	int deltaX = (Dest.x - Src.x) * 1000;
+	int deltaY = (Dest.y - Src.y) * 1000;
+	int Distance = deltaX * deltaX + deltaY * deltaY;
+	unsigned char SrcType = Map[Src.x][Src.y];
+	unsigned char DestType = Map[Dest.x][Dest.y];
+	if (DestType == 3U && SrcType != 3U)  // 草丛外必不可能看到草丛内
+		return false;
+	if (Distance < ViewRange * ViewRange)
+	{
+		int divide = std::max(std::abs(deltaX), std::abs(deltaY)) / 100;
+		if (divide == 0)
+			return true;
+		double dx = deltaX / divide;
+		double dy = deltaY / divide;
+		double myX = double(Src.x * 1000);
+		double myY = double(Src.y * 1000);
+		if (DestType == 3U && SrcType == 3U)  // 都在草丛内，要另作判断
+			for (int i = 0; i < divide; i++)
+			{
+				myX += dx;
+				myY += dy;
+				if (Map[(int)myX / 1000][(int)myY / 1000] != 3U)
+					return false;
+			}
+		else  // 不在草丛内，只需要没有墙即可
+			for (int i = 0; i < divide; i++)
+			{
+				myX += dx;
+				myY += dy;
+				if (Map[(int)myX / 1000][(int)myY / 1000] == 2U)
+					return false;
+			}
+		return true;
+	}
+	else
+		return false;
 }
 
 /* 信息协议
@@ -740,7 +808,8 @@ void AI::play(IStudentAPI& api)
 	}
 	if (this->playerID == 0)
 	{
-		Helper.DirectOpeningChest(true);
+		if (Chest.size() >= 2)Helper.DirectOpeningChest(true);
+		if (Chest.size() < 2 && Classroom.size() >= 2)Helper.DirectLearning(true);
 
 		// 玩家0执行操作
 	}
