@@ -1,0 +1,37 @@
+#include "Utilities.hpp"
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::AssassinDefaultAttack(int rank)//rank是要vector中要攻击的序号，当vector中仅有一个时，自动选择
+{
+	int stux = API.GetStudents()[rank]->x;
+	int stuy = API.GetStudents()[rank]->y;
+	int sx = API.GetSelfInfo()->x;
+	int sy = API.GetSelfInfo()->y;
+	API.Attack(atan2(stuy - sy, stux - sx));
+}
+
+template<typename IFooAPI>
+bool Utilities<typename IFooAPI>::AssassinDefaultAttackOver(int rank)
+{
+	int stux = API.GetStudents()[rank]->x;
+	int stuy = API.GetStudents()[rank]->y;
+	int sx = API.GetSelfInfo()->x;
+	int sy = API.GetSelfInfo()->y;
+	double Distance = sqrt((stux - sx) * (stux - sx) + (stuy - sy) * (stuy - sy));
+	switch (API.GetStudents()[rank]->studentType)
+	{
+	case THUAI6::StudentType::Athlete://运动员
+		if (Distance<double(7400 * 400 / 3150 - 0.297 * 3150))
+			return true;
+	case THUAI6::StudentType::Teacher://老师
+		if (Distance<double(7400 * 400 / 2700 - 0.297 * 2700))
+			return true;
+	case THUAI6::StudentType::StraightAStudent://学霸
+		if (Distance<double(7400 * 400 / 2880 - 0.297 * 2880))
+			return true;
+	case THUAI6::StudentType::Sunshine://奶妈
+		if (Distance<double(7400 * 400 / 3000 - 0.297 * 3000))
+			return true;
+	}
+	return false;
+}
