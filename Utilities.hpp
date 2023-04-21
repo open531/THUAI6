@@ -33,12 +33,14 @@ public:
 template<typename IFooAPI>
 class Utilities
 {
-private:
+//private:
+public:
 	unsigned char Map[50][50];
 	unsigned char Access[50][50];
 	std::vector<Point> Classroom;
 	std::vector<Point> Gate;
 	std::vector<Point> OpenGate;
+	std::vector<Point> HiddenGate;
 	std::vector<Point> Chest;
 	std::vector<Point> Door;
 
@@ -62,31 +64,39 @@ private:
 public:
 	Utilities(IFooAPI api);
 
-	// void Update(Point Door, bool State);			//¸üĞÂµØÍ¼ĞÅÏ¢£¬±ÈÈçÃÅºÍÒş²ØĞ£ÃÅ£¬ĞèÒªÔ¼¶¨infoµÄ¸ñÊ½
+	// void Update(Point Door, bool State);			//æ›´æ–°åœ°å›¾ä¿¡æ¯ï¼Œæ¯”å¦‚é—¨å’Œéšè—æ ¡é—¨ï¼Œéœ€è¦çº¦å®šinfoçš„æ ¼å¼
 	void UpdateClassroom();
 	void UpdateGate();
 	void UpdateChest();
 	void UpdateDoor();
-	void AutoUpdate(); // TODO: ×Ô¶¯¸üĞÂ£¬¼ì²é¸½½üµÄ¸ñ×ÓÓĞÃ»ÓĞºÍÒÑÖª²»Ò»ÖÂµÄ£¬Èç¹ûÓĞ¾Í¸üĞÂ²¢ÇÒ¹ã²¥
+	void AutoUpdate(); // TODO: è‡ªåŠ¨æ›´æ–°ï¼Œæ£€æŸ¥é™„è¿‘çš„æ ¼å­æœ‰æ²¡æœ‰å’Œå·²çŸ¥ä¸ä¸€è‡´çš„ï¼Œå¦‚æœæœ‰å°±æ›´æ–°å¹¶ä¸”å¹¿æ’­
+	std::vector<THUAI6::PropType> GetInventory() { return Inventory; }	// æŸ¥çœ‹èƒŒåŒ…
 
-	void MoveTo(Point Dest, bool WithWindows);		// ÍùÄ¿µÄµØ¶¯Ò»¶¯
-	void MoveToNearestClassroom(bool WithWindows);	// Íù×î½üµÄ×÷ÒµµÄ·½Ïò¶¯Ò»¶¯
-	void MoveToNearestGate(bool WithWindows);		// Íù×î½üµÄĞ£ÃÅÅÔ±ß¶¯Ò»¶¯
-	void MoveToNearestChest(bool WithWindows);		// Íù×î½üµÄÏä×ÓµÄ·½Ïò¶¯Ò»¶¯
-	bool NearPoint(Point P, int level = 1);         // level=0ÅĞ¶Ïµ±Ç°ÊÇ·ñÔÚ¸Ã¸ñ×ÓÉÏ£¬1ÅĞ¶ÏÊÇ·ñÔÚ¸ñ×ÓÉÏ»òÖÜÎ§4¸ñ£¬2ÅĞ¶ÏÊÇ·ñÔÚ¸ñ×ÓÉÏ»òÖÜÎ§8¸ñ
-	bool NearClassroom();							// ÒÑ¾­ÔÚ×÷ÒµÅÔ±ßÁËÂğ£¿
-	bool NearGate();								// ÒÑ¾­ÔÚĞ£ÃÅÅÔ±ßÁËÂğ£¿
-	bool NearChest();								// ÒÑ¾­ÔÚÏä×ÓÅÔ±ßÁËÂğ£¿
-	void DirectLearning(bool WithWindows);			// Ç°Íù×î½üµÄ×÷Òµ²¢Ñ§Ï°
-	void DirectOpeningChest(bool WithWindows);		// Ç°Íù×î½üµÄÏä×Ó²¢¿ªÏä
-	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// ¼ñÓëÊ¹ÓÃµÀ¾ß
+	void MoveTo(Point Dest, bool WithWindows);		// å¾€ç›®çš„åœ°åŠ¨ä¸€åŠ¨
+	void MoveToNearestClassroom(bool WithWindows);	// å¾€æœ€è¿‘çš„ä½œä¸šçš„æ–¹å‘åŠ¨ä¸€åŠ¨
+	void MoveToNearestGate(bool WithWindows);		// å¾€æœ€è¿‘çš„å…³é—­çš„æ ¡é—¨æ—è¾¹åŠ¨ä¸€åŠ¨
+	void MoveToNearestOpenGate(bool WithWindows);	// å¾€æœ€è¿‘çš„å¼€å¯çš„æ ¡é—¨æ—è¾¹åŠ¨ä¸€åŠ¨
+	void MoveToNearestChest(bool WithWindows);		// å¾€æœ€è¿‘çš„ç®±å­çš„æ–¹å‘åŠ¨ä¸€åŠ¨
+	bool NearPoint(Point P, int level = 1);         // level=0åˆ¤æ–­å½“å‰æ˜¯å¦åœ¨è¯¥æ ¼å­ä¸Šï¼Œ1åˆ¤æ–­æ˜¯å¦åœ¨æ ¼å­ä¸Šæˆ–å‘¨å›´4æ ¼ï¼Œ2åˆ¤æ–­æ˜¯å¦åœ¨æ ¼å­ä¸Šæˆ–å‘¨å›´8æ ¼
+	bool NearClassroom();							// å·²ç»åœ¨ä½œä¸šæ—è¾¹äº†å—ï¼Ÿ
+	bool NearGate();								// å·²ç»åœ¨å…³é—­çš„æ ¡é—¨æ—è¾¹äº†å—ï¼Ÿ
+	bool NearOpenGate();							// å·²ç»åœ¨å¼€å¯çš„æ ¡é—¨æ—è¾¹äº†å—ï¼Ÿ
+	bool NearChest();								// å·²ç»åœ¨ç®±å­æ—è¾¹äº†å—ï¼Ÿ
+	void DirectLearning(bool WithWindows);			// å‰å¾€æœ€è¿‘çš„ä½œä¸šå¹¶å­¦ä¹ 
+	void DirectOpeningChest(bool WithWindows);		// å‰å¾€æœ€è¿‘çš„ç®±å­å¹¶å¼€ç®±
+	void DirectOpeningGate(bool WithWindows);		// å‰å¾€æœ€è¿‘çš„å…³é—­çš„æ ¡é—¨å¹¶å¼€é—¨
+	void DirectGraduate(bool WithWindows);			// å‰å¾€æœ€è¿‘çš„å¼€å¯çš„æ ¡é—¨å¹¶æ¯•ä¸š
+	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// å‰å¾€å·²çŸ¥ä»·å€¼æœ€é«˜çš„é“å…·å¹¶æ¡é“å…·
 
-	int EstimateTime(Point Dest);					// È¥Ä¿µÄµØµÄÔ¤¹ÀÊ±¼ä
-	bool IsViewable(Point Src, Point Dest, int ViewRange);			// ÅĞ¶ÏÁ½¸öÎ»ÖÃÊÇ·ñ¿ÉÊÓ
+	int EstimateTime(Point Dest);					// å»ç›®çš„åœ°çš„é¢„ä¼°æ—¶é—´
+	bool IsViewable(Point Src, Point Dest, int ViewRange);			// åˆ¤æ–­ä¸¤ä¸ªä½ç½®æ˜¯å¦å¯è§†
 	int CountFinishedClassroom() const;
-	int CountNonemptyChest() const; // TODO: ÔİÎ´ÊµÏÖ
+	int CountNonemptyChest() const; // TODO: æš‚æœªå®ç°
+	int CountHiddenGate() const;
+	int CountClosedGate() const;
+	int CountOpenGate() const;
 
-	void AssassinDefaultAttack(int rank);	// ´Ì¿ÍÆÕÍ¨¹¥»÷
+	void AssassinDefaultAttack(int rank);	// åˆºå®¢æ™®é€šæ”»å‡»
 	bool AssassinDefaultAttackOver(int rank);
 };
 
