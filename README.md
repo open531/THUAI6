@@ -2,6 +2,8 @@
 
 把.h和.hpp添加到CAPI.sln的头文件里，把.cpp添加到源文件里。
 
+## Utilities
+
 `Utilities.hpp`中定义类Utilities，用于实现移动、攻击等操作，以及提供若干实用函数
 
 - [ ] `void UpdateClassroom();`
@@ -36,13 +38,39 @@
 
 `UtilitiesBasic.hpp`中实现基本移动和有目的的移动，以及其他零散的方法
 
+## Pigeon
+
 `Pigeon.h`通信
+
+要发送信息，只需要调用对应的函数，传入目标角色ID和具体信息。
+
+要接收信息，需要先调用`receiveMessage()`让鸽子尝试代收，如果有信息就会返回对应的信息种类，否则会返回`NoMessage`常量。鸽子会缓存信息字符串，之后再由用户调用读取对应信息的函数就可以返回相应的信息。
+
+```
+struct MapUpdateInfo
+{
+	THUAI6::PlaceType type;
+	int x, y, val;
+};
+typedef std::shared_ptr<const THUAI6::Student> NeedHelpInfo;
+typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
+```
+
+- [x] `void sendMapUpdate(int64_t dest, MapUpdateInfo muinfo);`
+- [x] `void sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val);`
+- [x] `void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);`
+- [ ] `void sendNeedHelp(std::shared_ptr<const THUAI6::Student> slf);`
+
+- [x] `int receiveMessage();` // 返回接收到的信息类型
+- [x] `MapUpdateInfo receiveMapUpdate();`
+- [x] `TrickerInfo_t receiveTrickerInfo();`
+- [ ] `NeedHelpInfo receiveNeedHelp();`
+
 
 `Pigeon.cpp`实现通信
 
 ## TODO List
 
-- 定义Pigeon的行为：发送、接收、判断信息类型等等，是传入信息还是直接绑定Utilities调用信息
-- 把Utilities和Pigeon互相绑定
-- 定义攻击方法
-- ……
+- 让 Utilities 绑定一只 Pigeon，完善 AutoUpdate
+- 实现传入 MapUpdateInfo 更新地图
+- 防止两个角色动作冲突（同地点学习、开箱），需要通信实现
