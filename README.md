@@ -1,5 +1,7 @@
 # THUAI6_team
 
+把.h和.hpp添加到CAPI.sln的头文件里，把.cpp添加到源文件里。
+
 `Utilities.hpp`中定义类Utilities，用于实现移动、攻击等操作，以及提供若干实用函数
 
 - [ ] `void UpdateClassroom();`
@@ -37,3 +39,10 @@
 `Pigeon.h`通信
 
 `Pigeon.cpp`实现通信
+
+## TODO List
+
+- 定义Pigeon的行为：发送、接收、判断信息类型等等，是传入信息还是直接绑定Utilities调用信息
+- 把Utilities和Pigeon互相绑定
+- 定义攻击方法
+- ……
