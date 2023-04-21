@@ -21,8 +21,8 @@ extern const bool asynchronous = false;
 
 extern const std::array<THUAI6::StudentType, 4> studentType = {
 	THUAI6::StudentType::StraightAStudent,
-	THUAI6::StudentType::Teacher,
 	THUAI6::StudentType::StraightAStudent,
+	THUAI6::StudentType::Teacher,
 	THUAI6::StudentType::Sunshine };
 
 extern const THUAI6::TrickerType trickerType = THUAI6::TrickerType::Assassin;
@@ -59,11 +59,11 @@ sPicking 去捡道具
 void AI::play(IStudentAPI& api)
 {
 	static std::vector<unsigned char> Priority(9, 0U);
+	static Pigeon gugu(api);
 	static Utilities<IStudentAPI&> Helper(api);
 	static int CurrentState = sDefault;
 
 	// 公共操作
-	Helper.AutoUpdate();
 	if (this->playerID == 0)
 	{
 		
@@ -74,6 +74,11 @@ void AI::play(IStudentAPI& api)
 	}
 	else if (this->playerID == 1)
 	{
+		Helper.DirectLearning(1);
+		return;
+		Helper.AutoUpdate();
+		while (gugu.receiveMessage()); // 收信息
+
 		std::shared_ptr<const THUAI6::Student> selfinfo = api.GetSelfInfo();
 		std::vector<std::shared_ptr<const THUAI6::Tricker>> tinfo = api.GetTrickers();
 		if (CurrentState != sDanger)
@@ -81,17 +86,27 @@ void AI::play(IStudentAPI& api)
 			if (!tinfo.empty())
 			{
 				api.EndAllAction();
+				gugu.sendTrickerInfo(0, tinfo);
+				gugu.sendTrickerInfo(2, tinfo);
+				gugu.sendTrickerInfo(3, tinfo);
 				CurrentState = sDanger;
 			}
 		}
 		if (CurrentState == sDefault)
 		{
-			CurrentState = sDoClassroom;
+			if (Helper.CountFinishedClassroom() <= 7) CurrentState = sDoClassroom;
+			else CurrentState = sOpenGate;
 		}
 		if (CurrentState == sDoClassroom)
 		{
 			Helper.DirectLearning(1);
+			if (Helper.CountFinishedClassroom() > 7) CurrentState = sDefault;
 			// 学完了就走
+		}
+		else if (CurrentState == sOpenGate)
+		{
+			if (!Helper.NearGate()) Helper.MoveToNearestGate(1);
+			else api.StartOpenGate();
 		}
 		// 玩家1执行操作
 	}
