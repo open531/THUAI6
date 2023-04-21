@@ -74,3 +74,8 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 - 让 Utilities 绑定一只 Pigeon，完善 AutoUpdate
 - 实现传入 MapUpdateInfo 更新地图
 - 防止两个角色动作冲突（同地点学习、开箱），需要通信实现
+- 防止两个角色相撞
+
+## Issues
+
+- 开启完校门的角色不会自己毕业，没有开启校门的角色反而能够顺利毕业。
