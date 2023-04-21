@@ -55,10 +55,10 @@ template<typename IFooAPI>
 std::vector<Node> Utilities<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 {
 	std::vector<Node> empty;
-	if (IsValidWithoutWindows(dest.x, dest.y) == false)
-	{
-		return empty;
-	}
+	//if (IsValidWithoutWindows(dest.x, dest.y) == false)
+	//{
+	//	return empty;
+	//}
 	if (IsDestination(src.x, src.y, dest))
 	{
 		return empty;
@@ -110,7 +110,7 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 			for (int newY = -1; newY <= 1; newY++) {
 				if (newX != 0 && newY != 0) continue;
 				double gNew, hNew, fNew;
-				if (IsValidWithoutWindows(x + newX, y + newY)) {
+				if (IsValidWithoutWindows(x + newX, y + newY) || IsDestination(x + newX, y + newY, dest)) {
 					if (IsDestination(x + newX, y + newY, dest))
 					{
 						AStarMap[x + newX][y + newY].parentX = x;
@@ -148,10 +148,10 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithWindows(Node src, Node dest)
 {
 	std::cout << src.x << src.y;
 	std::vector<Node> empty;
-	if (IsValidWithWindows(dest.x, dest.y) == false)
-	{
-		return empty;
-	}
+	//if (IsValidWithWindows(dest.x, dest.y) == false)
+	//{
+	//	return empty;
+	//}
 	if (IsDestination(src.x, src.y, dest))
 	{
 		return empty;
@@ -203,7 +203,7 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithWindows(Node src, Node dest)
 			for (int newY = -1; newY <= 1; newY++) {
 				if (newX != 0 && newY != 0) continue;
 				double gNew, hNew, fNew;
-				if (IsValidWithWindows(x + newX, y + newY)) {
+				if (IsValidWithWindows(x + newX, y + newY) || IsDestination(x + newX, y + newY, dest)) {
 					if (IsDestination(x + newX, y + newY, dest))
 					{
 						AStarMap[x + newX][y + newY].parentX = x;
