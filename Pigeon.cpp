@@ -1,4 +1,5 @@
 #include "Pigeon.h"
+#include<cstdarg>
 
 Encoder::Encoder() :Pointer(0)
 {
@@ -28,50 +29,59 @@ T Decoder::ReadInfo()
 	return *ptr;
 }
 
-std::string sendDoorMessage(int a[], int b[], int n, char c[])
+Pigeon::Pigeon(IStudentAPI& api) : API(api) {}
+
+void Pigeon::sendInfo(int64_t dest, std::string info)
+{
+	API.SendMessage(dest, info);
+}
+
+void Pigeon::sendMapUpdate(int64_t dest, MapUpdateInfo muinfo)
 {
 	Encoder enc;
 	enc.SetHeader(MapUpdate);
-
-	std::vector<std::pair<std::pair<int, int>, char>> p0;
-	for (int i = 0; i < n; i++)
-	{
-		p0[i].first.first = a[i];
-		p0[i].first.second = b[i];
-		p0[i].second = c[i];
-	}
-	enc.PushInfo(p0);
-	std::string info = enc.ToString();
-	return info;
+	enc.PushInfo(muinfo);
+	sendInfo(dest, enc.ToString());
 }
-
-std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>>  receiveDoorMessage(std::string info)
+void Pigeon::sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val)
 {
-	Decoder dec(info);
-	char header = dec.ReadInfo<char>();
-	std::vector<std::pair<std::pair<int, int>, char>> p0;
-	p0 = dec.ReadInfo<std::vector<std::pair<std::pair<int, int>, char>>>();
-	std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> p1(header, p0);
-
-	return p1;
+	MapUpdateInfo muinfo = { type, x, y, val };
+	sendMapUpdate(dest, muinfo);
 }
-//Door信息的编码和解码函数
-std::string sendTrickerMessage(std::vector<std::shared_ptr<const THUAI6::Tricker>> tricker)
+
+MapUpdateInfo Pigeon::receiveMapUpdate()
+{
+	Decoder dec(buf);
+	char header = dec.ReadInfo<char>();
+	assert(header == MapUpdate);
+	return dec.ReadInfo<MapUpdateInfo>();
+}
+
+int Pigeon::receiveMessage()
+{
+	if (API.HaveMessage())
+	{
+		buf = API.GetMessage().second; // 是谁发来的好像不太重要，只取信息内容
+		return buf[0];
+	}
+	else return NoMessage;
+}
+
+void Pigeon::sendTrickerInfo(int64_t dest, TrickerInfo_t tricker)
 {
 	Encoder enc;
 	enc.SetHeader(TrickerInfo);
 	enc.PushInfo<std::vector<std::shared_ptr<const THUAI6::Tricker>>>(tricker);
-	std::string info = enc.ToString();
-	return info;
+	sendInfo(dest, enc.ToString());
 
 }
 
-std::vector<std::shared_ptr<const THUAI6::Tricker>> receiveTrickerMessage(std::string info)
+TrickerInfo_t Pigeon::receiveTrickerInfo()
 {
-	Decoder dec(info);
+	Decoder dec(buf);
 	char header = dec.ReadInfo<char>();
-	std::vector<std::shared_ptr<const THUAI6::Tricker>> p1 = dec.ReadInfo<std::vector<std::shared_ptr<const THUAI6::Tricker>>>();
-	return p1;
+	assert(header == TrickerInfo);
+	return dec.ReadInfo<TrickerInfo_t>();
 }
 //捣蛋鬼信息的编码和解码函数
 std::string sendOneselfMessage(std::shared_ptr<const THUAI6::Student> self)
@@ -95,7 +105,7 @@ std::shared_ptr<const THUAI6::Student> receiveOneselfMessage(std::string info)
 std::string sendPropsMessage(std::vector<std::shared_ptr<const THUAI6::Prop>> prop)
 {
 	Encoder enc;
-	enc.SetHeader(WantTool);
+	enc.SetHeader(WantProp);
 	enc.PushInfo<std::vector<std::shared_ptr<const THUAI6::Prop>>>(prop);
 	std::string info = enc.ToString();
 	return info;
@@ -133,11 +143,11 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receivePropsMessage(std::string
 //
 //}
 //发送门信息的函数
-void send_Tricker(IStudentAPI& api1, int64_t playerID)
-{
-	std::string info_Tricker = sendTrickerMessage(api1.GetTrickers());
-	api1.SendMessage(playerID, info_Tricker);
-}
+//void send_Tricker(IStudentAPI& api1, int64_t playerID)
+//{
+//	std::string info_Tricker = sendTrickerMessage(api1.GetTrickers());
+//	api1.SendMessage(playerID, info_Tricker);
+//}
 //发送捣蛋鬼信息的函数
 void send_Oneself(IStudentAPI& api1, int64_t playerID)
 {
@@ -151,19 +161,19 @@ void send_Prop(IStudentAPI& api1, int64_t playerID)
 	api1.SendMessage(playerID, info_Prop);
 }
 //发送道具信息的函数
-std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> receive_Door(IStudentAPI& api2)
-{
-	std::string info_Door = api2.GetMessage().second;
-	std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> p1 = receiveDoorMessage(info_Door);
-	return p1;
-}
+//std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> receive_Door(IStudentAPI& api2)
+//{
+//	std::string info_Door = api2.GetMessage().second;
+//	std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> p1 = receiveDoorMessage(info_Door);
+//	return p1;
+//}
 //接收门信息的函数
-std::vector<std::shared_ptr<const THUAI6::Tricker>> receive_Tricker(IStudentAPI& api2)
-{
-	std::string info_Tricker = api2.GetMessage().second;
-	std::vector<std::shared_ptr<const THUAI6::Tricker>> p1 = receiveTrickerMessage(info_Tricker);
-	return p1;
-}
+//std::vector<std::shared_ptr<const THUAI6::Tricker>> receive_Tricker(IStudentAPI& api2)
+//{
+//	std::string info_Tricker = api2.GetMessage().second;
+//	std::vector<std::shared_ptr<const THUAI6::Tricker>> p1 = receiveTrickerMessage(info_Tricker);
+//	return p1;
+//}
 //接收捣蛋鬼信息的函数
 std::shared_ptr<const THUAI6::Student> receive_Oneself(IStudentAPI& api2)
 {
