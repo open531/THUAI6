@@ -632,6 +632,10 @@ void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
 {
+	//if (API.GetProps().size() > 0)
+	//{
+	//	API.PickProp(API.GetProps()[0]->type);
+	//}
 	UpdateChest();
 	if (!NearChest())
 	{
@@ -650,21 +654,28 @@ void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority,
 	{
 		int MaxValue = 0, MaxNum = 0;
 		std::vector<std::shared_ptr<const THUAI6::Prop>> ViewableProps = API.GetProps();
-		std::vector<int> PropValue;
+		int PropValue = 0;
 		for (int i = 0; i < ViewableProps.size(); i++)
 		{
 			int dx = (API.GetProps()[i]->x - API.GetSelfInfo()->x) / 1000;
 			int dy = (API.GetProps()[i]->y - API.GetSelfInfo()->y) / 1000;
 			int Distance = sqrt(dx * dx + dy * dy);
-			PropValue.emplace_back(Distance * DistanceInfluence + Priority[(int)API.GetProps()[i]->type] * PropInfluence);
-			if (PropValue[i] >= MaxValue)
+			PropValue = (Distance * DistanceInfluence + Priority[(int)(API.GetProps()[i]->type)] * PropInfluence);
+			if (PropValue >= MaxValue)
 			{
-				MaxValue = PropValue[i];
+				MaxValue = PropValue;
 				MaxNum = i;
 			}
 		}
-		MoveTo(Point(ViewableProps[MaxNum]->x, ViewableProps[MaxNum]->y), WithWindows);
-		API.PickProp(ViewableProps[MaxNum]->type);
+		if (!NearPoint(Point(ViewableProps[MaxNum]->x / 1000, ViewableProps[MaxNum]->y / 1000), 0))
+		{
+			MoveTo(Point(ViewableProps[MaxNum]->x / 1000, ViewableProps[MaxNum]->y / 1000), WithWindows);
+		}
+		else
+		{
+			API.PickProp(ViewableProps[MaxNum]->type);
+			Inventory.emplace_back(ViewableProps[MaxNum]->type);
+		}
 	}
 }
 
@@ -797,7 +808,8 @@ Picking 去捡道具
 
 void AI::play(IStudentAPI& api)
 {
-
+	static std::vector<unsigned char> Priority;
+	for (int i = 0; i <= 8; i++) Priority.emplace_back(0U);
 	static Utilities<IStudentAPI&> Helper(api);
 
 	// 公共操作
@@ -808,8 +820,8 @@ void AI::play(IStudentAPI& api)
 	}
 	if (this->playerID == 0)
 	{
-		if (Chest.size() >= 2)Helper.DirectOpeningChest(true);
-		if (Chest.size() < 2 && Classroom.size() >= 2)Helper.DirectLearning(true);
+		if (Chest.size() >= 7)Helper.DirectOpeningChest(true);
+		else if (api.GetProps().size() > 0)Helper.DirectProp(Priority, 1, 1, true);
 
 		// 玩家0执行操作
 	}
