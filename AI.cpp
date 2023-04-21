@@ -58,7 +58,7 @@ sPicking 去捡道具
 
 void AI::play(IStudentAPI& api)
 {
-
+	static std::vector<unsigned char> Priority(9, 0U);
 	static Utilities<IStudentAPI&> Helper(api);
 	static int CurrentState = sDefault;
 
@@ -67,8 +67,9 @@ void AI::play(IStudentAPI& api)
 	if (this->playerID == 0)
 	{
 		
-		if (Helper.CountNonemptyChest() >= 2) Helper.DirectOpeningChest(true);
-		else if (Helper.CountNonemptyChest() < 2 && Helper.CountFinishedClassroom() <= 8)Helper.DirectLearning(true);
+		if (Helper.CountNonemptyChest() >= 7) Helper.DirectOpeningChest(true);
+		else if (api.GetProps().size() > 0) Helper.DirectProp(Priority, 1, 1, true);
+
 		// 玩家0执行操作
 	}
 	else if (this->playerID == 1)
