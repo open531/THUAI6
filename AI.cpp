@@ -14,36 +14,36 @@
 #include "Utilities.hpp"
 #include "Pigeon.h"
 
-// Îª¼ÙÔòplay()ÆÚ¼äÈ·±£ÓÎÏ·×´Ì¬²»¸üĞÂ£¬ÎªÕæÔòÖ»±£Ö¤ÓÎÏ·×´Ì¬ÔÚµ÷ÓÃÏà¹Ø·½·¨Ê±²»¸üĞÂ
+// ä¸ºå‡åˆ™play()æœŸé—´ç¡®ä¿æ¸¸æˆçŠ¶æ€ä¸æ›´æ–°ï¼Œä¸ºçœŸåˆ™åªä¿è¯æ¸¸æˆçŠ¶æ€åœ¨è°ƒç”¨ç›¸å…³æ–¹æ³•æ—¶ä¸æ›´æ–°
 extern const bool asynchronous = false;
 
-// Ñ¡ÊÖĞèÒªÒÀ´Î½«player0µ½player4µÄÖ°ÒµÔÚÕâÀï¶¨Òå
+// é€‰æ‰‹éœ€è¦ä¾æ¬¡å°†player0åˆ°player4çš„èŒä¸šåœ¨è¿™é‡Œå®šä¹‰
 
 extern const std::array<THUAI6::StudentType, 4> studentType = {
 	THUAI6::StudentType::StraightAStudent,
 	THUAI6::StudentType::StraightAStudent,
-	THUAI6::StudentType::Teacher,
-	THUAI6::StudentType::Sunshine };
+	THUAI6::StudentType::StraightAStudent,
+	THUAI6::StudentType::StraightAStudent };
 
 extern const THUAI6::TrickerType trickerType = THUAI6::TrickerType::Assassin;
 
-//¿ÉÒÔÔÚAI.cppÄÚ²¿ÉùÃ÷±äÁ¿Óëº¯Êı
+//å¯ä»¥åœ¨AI.cppå†…éƒ¨å£°æ˜å˜é‡ä¸å‡½æ•°
 
-/* ÈËÎï×´Ì¬
-sCantMove ¶¯µ¯²»µÃ£¨³ÁÃÔ/Ç°ºóÒ¡/±ÏÒµ¡­¡­£©
-sDefault Ä¬ÈÏ
-sDoClassroom È¥Ğ´×÷Òµ/ÔÚĞ´×÷Òµ
-sOpenGate È¥¿ªĞ£ÃÅ/ÔÚ¿ªĞ£ÃÅ
-sOpenChest È¥¿ªÏä×Ó/ÔÚ¿ªÏä×Ó
-sDanger Ó¦¶ÔÎ£ÏÕ
-sRousing »½ĞÑÄ³ÈË
-sEncouraging ÃãÀøÄ³ÈË
-sPicking È¥¼ñµÀ¾ß
-ÒÔÉÏÊÇËùÓĞ½ÇÉ«ÆÕ±éÓµÓĞµÄ×´Ì¬£¬ÆäËû×´Ì¬ĞèÒª×ÔĞĞ¶¨Òå£¬½¨Òé´Ó0x80¿ªÊ¼
-±ÈÈçÔË¶¯Ô±¿ÉÒÔ¶¨ÒåÒ»¸ö×´Ì¬½ĞÕıÃæÓ²¸Õ£¬ÀÏÊ¦¿ÉÒÔ¶¨ÒåÒ»¸ö×´Ì¬½ĞÑ²Âß£¨ÊÔÍ¼ÔÚÊÓÒ°ÄÚ¸ú×Åµ·µ°¹í£©£¬µÈµÈ
-»ù±¾Âß¼­¾ÍÊÇÃ¿´ÎAI::Play¶¼»á¸ù¾İĞÅÏ¢À´¾ö¶¨Î¬³Öµ±Ç°×´Ì¬»¹ÊÇÌøµ½ÁíÒ»¸ö×´Ì¬£¨ÀàËÆÓÚÍ¼Áé»úÄ£ÄâË¼Î¬£©
-ĞèÒªÒ»Ğ©¿Õ¼ä´¢´æ±ØÒªµÄĞÅÏ¢£¬¿ÉÄÜ»áÓÃµ½Í¨ĞÅ
-»òĞí¿ÉÒÔ¸ø¸÷ÖÖ×´Ì¬·Ö¸öÀà»òÕßÓÅÏÈ¼¶£¬·½±ãĞ´´úÂë
+/* äººç‰©çŠ¶æ€
+sCantMove åŠ¨å¼¹ä¸å¾—ï¼ˆæ²‰è¿·/å‰åæ‘‡/æ¯•ä¸šâ€¦â€¦ï¼‰
+sDefault é»˜è®¤
+sDoClassroom å»å†™ä½œä¸š/åœ¨å†™ä½œä¸š
+sOpenGate å»å¼€æ ¡é—¨/åœ¨å¼€æ ¡é—¨
+sOpenChest å»å¼€ç®±å­/åœ¨å¼€ç®±å­
+sDanger åº”å¯¹å±é™©
+sRousing å”¤é†’æŸäºº
+sEncouraging å‹‰åŠ±æŸäºº
+sPicking å»æ¡é“å…·
+ä»¥ä¸Šæ˜¯æ‰€æœ‰è§’è‰²æ™®éæ‹¥æœ‰çš„çŠ¶æ€ï¼Œå…¶ä»–çŠ¶æ€éœ€è¦è‡ªè¡Œå®šä¹‰ï¼Œå»ºè®®ä»0x80å¼€å§‹
+æ¯”å¦‚è¿åŠ¨å‘˜å¯ä»¥å®šä¹‰ä¸€ä¸ªçŠ¶æ€å«æ­£é¢ç¡¬åˆšï¼Œè€å¸ˆå¯ä»¥å®šä¹‰ä¸€ä¸ªçŠ¶æ€å«å·¡é€»ï¼ˆè¯•å›¾åœ¨è§†é‡å†…è·Ÿç€æ£è›‹é¬¼ï¼‰ï¼Œç­‰ç­‰
+åŸºæœ¬é€»è¾‘å°±æ˜¯æ¯æ¬¡AI::Playéƒ½ä¼šæ ¹æ®ä¿¡æ¯æ¥å†³å®šç»´æŒå½“å‰çŠ¶æ€è¿˜æ˜¯è·³åˆ°å¦ä¸€ä¸ªçŠ¶æ€ï¼ˆç±»ä¼¼äºå›¾çµæœºæ¨¡æ‹Ÿæ€ç»´ï¼‰
+éœ€è¦ä¸€äº›ç©ºé—´å‚¨å­˜å¿…è¦çš„ä¿¡æ¯ï¼Œå¯èƒ½ä¼šç”¨åˆ°é€šä¿¡
+æˆ–è®¸å¯ä»¥ç»™å„ç§çŠ¶æ€åˆ†ä¸ªç±»æˆ–è€…ä¼˜å…ˆçº§ï¼Œæ–¹ä¾¿å†™ä»£ç 
 */
 #define sCantMove 0x00
 #define sDefault 0x10
@@ -63,63 +63,76 @@ void AI::play(IStudentAPI& api)
 	static Utilities<IStudentAPI&> Helper(api);
 	static int CurrentState = sDefault;
 
-	// ¹«¹²²Ù×÷
+	Helper.AutoUpdate();
+	if (Helper.Classroom.size() < 3 )
+	{
+		if (Helper.OpenGate.size() < 1) Helper.DirectOpeningGate(true);
+		else Helper.DirectGraduate(true);
+	}
+	else Helper.DirectLearning(true);
+
+
+	// å…¬å…±æ“ä½œ
 	if (this->playerID == 0)
 	{
-		
-		if (Helper.CountNonemptyChest() >= 7) Helper.DirectOpeningChest(true);
-		else if (api.GetProps().size() > 0) Helper.DirectProp(Priority, 1, 1, true);
+		//Helper.AutoUpdate();
+		//if (Helper.CountFinishedClassroom() > 7)
+		//{
+		//	if (Helper.CountOpenGate() < 1) Helper.DirectOpeningGate(true);
+		//	else Helper.DirectGraduate(true);
+		//}
+		//else Helper.DirectLearning(true);
 
-		// Íæ¼Ò0Ö´ĞĞ²Ù×÷
+		// ç©å®¶0æ‰§è¡Œæ“ä½œ
 	}
 	else if (this->playerID == 1)
 	{
-		Helper.DirectLearning(1);
-		return;
-		Helper.AutoUpdate();
-		while (gugu.receiveMessage()); // ÊÕĞÅÏ¢
+		//Helper.DirectLearning(1);
+		//return;
+		//Helper.AutoUpdate();
+		//while (gugu.receiveMessage()); // æ”¶ä¿¡æ¯
 
-		std::shared_ptr<const THUAI6::Student> selfinfo = api.GetSelfInfo();
-		std::vector<std::shared_ptr<const THUAI6::Tricker>> tinfo = api.GetTrickers();
-		if (CurrentState != sDanger)
-		{
-			if (!tinfo.empty())
-			{
-				api.EndAllAction();
-				gugu.sendTrickerInfo(0, tinfo);
-				gugu.sendTrickerInfo(2, tinfo);
-				gugu.sendTrickerInfo(3, tinfo);
-				CurrentState = sDanger;
-			}
-		}
-		if (CurrentState == sDefault)
-		{
-			if (Helper.CountFinishedClassroom() <= 7) CurrentState = sDoClassroom;
-			else CurrentState = sOpenGate;
-		}
-		if (CurrentState == sDoClassroom)
-		{
-			Helper.DirectLearning(1);
-			if (Helper.CountFinishedClassroom() > 7) CurrentState = sDefault;
-			// Ñ§ÍêÁË¾Í×ß
-		}
-		else if (CurrentState == sOpenGate)
-		{
-			if (!Helper.NearGate()) Helper.MoveToNearestGate(1);
-			else api.StartOpenGate();
-		}
-		// Íæ¼Ò1Ö´ĞĞ²Ù×÷
+		//std::shared_ptr<const THUAI6::Student> selfinfo = api.GetSelfInfo();
+		//std::vector<std::shared_ptr<const THUAI6::Tricker>> tinfo = api.GetTrickers();
+		//if (CurrentState != sDanger)
+		//{
+		//	if (!tinfo.empty())
+		//	{
+		//		api.EndAllAction();
+		//		gugu.sendTrickerInfo(0, tinfo);
+		//		gugu.sendTrickerInfo(2, tinfo);
+		//		gugu.sendTrickerInfo(3, tinfo);
+		//		CurrentState = sDanger;
+		//	}
+		//}
+		//if (CurrentState == sDefault)
+		//{
+		//	if (Helper.CountFinishedClassroom() <= 7) CurrentState = sDoClassroom;
+		//	else CurrentState = sOpenGate;
+		//}
+		//if (CurrentState == sDoClassroom)
+		//{
+		//	Helper.DirectLearning(1);
+		//	if (Helper.CountFinishedClassroom() > 7) CurrentState = sDefault;
+		//	// å­¦å®Œäº†å°±èµ°
+		//}
+		//else if (CurrentState == sOpenGate)
+		//{
+		//	if (!Helper.NearGate()) Helper.MoveToNearestGate(1);
+		//	else api.StartOpenGate();
+		//}
+		// ç©å®¶1æ‰§è¡Œæ“ä½œ
 	}
 	else if (this->playerID == 2)
 	{
-		// Íæ¼Ò2Ö´ĞĞ²Ù×÷
+		// ç©å®¶2æ‰§è¡Œæ“ä½œ
 	}
 	else if (this->playerID == 3)
 	{
-		// Íæ¼Ò3Ö´ĞĞ²Ù×÷
+		// ç©å®¶3æ‰§è¡Œæ“ä½œ
 	}
-	//µ±È»¿ÉÒÔĞ´³Éif (this->playerID == 2||this->playerID == 3)Ö®ÀàµÄ²Ù×÷
-	// ¹«¹²²Ù×÷
+	//å½“ç„¶å¯ä»¥å†™æˆif (this->playerID == 2||this->playerID == 3)ä¹‹ç±»çš„æ“ä½œ
+	// å…¬å…±æ“ä½œ
 }
 
 void AI::play(ITrickerAPI& api)
