@@ -192,16 +192,24 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
 	bool IsStuck = (sx == TEMP.x && sy == TEMP.y);
-	//if (!API.GetStudents().empty())
-	//	for (int i = 0; i < API.GetStudents().size(); i++)
-	//	{
-	//		Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = 0U;
-	//	}
-	//if (!API.GetTrickers().empty())
-	//	for (int i = 0; i < API.GetTrickers().size(); i++)
-	//	{
-	//		Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = 0U;
-	//	}
+	std::vector<unsigned char> AccessTempS;
+	std::vector<unsigned char> AccessTempT;
+	for (int i = 0; i < API.GetStudents().size(); i++)
+	{
+		if ((API.GetStudents()[i]->x / 1000 != sx / 1000) && (API.GetStudents()[i]->y / 1000 != sy / 1000))
+		{
+			AccessTempS.emplace_back(Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000]);
+			Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = 0U;
+		}
+	}
+	for (int i = 0; i < API.GetTrickers().size(); i++)
+	{
+		if ((API.GetTrickers()[i]->x / 1000 != sx / 1000) && (API.GetTrickers()[i]->y / 1000 != sy / 1000))
+		{
+			AccessTempT.emplace_back(Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000]);
+			Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = 0U;
+		}
+	}
 	std::vector<Node> UsablePath;
 	if (WithWindows) UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
 	else UsablePath = AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
@@ -243,16 +251,22 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 		API.SkipWindow();
 	}
 	TEMP.x = sx; TEMP.y = sy;
-	//if (!API.GetStudents().empty())
-	//	for (int i = 0; i < API.GetStudents().size(); i++)
-	//	{
-	//		Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = 2U;
-	//	}
-	//if (!API.GetTrickers().empty())
-	//	for (int i = 0; i < API.GetTrickers().size(); i++)
-	//	{
-	//		Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = 2U;
-	//	}
+	for (int i = 0, j = 0; i < API.GetStudents().size(); i++)
+	{
+		if ((API.GetStudents()[i]->x / 1000 != sx / 1000) && (API.GetStudents()[i]->y / 1000 != sy / 1000))
+		{
+			Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = AccessTempS[j];
+			j++;
+		}
+	}
+	for (int i = 0, j = 0; i < API.GetTrickers().size(); i++)
+	{
+		if ((API.GetTrickers()[i]->x / 1000 != sx / 1000) && (API.GetTrickers()[i]->y / 1000 != sy / 1000))
+		{
+			Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = AccessTempT[i];
+			j++;
+		}
+	}
 }
 
 template<typename IFooAPI>
