@@ -192,12 +192,12 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
 	bool IsStuck = (sx == TEMP.x && sy == TEMP.y);
-	//if (API.GetStudents().size())
+	//if (!API.GetStudents().empty())
 	//	for (int i = 0; i < API.GetStudents().size(); i++)
 	//	{
 	//		Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = 0U;
 	//	}
-	//if (API.GetTrickers().size())
+	//if (!API.GetTrickers().empty())
 	//	for (int i = 0; i < API.GetTrickers().size(); i++)
 	//	{
 	//		Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = 0U;
@@ -243,12 +243,12 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 		API.SkipWindow();
 	}
 	TEMP.x = sx; TEMP.y = sy;
-	//if (API.GetStudents().size())
+	//if (!API.GetStudents().empty())
 	//	for (int i = 0; i < API.GetStudents().size(); i++)
 	//	{
 	//		Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = 2U;
 	//	}
-	//if (API.GetTrickers().size())
+	//if (!API.GetTrickers().empty())
 	//	for (int i = 0; i < API.GetTrickers().size(); i++)
 	//	{
 	//		Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = 2U;
@@ -282,8 +282,8 @@ void Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 	for (int i = 0; i < Classroom.size(); i++)
 	{
-		Distance = AStarWithWindows(Self, Classroom[i]).size();
-		if (Distance < minDistance)
+		Distance = WithWindows ? AStarWithWindows(Self, Classroom[i]).size() : AStarWithoutWindows(Self, Classroom[i]).size();
+		if (Distance < minDistance && Distance != 0)
 		{
 			minDistance = Distance;
 			minNum = i;
@@ -311,8 +311,8 @@ void Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		Distance = AStarWithWindows(Self, Gate[i]).size();
-		if (Distance < minDistance)
+		Distance = WithWindows ? AStarWithWindows(Self, Gate[i]).size() : AStarWithoutWindows(Self, Gate[i]).size();
+		if (Distance < minDistance && Distance != 0)
 		{
 			minDistance = Distance;
 			minNum = i;
@@ -330,8 +330,8 @@ void Utilities<typename IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 	for (int i = 0; i < OpenGate.size(); i++)
 	{
-		Distance = AStarWithWindows(Self, OpenGate[i]).size();
-		if (Distance < minDistance)
+		Distance = WithWindows ? AStarWithWindows(Self, OpenGate[i]).size() : AStarWithoutWindows(Self, OpenGate[i]).size();
+		if (Distance < minDistance && Distance != 0)
 		{
 			minDistance = Distance;
 			minNum = i;
@@ -369,8 +369,8 @@ void Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 	for (int i = 0; i < Chest.size(); i++)
 	{
-		Distance = AStarWithWindows(Self, Chest[i]).size();
-		if (Distance < minDistance)
+		Distance = WithWindows ? AStarWithWindows(Self, Chest[i]).size() : AStarWithoutWindows(Self, Chest[i]).size();
+		if (Distance < minDistance && Distance != 0)
 		{
 			minDistance = Distance;
 			minNum = i;
