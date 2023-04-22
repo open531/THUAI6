@@ -116,13 +116,16 @@ template<typename IFooAPI>
 void Utilities<typename IFooAPI>::UpdateClassroom()
 {
 	int Size = Classroom.size();
-	for (int i = 0; i < Size; i++)
+	if (Size)
 	{
-		if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) >= 10000000)
+		for (int i = 0; i < Size; i++)
 		{
-			Map[Classroom[i].x][Classroom[i].y] = 2U;
-			Classroom.erase(Classroom.begin() + i);
-			i--; Size--;
+			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) >= 10000000)
+			{
+				Map[Classroom[i].x][Classroom[i].y] = 2U;
+				Classroom.erase(Classroom.begin() + i);
+				i--; Size--;
+			}
 		}
 	}
 }
@@ -130,26 +133,32 @@ void Utilities<typename IFooAPI>::UpdateClassroom()
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::UpdateGate()
 {
-	int HiddenGateSize = HiddenGate.size();
-	for (int i = 0; i < HiddenGateSize; i++)
-	{
-		if (API.GetHiddenGateState(HiddenGate[i].x, HiddenGate[i].y) == THUAI6::HiddenGateState::Opened)
-		{
-			Map[HiddenGate[i].x][HiddenGate[i].y] = 5U;
-			OpenGate.emplace_back(Point(HiddenGate[i].x, HiddenGate[i].y));
-			HiddenGate.erase(HiddenGate.begin() + i);
-			i--; HiddenGateSize--;
-		}
-	}
+	//int HiddenGateSize = HiddenGate.size();
+	//if (HiddenGateSize)
+	//{
+	//	for (int i = 0; i < HiddenGateSize; i++)
+	//	{
+	//		if (API.GetHiddenGateState(HiddenGate[i].x, HiddenGate[i].y) == THUAI6::HiddenGateState::Opened)
+	//		{
+	//			Map[HiddenGate[i].x][HiddenGate[i].y] = 5U;
+	//			OpenGate.emplace_back(Point(HiddenGate[i].x, HiddenGate[i].y));
+	//			HiddenGate.erase(HiddenGate.begin() + i);
+	//			i--; HiddenGateSize--;
+	//		}
+	//	}
+	//}
 	int GateSize = Gate.size();
-	for (int i = 0; i < GateSize; i++)
+	if (GateSize)
 	{
-		if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 17999)
+		for (int i = 0; i < GateSize; i++)
 		{
-			Map[Gate[i].x][Gate[i].y] = 12U;
-			OpenGate.emplace_back(Point(Gate[i].x, Gate[i].y));
-			Gate.erase(Gate.begin() + i);
-			i--; GateSize--;
+			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
+			{
+				//Map[Gate[i].x][Gate[i].y] = 12U;
+				//OpenGate.emplace_back(Point(Gate[i].x, Gate[i].y));
+				//Gate.erase(Gate.begin() + i);
+				//i--; GateSize--;
+			}
 		}
 	}
 }
@@ -158,13 +167,16 @@ template<typename IFooAPI>
 void Utilities<typename IFooAPI>::UpdateChest()
 {
 	int Size = Chest.size();
-	for (int i = 0; i < Size; i++)
+	if (Size)
 	{
-		if (API.GetChestProgress(Chest[i].x, Chest[i].y) >= 10000000)
+		for (int i = 0; i < Size; i++)
 		{
-			Map[Chest[i].x][Chest[i].y] = 2U;
-			Chest.erase(Chest.begin() + i);
-			i--; Size--;
+			if (API.GetChestProgress(Chest[i].x, Chest[i].y) >= 10000000)
+			{
+				Map[Chest[i].x][Chest[i].y] = 2U;
+				Chest.erase(Chest.begin() + i);
+				i--; Size--;
+			}
 		}
 	}
 }
@@ -173,21 +185,24 @@ template<typename IFooAPI>
 void Utilities<typename IFooAPI>::UpdateDoor()
 {
 	int Size = Door.size();
-	for (int i = 0; i < Size; i++)
+	if (Size)
 	{
-		if (API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
+		for (int i = 0; i < Size; i++)
 		{
-			Access[Door[i].x][Door[i].y] = 2U;
-		}
-		if (!API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
-		{
-			Access[Door[i].x][Door[i].y] = 0U;
+			if (API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
+			{
+				Access[Door[i].x][Door[i].y] = 2U;
+			}
+			if (!API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
+			{
+				Access[Door[i].x][Door[i].y] = 0U;
+			}
 		}
 	}
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
+bool Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
@@ -213,7 +228,7 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	std::vector<Node> UsablePath;
 	if (WithWindows) UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
 	else UsablePath = AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
-	if (UsablePath.size() < 2) return;
+	if (UsablePath.size() < 2) return false;
 	int tx, ty;
 	if (UsablePath.size() >= 3
 		&& IsValidWithoutWindows(sx / 1000, sy / 1000)
@@ -241,9 +256,8 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 		else
 		{
 			time_t t;
-			srand((unsigned)time(&t));
-			API.Move(100 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed,
-				atan2(dy, dx) + rand());
+			srand((unsigned)time(&t) + sx + sy + API.GetSelfInfo()->speed);
+			API.Move(150 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
 		}
 	}
 	else
@@ -267,6 +281,7 @@ void Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 			j++;
 		}
 	}
+	return true;
 }
 
 template<typename IFooAPI>
@@ -288,22 +303,36 @@ bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
+bool Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 {
 	int minDistance = INT_MAX;
-	int minNum = 0;
+	int minNum = -1;
 	int Distance = INT_MAX;
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
-	for (int i = 0; i < Classroom.size(); i++)
+	if (!Classroom.empty())
 	{
-		Distance = WithWindows ? AStarWithWindows(Self, Classroom[i]).size() : AStarWithoutWindows(Self, Classroom[i]).size();
-		if (Distance < minDistance && Distance != 0)
+		for (int i = 0; i < Classroom.size(); i++)
 		{
-			minDistance = Distance;
-			minNum = i;
+			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
+			{
+				Distance = WithWindows ? AStarWithWindows(Self, Classroom[i]).size() : AStarWithoutWindows(Self, Classroom[i]).size();
+				if (Distance < minDistance && Distance != 0)
+				{
+					minDistance = Distance;
+					minNum = i;
+				}
+			}
 		}
 	}
-	MoveTo(Classroom[minNum], WithWindows);
+	if (minNum >= 0)
+	{
+		MoveTo(Classroom[minNum], WithWindows);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 template<typename IFooAPI>
@@ -311,47 +340,75 @@ bool Utilities<typename IFooAPI>::NearClassroom()
 {
 	for (int i = 0; i < Classroom.size(); i++)
 	{
-		if (NearPoint(Classroom[i], 2)) return true;
+		if (NearPoint(Classroom[i], 2)&& API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000) return true;
 	}
 	return false;
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
+bool Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
 {
 	int minDistance = INT_MAX;
-	int minNum = 0;
+	int minNum = -1;
 	int Distance = INT_MAX;
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
-	for (int i = 0; i < Gate.size(); i++)
+	if (!Gate.empty())
 	{
-		Distance = WithWindows ? AStarWithWindows(Self, Gate[i]).size() : AStarWithoutWindows(Self, Gate[i]).size();
-		if (Distance < minDistance && Distance != 0)
+		for (int i = 0; i < Gate.size(); i++)
 		{
-			minDistance = Distance;
-			minNum = i;
+			if (API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
+			{
+				Distance = WithWindows ? AStarWithWindows(Self, Gate[i]).size() : AStarWithoutWindows(Self, Gate[i]).size();
+				if (Distance < minDistance && Distance != 0)
+				{
+					minDistance = Distance;
+					minNum = i;
+				}
+			}
 		}
 	}
-	MoveTo(Gate[minNum], WithWindows);
+	if (minNum >= 0)
+	{
+		MoveTo(Gate[minNum], WithWindows);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
+bool Utilities<typename IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 {
 	int minDistance = INT_MAX;
-	int minNum = 0;
+	int minNum = -1;
 	int Distance = INT_MAX;
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
-	for (int i = 0; i < OpenGate.size(); i++)
+	if (!Gate.empty())
 	{
-		Distance = WithWindows ? AStarWithWindows(Self, OpenGate[i]).size() : AStarWithoutWindows(Self, OpenGate[i]).size();
-		if (Distance < minDistance && Distance != 0)
+		for (int i = 0; i < Gate.size(); i++)
 		{
-			minDistance = Distance;
-			minNum = i;
+			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
+			{
+				Distance = WithWindows ? AStarWithWindows(Self, OpenGate[i]).size() : AStarWithoutWindows(Self, OpenGate[i]).size();
+				if (Distance < minDistance && Distance != 0)
+				{
+					minDistance = Distance;
+					minNum = i;
+				}
+			}
 		}
 	}
-	MoveTo(OpenGate[minNum], WithWindows);
+	if (minNum >= 0)
+	{
+		MoveTo(Gate[minNum], WithWindows);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 template<typename IFooAPI>
@@ -359,7 +416,7 @@ bool Utilities<typename IFooAPI>::NearGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		if (NearPoint(Gate[i], 1)) return true;
+		if (NearPoint(Gate[i], 2)&& API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000) return true;
 	}
 	return false;
 }
@@ -367,30 +424,44 @@ bool Utilities<typename IFooAPI>::NearGate()
 template<typename IFooAPI>
 bool Utilities<typename IFooAPI>::NearOpenGate()
 {
-	for (int i = 0; i < OpenGate.size(); i++)
+	for (int i = 0; i < Gate.size(); i++)
 	{
-		if (NearPoint(OpenGate[i], 1)) return true;
+		if (NearPoint(Gate[i], 2)&& API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000) return true;
 	}
 	return false;
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
+bool Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
 {
 	int minDistance = INT_MAX;
-	int minNum = 0;
+	int minNum = -1;
 	int Distance = INT_MAX;
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
-	for (int i = 0; i < Chest.size(); i++)
+	if (!Chest.empty())
 	{
-		Distance = WithWindows ? AStarWithWindows(Self, Chest[i]).size() : AStarWithoutWindows(Self, Chest[i]).size();
-		if (Distance < minDistance && Distance != 0)
+		for (int i = 0; i < Chest.size(); i++)
 		{
-			minDistance = Distance;
-			minNum = i;
+			if (API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
+			{
+				Distance = WithWindows ? AStarWithWindows(Self, Chest[i]).size() : AStarWithoutWindows(Self, Chest[i]).size();
+				if (Distance < minDistance && Distance != 0)
+				{
+					minDistance = Distance;
+					minNum = i;
+				}
+			}
 		}
 	}
-	MoveTo(Chest[minNum], WithWindows);
+	if (minNum >= 0)
+	{
+		MoveTo(Chest[minNum], WithWindows);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 template<typename IFooAPI>
@@ -398,7 +469,7 @@ bool Utilities<typename IFooAPI>::NearChest()
 {
 	for (int i = 0; i < Chest.size(); i++)
 	{
-		if (NearPoint(Chest[i], 2)) return true;
+		if (NearPoint(Chest[i], 2)&& API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000) return true;
 	}
 	return false;
 }
@@ -416,7 +487,7 @@ int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
 {
-	UpdateClassroom();
+	//UpdateClassroom();
 	if (!NearClassroom())
 	{
 		MoveToNearestClassroom(WithWindows);
@@ -430,7 +501,7 @@ void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
 {
-	UpdateChest();
+	//UpdateChest();
 	if (!NearChest())
 	{
 		MoveToNearestChest(WithWindows);
@@ -444,8 +515,8 @@ void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectOpeningGate(bool WithWindows)
 {
-	UpdateGate();
-	if (!NearGate())
+	//UpdateGate();
+	if (!NearGate() && !NearOpenGate())
 	{
 		MoveToNearestGate(WithWindows);
 	}
@@ -458,7 +529,7 @@ void Utilities<typename IFooAPI>::DirectOpeningGate(bool WithWindows)
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectGraduate(bool WithWindows)
 {
-	UpdateGate();
+	//UpdateGate();
 	if (!NearOpenGate())
 	{
 		MoveToNearestOpenGate(WithWindows);
