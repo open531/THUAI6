@@ -112,94 +112,94 @@ void Utilities<IFooAPI>::AutoUpdate()
 	for (auto it : Classroom) cntFinishedClassroom += ClassroomState[it.x][it.y];
 }
 
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::UpdateClassroom()
-{
-	int Size = Classroom.size();
-	if (Size)
-	{
-		for (int i = 0; i < Size; i++)
-		{
-			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) >= 10000000)
-			{
-				Map[Classroom[i].x][Classroom[i].y] = 2U;
-				Classroom.erase(Classroom.begin() + i);
-				i--; Size--;
-			}
-		}
-	}
-}
+//template<typename IFooAPI>
+//void Utilities<typename IFooAPI>::UpdateClassroom()
+//{
+//	int Size = Classroom.size();
+//	if (Size)
+//	{
+//		for (int i = 0; i < Size; i++)
+//		{
+//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) >= 10000000)
+//			{
+//				Map[Classroom[i].x][Classroom[i].y] = 2U;
+//				Classroom.erase(Classroom.begin() + i);
+//				i--; Size--;
+//			}
+//		}
+//	}
+//}
 
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::UpdateGate()
-{
-	//int HiddenGateSize = HiddenGate.size();
-	//if (HiddenGateSize)
-	//{
-	//	for (int i = 0; i < HiddenGateSize; i++)
-	//	{
-	//		if (API.GetHiddenGateState(HiddenGate[i].x, HiddenGate[i].y) == THUAI6::HiddenGateState::Opened)
-	//		{
-	//			Map[HiddenGate[i].x][HiddenGate[i].y] = 5U;
-	//			OpenGate.emplace_back(Point(HiddenGate[i].x, HiddenGate[i].y));
-	//			HiddenGate.erase(HiddenGate.begin() + i);
-	//			i--; HiddenGateSize--;
-	//		}
-	//	}
-	//}
-	int GateSize = Gate.size();
-	if (GateSize)
-	{
-		for (int i = 0; i < GateSize; i++)
-		{
-			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
-			{
-				//Map[Gate[i].x][Gate[i].y] = 12U;
-				//OpenGate.emplace_back(Point(Gate[i].x, Gate[i].y));
-				//Gate.erase(Gate.begin() + i);
-				//i--; GateSize--;
-			}
-		}
-	}
-}
+//template<typename IFooAPI>
+//void Utilities<typename IFooAPI>::UpdateGate()
+//{
+//	int HiddenGateSize = HiddenGate.size();
+//	if (HiddenGateSize)
+//	{
+//		for (int i = 0; i < HiddenGateSize; i++)
+//		{
+//			if (API.GetHiddenGateState(HiddenGate[i].x, HiddenGate[i].y) == THUAI6::HiddenGateState::Opened)
+//			{
+//				Map[HiddenGate[i].x][HiddenGate[i].y] = 5U;
+//				OpenGate.emplace_back(Point(HiddenGate[i].x, HiddenGate[i].y));
+//				HiddenGate.erase(HiddenGate.begin() + i);
+//				i--; HiddenGateSize--;
+//			}
+//		}
+//	}
+//	int GateSize = Gate.size();
+//	if (GateSize)
+//	{
+//		for (int i = 0; i < GateSize; i++)
+//		{
+//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
+//			{
+//				Map[Gate[i].x][Gate[i].y] = 12U;
+//				OpenGate.emplace_back(Point(Gate[i].x, Gate[i].y));
+//				Gate.erase(Gate.begin() + i);
+//				i--; GateSize--;
+//			}
+//		}
+//	}
+//}
 
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::UpdateChest()
-{
-	int Size = Chest.size();
-	if (Size)
-	{
-		for (int i = 0; i < Size; i++)
-		{
-			if (API.GetChestProgress(Chest[i].x, Chest[i].y) >= 10000000)
-			{
-				Map[Chest[i].x][Chest[i].y] = 2U;
-				Chest.erase(Chest.begin() + i);
-				i--; Size--;
-			}
-		}
-	}
-}
+//template<typename IFooAPI>
+//void Utilities<typename IFooAPI>::UpdateChest()
+//{
+//	int Size = Chest.size();
+//	if (Size)
+//	{
+//		for (int i = 0; i < Size; i++)
+//		{
+//			if (API.GetChestProgress(Chest[i].x, Chest[i].y) >= 10000000)
+//			{
+//				Map[Chest[i].x][Chest[i].y] = 2U;
+//				Chest.erase(Chest.begin() + i);
+//				i--; Size--;
+//			}
+//		}
+//	}
+//}
 
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::UpdateDoor()
-{
-	int Size = Door.size();
-	if (Size)
-	{
-		for (int i = 0; i < Size; i++)
-		{
-			if (API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
-			{
-				Access[Door[i].x][Door[i].y] = 2U;
-			}
-			if (!API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
-			{
-				Access[Door[i].x][Door[i].y] = 0U;
-			}
-		}
-	}
-}
+//template<typename IFooAPI>
+//void Utilities<typename IFooAPI>::UpdateDoor()
+//{
+//	int Size = Door.size();
+//	if (Size)
+//	{
+//		for (int i = 0; i < Size; i++)
+//		{
+//			if (API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
+//			{
+//				Access[Door[i].x][Door[i].y] = 2U;
+//			}
+//			if (!API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
+//			{
+//				Access[Door[i].x][Door[i].y] = 0U;
+//			}
+//		}
+//	}
+//}
 
 template<typename IFooAPI>
 bool Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
@@ -340,7 +340,7 @@ bool Utilities<typename IFooAPI>::NearClassroom()
 {
 	for (int i = 0; i < Classroom.size(); i++)
 	{
-		if (NearPoint(Classroom[i], 2)&& API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000) return true;
+		if (NearPoint(Classroom[i], 2) && API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000) return true;
 	}
 	return false;
 }
@@ -416,7 +416,7 @@ bool Utilities<typename IFooAPI>::NearGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		if (NearPoint(Gate[i], 2)&& API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000) return true;
+		if (NearPoint(Gate[i], 2) && API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000) return true;
 	}
 	return false;
 }
@@ -426,7 +426,7 @@ bool Utilities<typename IFooAPI>::NearOpenGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		if (NearPoint(Gate[i], 2)&& API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000) return true;
+		if (NearPoint(Gate[i], 2) && API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000) return true;
 	}
 	return false;
 }
@@ -469,7 +469,7 @@ bool Utilities<typename IFooAPI>::NearChest()
 {
 	for (int i = 0; i < Chest.size(); i++)
 	{
-		if (NearPoint(Chest[i], 2)&& API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000) return true;
+		if (NearPoint(Chest[i], 2) && API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000) return true;
 	}
 	return false;
 }
