@@ -51,20 +51,18 @@ void Utilities<IFooAPI>::InitMap(IStudentAPI& api)
 }
 
 template<typename IFooAPI>
-Utilities<IFooAPI>::Utilities(IFooAPI api) : API(api), cntFinishedClassroom(0), LastUpdateTime(0)
+Utilities<IFooAPI>::Utilities(IFooAPI api, Pigeon& gugu_) : API(api), gugu(gugu_), LastAutoUpdateFrame(0)
 {
-	memset(ClassroomState, 0, sizeof(ClassroomState));
-	memset(ChestState, 0, sizeof(ChestState));
 	InitMap(api);
 }
 
 template<typename IFooAPI>
 void Utilities<IFooAPI>::AutoUpdate()
 {
-	auto msec = std::chrono::duration_cast<std::chrono::milliseconds> (std::chrono::system_clock::now().time_since_epoch()).count();
-	if (msec - LastUpdateTime < UpdateInterval) return;
+	int cntframe = API.GetFrameCount();
+	if (cntframe - LastAutoUpdateFrame < UpdateInterval) return;
 	std::shared_ptr<const THUAI6::Student> selfinfo = API.GetSelfInfo();
-	LastUpdateTime = msec;
+	LastAutoUpdateFrame = cntframe;
 	for (auto it : Door)
 	{
 		if (IsViewable(Point(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
@@ -82,7 +80,10 @@ void Utilities<IFooAPI>::AutoUpdate()
 			}
 			if (newDoor)
 			{
-				// TODO: 广播门的最新信息
+				gugu.sendMapUpdate(0, THUAI6::PlaceType::Door3, it.x, it.y, checkopen?2U:0U); // 这里没有区分Door3, Door5, Door6的区别，可能要改
+				gugu.sendMapUpdate(1, THUAI6::PlaceType::Door3, it.x, it.y, checkopen?2U:0U);
+				gugu.sendMapUpdate(2, THUAI6::PlaceType::Door3, it.x, it.y, checkopen?2U:0U);
+				gugu.sendMapUpdate(3, THUAI6::PlaceType::Door3, it.x, it.y, checkopen?2U:0U);
 			}
 		}
 	}
@@ -90,10 +91,13 @@ void Utilities<IFooAPI>::AutoUpdate()
 	{
 		if (IsViewable(Point(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
 		{
-			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && !ClassroomState[it.x][it.y])
+			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
 			{
-				ClassroomState[it.x][it.y] = true;
-				// TODO: 广播作业写完的信息
+				ProgressMem[it.x][it.y] = 10000000;
+				gugu.sendMapUpdate(0, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				gugu.sendMapUpdate(1, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				gugu.sendMapUpdate(2, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				gugu.sendMapUpdate(3, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
 			}
 		}
 	}
@@ -101,15 +105,30 @@ void Utilities<IFooAPI>::AutoUpdate()
 	{
 		if (IsViewable(Point(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
 		{
-			if (API.GetChestProgress(it.x, it.y) >= 10000000 && !ChestState[it.x][it.y])
+			if (API.GetChestProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
 			{
-				ChestState[it.x][it.y] = true;
-				// TODO: 广播箱子开启的信息
+				ProgressMem[it.x][it.y] = 10000000;
+				gugu.sendMapUpdate(0, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				gugu.sendMapUpdate(1, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				gugu.sendMapUpdate(2, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				gugu.sendMapUpdate(3, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
 			}
 		}
 	}
-	cntFinishedClassroom = 0;
-	for (auto it : Classroom) cntFinishedClassroom += ClassroomState[it.x][it.y];
+	for (auto it : Gate)
+	{
+		if (IsViewable(Point(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetGateProgress(it.x, it.y) >= 18000 && ProgressMem[it.x][it.y] < 18000)
+			{
+				ProgressMem[it.x][it.y] = 18000;
+				gugu.sendMapUpdate(0, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				gugu.sendMapUpdate(1, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				gugu.sendMapUpdate(2, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				gugu.sendMapUpdate(3, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+			}
+		}
+	}
 }
 
 //template<typename IFooAPI>
@@ -313,7 +332,8 @@ bool Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 	{
 		for (int i = 0; i < Classroom.size(); i++)
 		{
-			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
+//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
+			if (GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
 			{
 				Distance = WithWindows ? AStarWithWindows(Self, Classroom[i]).size() : AStarWithoutWindows(Self, Classroom[i]).size();
 				if (Distance < minDistance && Distance != 0)
@@ -356,7 +376,8 @@ bool Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
 	{
 		for (int i = 0; i < Gate.size(); i++)
 		{
-			if (API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
+//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
+			if (GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
 			{
 				Distance = WithWindows ? AStarWithWindows(Self, Gate[i]).size() : AStarWithoutWindows(Self, Gate[i]).size();
 				if (Distance < minDistance && Distance != 0)
@@ -389,7 +410,8 @@ bool Utilities<typename IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 	{
 		for (int i = 0; i < Gate.size(); i++)
 		{
-			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
+//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
+			if (GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			{
 				Distance = WithWindows ? AStarWithWindows(Self, OpenGate[i]).size() : AStarWithoutWindows(Self, OpenGate[i]).size();
 				if (Distance < minDistance && Distance != 0)
@@ -442,7 +464,8 @@ bool Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
 	{
 		for (int i = 0; i < Chest.size(); i++)
 		{
-			if (API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
+//			if (API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
+			if (GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
 			{
 				Distance = WithWindows ? AStarWithWindows(Self, Chest[i]).size() : AStarWithoutWindows(Self, Chest[i]).size();
 				if (Distance < minDistance && Distance != 0)
@@ -543,13 +566,23 @@ void Utilities<typename IFooAPI>::DirectGraduate(bool WithWindows)
 template<typename IFooAPI>
 int Utilities<typename IFooAPI>::CountFinishedClassroom() const
 {
-	return cntFinishedClassroom;
+	int cnt = 0;
+	for (auto i : Classroom)
+	{
+		if (ProgressMem[i.x][i.y] >= 10000000) cnt++;
+	}
+	return cnt;
 }
 
 template<typename IFooAPI>
 int Utilities<typename IFooAPI>::CountNonemptyChest() const
 {
-	return Chest.size();
+	int cnt = 0;
+	for (auto i : Chest)
+	{
+		if (ProgressMem[i.x][i.y] < 10000000) cnt++;
+	}
+	return cnt;
 }
 
 template<typename IFooAPI>
@@ -641,4 +674,76 @@ bool Utilities<typename IFooAPI>::IsViewable(Point Src, Point Dest, int ViewRang
 	}
 	else
 		return false;
+}
+
+template<typename IFooAPI>
+int Utilities<IFooAPI>::GetChestProgress(int cellx, int celly)
+{
+	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange)) return API.GetChestProgress(cellx, celly);
+	else return ProgressMem[cellx][celly];
+}
+
+template<typename IFooAPI>
+int Utilities<IFooAPI>::GetGateProgress(int cellx, int celly)
+{
+	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange)) return API.GetGateProgress(cellx, celly);
+	else return ProgressMem[cellx][celly];
+}
+
+template<typename IFooAPI>
+int Utilities<IFooAPI>::GetClassroomProgress(int cellx, int celly)
+{
+	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange)) return API.GetClassroomProgress(cellx, celly);
+	else return ProgressMem[cellx][celly];
+}
+
+template<typename IFooAPI>
+int Utilities<IFooAPI>::GetDoorProgress(int cellx, int celly)
+{
+	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange)) return API.GetDoorProgress(cellx, celly);
+	else return ProgressMem[cellx][celly];
+}
+
+template<typename IFooAPI>
+int Utilities<IFooAPI>::GetChestProgress(Point cell) const
+{
+	return GetChestProgress(cell.x, cell.y);
+}
+
+template<typename IFooAPI>
+int Utilities<IFooAPI>::GetGateProgress(Point cell) const
+{
+	return GetGateProgress(cell.x, cell.y);
+}
+
+template<typename IFooAPI>
+int Utilities<IFooAPI>::GetClassroomProgress(Point cell) const
+{
+	return GetClassroomProgress(cell.x, cell.y);
+}
+
+template<typename IFooAPI>
+int Utilities<IFooAPI>::GetDoorProgress(Point cell) const
+{
+	return GetDoorProgress(cell.x, cell.y);
+}
+
+template<typename IFooAPI>
+void Utilities<IFooAPI>::Update(MapUpdateInfo upinfo, int t_)
+{
+	if (t_ < LastUpdateFrame[upinfo.x][upinfo.y]) return;
+	LastUpdateFrame[upinfo.x][upinfo.y] = t_;
+	if (upinfo.type == THUAI6::PlaceType::Chest
+		|| upinfo.type == THUAI6::PlaceType::ClassRoom
+		|| upinfo.type == THUAI6::PlaceType::Gate
+		|| upinfo.type == THUAI6::PlaceType::HiddenGate)
+	{
+		ProgressMem[upinfo.x][upinfo.y] = upinfo.val;
+	}
+	else if (upinfo.type == THUAI6::PlaceType::Door3
+		|| upinfo.type == THUAI6::PlaceType::Door5
+		|| upinfo.type == THUAI6::PlaceType::Door6)
+	{
+		Access[upinfo.x][upinfo.y] = upinfo.val;
+	}
 }

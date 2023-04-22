@@ -1,4 +1,5 @@
 #include "Pigeon.h"
+
 #include<cstdarg>
 
 Encoder::Encoder() :Pointer(0)
@@ -33,13 +34,14 @@ Pigeon::Pigeon(IStudentAPI& api) : API(api) {}
 
 void Pigeon::sendInfo(int64_t dest, std::string info)
 {
-	API.SendMessage(dest, info);
+	if (dest != API.GetSelfInfo()->guid) API.SendMessage(dest, info);
 }
 
 void Pigeon::sendMapUpdate(int64_t dest, MapUpdateInfo muinfo)
 {
 	Encoder enc;
 	enc.SetHeader(MapUpdate);
+	enc.PushInfo(API.GetFrameCount());
 	enc.PushInfo(muinfo);
 	sendInfo(dest, enc.ToString());
 }
@@ -49,12 +51,12 @@ void Pigeon::sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, i
 	sendMapUpdate(dest, muinfo);
 }
 
-MapUpdateInfo Pigeon::receiveMapUpdate()
+std::pair<int, MapUpdateInfo> Pigeon::receiveMapUpdate()
 {
 	Decoder dec(buf);
 	char header = dec.ReadInfo<char>();
 	assert(header == MapUpdate);
-	return dec.ReadInfo<MapUpdateInfo>();
+	return std::make_pair<int, MapUpdateInfo>(dec.ReadInfo<int>(), dec.ReadInfo<MapUpdateInfo>());
 }
 
 int Pigeon::receiveMessage()
@@ -71,17 +73,18 @@ void Pigeon::sendTrickerInfo(int64_t dest, TrickerInfo_t tricker)
 {
 	Encoder enc;
 	enc.SetHeader(TrickerInfo);
+	enc.PushInfo(API.GetFrameCount());
 	enc.PushInfo<std::vector<std::shared_ptr<const THUAI6::Tricker>>>(tricker);
 	sendInfo(dest, enc.ToString());
 
 }
 
-TrickerInfo_t Pigeon::receiveTrickerInfo()
+std::pair<int, TrickerInfo_t> Pigeon::receiveTrickerInfo()
 {
 	Decoder dec(buf);
 	char header = dec.ReadInfo<char>();
 	assert(header == TrickerInfo);
-	return dec.ReadInfo<TrickerInfo_t>();
+	return std::make_pair<int, TrickerInfo_t>(dec.ReadInfo<int>(), dec.ReadInfo<TrickerInfo_t>());
 }
 //捣蛋鬼信息的编码和解码函数
 std::string sendOneselfMessage(std::shared_ptr<const THUAI6::Student> self)

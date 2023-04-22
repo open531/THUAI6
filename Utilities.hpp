@@ -3,6 +3,7 @@
 
 #include "API.h"
 #include "AI.h"
+#include "Pigeon.h"
 #include<stack>
 
 class Point
@@ -33,7 +34,11 @@ public:
 template<typename IFooAPI>
 class Utilities
 {
-	//private:
+private:
+	int ProgressMem[50][50];
+	int LastUpdateFrame[50][50];
+	int LastAutoUpdateFrame;
+	Pigeon& gugu;
 public:
 	unsigned char Map[50][50];
 	unsigned char Access[50][50];
@@ -55,16 +60,14 @@ public:
 	const IFooAPI& API;
 	Point TEMP;
 	std::vector<THUAI6::PropType> Inventory;
-	int cntFinishedClassroom, LastUpdateTime;
-	const int UpdateInterval = 1000;
-	bool ClassroomState[50][50], ChestState[50][50];
+	const int UpdateInterval = 1;
 
 	void InitMap(IStudentAPI& api);
 
 public:
-	Utilities(IFooAPI api);
+	Utilities(IFooAPI api, Pigeon& gugu_);
 
-	// void Update(Point Door, bool State);			//更新地图信息，比如门和隐藏校门，需要约定info的格式
+	void Update(MapUpdateInfo upinfo, int t_);			//更新地图信息，比如门和隐藏校门，需要约定info的格式
 	//void UpdateClassroom();
 	//void UpdateGate();
 	//void UpdateChest();
@@ -95,6 +98,15 @@ public:
 	int CountHiddenGate() const;
 	int CountClosedGate() const;
 	int CountOpenGate() const;
+
+	int GetChestProgress(int cellx, int celly);
+	int GetGateProgress(int cellx, int celly);
+	int GetClassroomProgress(int cellx, int celly);
+	int GetDoorProgress(int cellx, int celly);
+	int GetChestProgress(Point cell) const;
+	int GetGateProgress(Point cell) const;
+	int GetClassroomProgress(Point cell) const;
+	int GetDoorProgress(Point cell) const;
 
 	void AssassinDefaultAttack(int rank);	// 刺客普通攻击
 	bool AssassinDefaultAttackOver(int rank);

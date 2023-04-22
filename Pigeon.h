@@ -3,7 +3,6 @@
 
 #include "API.h"
 #include "AI.h"
-#include "Utilities.hpp"
 #include<queue>
 
 /* 信息协议
@@ -70,9 +69,11 @@ public:
 	void sendNeedHelp(std::shared_ptr<const THUAI6::Student> slf);
 
 	int receiveMessage(); // 返回接收到的信息类型
-	MapUpdateInfo receiveMapUpdate();
-	TrickerInfo_t receiveTrickerInfo();
-	NeedHelpInfo receiveNeedHelp();
+	std::pair<int, MapUpdateInfo> receiveMapUpdate();
+	std::pair<int, TrickerInfo_t> receiveTrickerInfo();
+	std::pair<int, NeedHelpInfo> receiveNeedHelp();
 };
+
+#include "Pigeon.hpp"
 
 #endif
