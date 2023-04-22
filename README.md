@@ -79,3 +79,4 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 ## Issues
 
 - 开启完校门的角色不会自己毕业，没有开启校门的角色反而能够顺利毕业。
+- 开启校门后没有直接毕业，而是折返，同时会报错。
