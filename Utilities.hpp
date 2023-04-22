@@ -9,8 +9,8 @@ class Point
 {
 public:
 	Point(int x_ = 0, int y_ = 0) :x(x_), y(y_) {}
-//	Point ToAcc() { return Point(x * 1000 + 500, y * 1000 + 500); }
-//	Point ToNormal() { return Point(x / 1000, y / 1000); }
+	//	Point ToAcc() { return Point(x * 1000 + 500, y * 1000 + 500); }
+	//	Point ToNormal() { return Point(x / 1000, y / 1000); }
 	int x;
 	int y;
 };
@@ -33,7 +33,7 @@ public:
 template<typename IFooAPI>
 class Utilities
 {
-//private:
+	//private:
 public:
 	unsigned char Map[50][50];
 	unsigned char Access[50][50];
@@ -65,18 +65,18 @@ public:
 	Utilities(IFooAPI api);
 
 	// void Update(Point Door, bool State);			//更新地图信息，比如门和隐藏校门，需要约定info的格式
-	void UpdateClassroom();
-	void UpdateGate();
-	void UpdateChest();
-	void UpdateDoor();
+	//void UpdateClassroom();
+	//void UpdateGate();
+	//void UpdateChest();
+	//void UpdateDoor();
 	void AutoUpdate(); // TODO: 自动更新，检查附近的格子有没有和已知不一致的，如果有就更新并且广播
 	std::vector<THUAI6::PropType> GetInventory() { return Inventory; }	// 查看背包
 
-	void MoveTo(Point Dest, bool WithWindows);		// 往目的地动一动
-	void MoveToNearestClassroom(bool WithWindows);	// 往最近的作业的方向动一动
-	void MoveToNearestGate(bool WithWindows);		// 往最近的关闭的校门旁边动一动
-	void MoveToNearestOpenGate(bool WithWindows);	// 往最近的开启的校门旁边动一动
-	void MoveToNearestChest(bool WithWindows);		// 往最近的箱子的方向动一动
+	bool MoveTo(Point Dest, bool WithWindows);		// 往目的地动一动
+	bool MoveToNearestClassroom(bool WithWindows);	// 往最近的作业的方向动一动
+	bool MoveToNearestGate(bool WithWindows);		// 往最近的关闭的校门旁边动一动
+	bool MoveToNearestOpenGate(bool WithWindows);	// 往最近的开启的校门旁边动一动
+	bool MoveToNearestChest(bool WithWindows);		// 往最近的箱子的方向动一动
 	bool NearPoint(Point P, int level = 1);         // level=0判断当前是否在该格子上，1判断是否在格子上或周围4格，2判断是否在格子上或周围8格
 	bool NearClassroom();							// 已经在作业旁边了吗？
 	bool NearGate();								// 已经在关闭的校门旁边了吗？
