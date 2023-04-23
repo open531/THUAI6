@@ -39,14 +39,16 @@ std::vector<Node> Utilities<IFooAPI>::MakePath(std::array<std::array<Node, 50>, 
 
 		}
 		Path.push(map[x][y]);
-		while (!Path.empty()) {
+		while (!Path.empty())
+		{
 			Node top = Path.top();
 			Path.pop();
 			UsablePath.emplace_back(top);
 		}
 		return UsablePath;
 	}
-	catch (const std::exception& e) {
+	catch (const std::exception& e)
+	{
 		std::cout << e.what() << std::endl;
 	}
 }
@@ -65,8 +67,10 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 	}
 	bool ClosedList[50][50];
 	std::array<std::array < Node, 50>, 50> AStarMap;
-	for (int x = 0; x < 50; x++) {
-		for (int y = 0; y < 50; y++) {
+	for (int x = 0; x < 50; x++)
+	{
+		for (int y = 0; y < 50; y++)
+		{
 			AStarMap[x][y].fCost = FLT_MAX;
 			AStarMap[x][y].gCost = FLT_MAX;
 			AStarMap[x][y].hCost = FLT_MAX;
@@ -87,15 +91,18 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 	std::vector<Node> OpenList;
 	OpenList.emplace_back(AStarMap[x][y]);
 	bool FoundDest = false;
-	while (!OpenList.empty() && OpenList.size() < 50 * 50) {
+	while (!OpenList.empty() && OpenList.size() < 50 * 50)
+	{
 		Node node;
-		do {
+		do
+		{
 			float temp = FLT_MAX;
 			std::vector<Node>::iterator itNode;
-			for (std::vector<Node>::iterator it = OpenList.begin();
-				it != OpenList.end(); it = next(it)) {
+			for (std::vector<Node>::iterator it = OpenList.begin(); it != OpenList.end(); it = next(it))
+			{
 				Node n = *it;
-				if (n.fCost < temp) {
+				if (n.fCost < temp)
+				{
 					temp = n.fCost;
 					itNode = it;
 				}
@@ -106,11 +113,15 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 		x = node.x;
 		y = node.y;
 		ClosedList[x][y] = true;
-		for (int newX = -1; newX <= 1; newX++) {
-			for (int newY = -1; newY <= 1; newY++) {
+		for (int newX = -1; newX <= 1; newX++)
+		{
+			for (int newY = -1; newY <= 1; newY++)
+			{
 				if (newX != 0 && newY != 0) continue;
 				double gNew, hNew, fNew;
-				if (IsValidWithoutWindows(x + newX, y + newY) || IsDestination(x + newX, y + newY, dest)) {
+				if (IsValidWithoutWindows(x + newX, y + newY) || 
+					IsDestination(x + newX, y + newY, dest))
+				{
 					if (IsDestination(x + newX, y + newY, dest))
 					{
 						AStarMap[x + newX][y + newY].parentX = x;
@@ -138,7 +149,8 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 			}
 		}
 	}
-	if (FoundDest == false) {
+	if (FoundDest == false)
+	{
 		return empty;
 	}
 }
@@ -158,8 +170,10 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithWindows(Node src, Node dest)
 	}
 	bool ClosedList[50][50];
 	std::array<std::array < Node, 50>, 50> AStarMap;
-	for (int x = 0; x < 50; x++) {
-		for (int y = 0; y < 50; y++) {
+	for (int x = 0; x < 50; x++)
+	{
+		for (int y = 0; y < 50; y++)
+		{
 			AStarMap[x][y].fCost = FLT_MAX;
 			AStarMap[x][y].gCost = FLT_MAX;
 			AStarMap[x][y].hCost = FLT_MAX;
@@ -180,15 +194,19 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithWindows(Node src, Node dest)
 	std::vector<Node> OpenList;
 	OpenList.emplace_back(AStarMap[x][y]);
 	bool FoundDest = false;
-	while (!OpenList.empty() && OpenList.size() < 50 * 50) {
+	while (!OpenList.empty() && OpenList.size() < 50 * 50)
+	{
 		Node node;
-		do {
+		do
+		{
 			float temp = FLT_MAX;
 			std::vector<Node>::iterator itNode;
 			for (std::vector<Node>::iterator it = OpenList.begin();
-				it != OpenList.end(); it = next(it)) {
+				it != OpenList.end(); it = next(it))
+			{
 				Node n = *it;
-				if (n.fCost < temp) {
+				if (n.fCost < temp)
+				{
 					temp = n.fCost;
 					itNode = it;
 				}
@@ -199,11 +217,14 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithWindows(Node src, Node dest)
 		x = node.x;
 		y = node.y;
 		ClosedList[x][y] = true;
-		for (int newX = -1; newX <= 1; newX++) {
-			for (int newY = -1; newY <= 1; newY++) {
+		for (int newX = -1; newX <= 1; newX++)
+		{
+			for (int newY = -1; newY <= 1; newY++)
+			{
 				if (newX != 0 && newY != 0) continue;
 				double gNew, hNew, fNew;
-				if (IsValidWithWindows(x + newX, y + newY) || IsDestination(x + newX, y + newY, dest)) {
+				if (IsValidWithWindows(x + newX, y + newY) || IsDestination(x + newX, y + newY, dest))
+				{
 					if (IsDestination(x + newX, y + newY, dest))
 					{
 						AStarMap[x + newX][y + newY].parentX = x;
@@ -231,7 +252,8 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithWindows(Node src, Node dest)
 			}
 		}
 	}
-	if (FoundDest == false) {
+	if (FoundDest == false)
+	{
 		return empty;
 	}
 }

@@ -249,7 +249,26 @@ bool Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	std::vector<Node> UsablePath;
 	if (WithWindows) UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
 	else UsablePath = AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
-	if (UsablePath.size() < 2) return false;
+	if (UsablePath.size() < 2)
+	{
+		for (int i = 0, j = 0; i < API.GetStudents().size(); i++)
+		{
+			if ((API.GetStudents()[i]->x / 1000 != sx / 1000) && (API.GetStudents()[i]->y / 1000 != sy / 1000))
+			{
+				Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = AccessTempS[j];
+				j++;
+			}
+		}
+		for (int i = 0, j = 0; i < API.GetTrickers().size(); i++)
+		{
+			if ((API.GetTrickers()[i]->x / 1000 != sx / 1000) && (API.GetTrickers()[i]->y / 1000 != sy / 1000))
+			{
+				Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = AccessTempT[i];
+				j++;
+			}
+		}
+		return false;
+	}
 	int tx, ty;
 	if (UsablePath.size() >= 3
 		&& IsValidWithoutWindows(sx / 1000, sy / 1000)
