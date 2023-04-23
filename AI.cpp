@@ -58,29 +58,24 @@ sPicking 去捡道具
 
 void AI::play(IStudentAPI& api)
 {
-	static std::vector<unsigned char> Priority(9, 0U);
+	static std::vector<unsigned char> Priority = { 0,1,2,3,4,5,6,7,8 };
 	static Pigeon gugu(api);
 	static Utilities<IStudentAPI&> Helper(api, gugu);
 	static int CurrentState = sDefault;
 
-	int MessageT;
-	while ((MessageT = gugu.receiveMessage()) != NoMessage)
-	{
-		if (MessageT == MapUpdate)
-		{
-			auto ms = gugu.receiveMapUpdate();
-			Helper.Update(ms.second, ms.first);
-		}
-	}
 	Helper.AutoUpdate();
-
 	if (Helper.Classroom.size() < 3)
 	{
 		if (Helper.OpenGate.empty()) Helper.DirectOpeningGate(true);
-		if (Helper.OpenGate.size()) 
+		if (Helper.OpenGate.size())
 		{
-			if (Helper.Chest.size())Helper.DirectOpeningChest(true);
-			if (Helper.Chest.empty())Helper.DirectGraduate(true);
+			if (Helper.Chest.size() >= 3)
+			{
+				Helper.DirectOpeningChest(true);
+				Helper.DirectProp(Priority, 1, 1, true);
+			}
+			else
+				Helper.DirectGraduate(true);
 		}
 	}
 	else Helper.DirectLearning(true);
