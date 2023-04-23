@@ -2,7 +2,7 @@
 
 把.h和.hpp添加到CAPI.sln的头文件里，把.cpp添加到源文件里。
 
-## Utilities
+## 1 Utilities
 
 `Utilities.hpp`中定义类Utilities，用于实现移动、攻击等操作，以及提供若干实用函数
 
@@ -65,7 +65,7 @@
 
 `UtilitiesBasic.hpp`中实现基本移动和有目的的移动，以及其他零散的方法
 
-## Pigeon
+## 2. Pigeon
 
 `Pigeon.h`通信
 
@@ -96,14 +96,14 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 以下接收具体信息的函数中，返回值的第一个值是信息发送时的帧数（等价于时间）。
 
-- [x] `int receiveMessage(); // 返回接收到的信息类型
-- [x] `std::pair<int, MapUpdateInfo> receiveMapUpdate();
-- [ ] `std::pair<int, TrickerInfo_t> receiveTrickerInfo();
-- [ ] `std::pair<int, NeedHelpInfo> receiveNeedHelp();
+- [x] `int receiveMessage();` // 返回接收到的信息类型
+- [x] `std::pair<int, MapUpdateInfo> receiveMapUpdate();`
+- [ ] `std::pair<int, TrickerInfo_t> receiveTrickerInfo();`
+- [ ] `std::pair<int, NeedHelpInfo> receiveNeedHelp();`
 
 `Pigeon.hpp`实现通信
 
-## 建议使用的策略编写方法
+## 3. 建议使用的策略编写方法
 
 首先定义角色可能处于的状态（已经定义了一些）。
 
@@ -111,7 +111,7 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 具体实现上，使用一个`switch-case`进行不同状态的处理。
 
-## 执行顺序
+## 4. 执行顺序
 
 每一帧应当按照以下顺序执行：
 
@@ -119,13 +119,13 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 - 使`Pigeon`接收信息，并对`Pigeon`接收的信息进行处理，直到没有新信息，此时可以依据接收的信息进行状态变更的准备；
 - 决定变更状态或维持状态，并执行状态对应的行为。
 
-## TODO List
+## 5. TODO List
 
 - 防止两个角色动作冲突（同地点学习、开箱），需要通信实现
 - 防止两个角色相撞
 - 建议使用继承类分别编写不同角色的技能使用
 
-## Issues
+## 6. Issues
 
 - 开启完校门的角色不会自己毕业，没有开启校门的角色反而能够顺利毕业。
 - 开启校门后没有直接毕业，而是折返，同时会报错。
