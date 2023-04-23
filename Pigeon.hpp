@@ -9,8 +9,15 @@ Encoder::Encoder() :Pointer(0)
 template<typename T>
 void Encoder::PushInfo(T info)
 {
-	memcpy(msg, &info, sizeof(T));
-	Pointer += sizeof(T);
+	size_t t = sizeof(T);
+	void* ptr = & info;
+	for (size_t i = 0; i < t; i++)
+	{
+		msg[Pointer] = ((*((unsigned char*)ptr + i)) >> 4);
+		Pointer++;
+		msg[Pointer] = ((*((unsigned char*)ptr + i)) & 0x0f);
+		Pointer++;
+	}
 }
 void Encoder::SetHeader(char header)
 {
@@ -25,9 +32,15 @@ Decoder::Decoder(std::string code) :msg(code), Pointer(0) {}
 template<typename T>
 T Decoder::ReadInfo()
 {
-	T* ptr = (T*)(msg.c_str() + Pointer);
-	Pointer += sizeof(T);
-	return *ptr;
+	T obj;
+	void* ptr = &obj;
+	size_t t = sizeof(T);
+	for (size_t i = 0; i < t; i++)
+	{
+		*((unsigned char*)ptr + i) = (((unsigned char)*(msg.c_str() + Pointer)) << 4) | (((unsigned char)*(msg.c_str() + Pointer + 1)));
+		Pointer += 2;
+	}
+	return obj;
 }
 
 Pigeon::Pigeon(IStudentAPI& api) : API(api) {}
@@ -63,7 +76,7 @@ int Pigeon::receiveMessage()
 {
 	if (API.HaveMessage())
 	{
-		buf = API.GetMessage().second; // ÊÇË­·¢À´µÄºÃÏñ²»Ì«ÖØÒª£¬Ö»È¡ĞÅÏ¢ÄÚÈİ
+		buf = API.GetMessage().second; // æ˜¯è°å‘æ¥çš„å¥½åƒä¸å¤ªé‡è¦ï¼Œåªå–ä¿¡æ¯å†…å®¹
 		return buf[0];
 	}
 	else return NoMessage;
@@ -86,7 +99,7 @@ std::pair<int, TrickerInfo_t> Pigeon::receiveTrickerInfo()
 	assert(header == TrickerInfo);
 	return std::make_pair<int, TrickerInfo_t>(dec.ReadInfo<int>(), dec.ReadInfo<TrickerInfo_t>());
 }
-//µ·µ°¹íĞÅÏ¢µÄ±àÂëºÍ½âÂëº¯Êı
+//æ£è›‹é¬¼ä¿¡æ¯çš„ç¼–ç å’Œè§£ç å‡½æ•°
 std::string sendOneselfMessage(std::shared_ptr<const THUAI6::Student> self)
 {
 	Encoder enc;
@@ -104,7 +117,7 @@ std::shared_ptr<const THUAI6::Student> receiveOneselfMessage(std::string info)
 	return p1;
 
 }
-//×Ô¼ºĞÅÏ¢µÄ±àÂëºÍ½âÂëº¯Êı
+//è‡ªå·±ä¿¡æ¯çš„ç¼–ç å’Œè§£ç å‡½æ•°
 std::string sendPropsMessage(std::vector<std::shared_ptr<const THUAI6::Prop>> prop)
 {
 	Encoder enc;
@@ -121,7 +134,7 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receivePropsMessage(std::string
 	std::vector<std::shared_ptr<const THUAI6::Prop>> p1 = dec.ReadInfo<std::vector<std::shared_ptr<const THUAI6::Prop>>>();
 	return p1;
 }
-//µÀ¾ßĞÅÏ¢µÄ±àÂëºÍ½âÂëº¯Êı
+//é“å…·ä¿¡æ¯çš„ç¼–ç å’Œè§£ç å‡½æ•°
 //void send_Door(IStudentAPI& api1, int64_t playerID)
 //{
 //	int i, j, n = 0;
@@ -145,50 +158,50 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receivePropsMessage(std::string
 //	api1.SendMessage(playerID, info_Door);
 //
 //}
-//·¢ËÍÃÅĞÅÏ¢µÄº¯Êı
+//å‘é€é—¨ä¿¡æ¯çš„å‡½æ•°
 //void send_Tricker(IStudentAPI& api1, int64_t playerID)
 //{
 //	std::string info_Tricker = sendTrickerMessage(api1.GetTrickers());
 //	api1.SendMessage(playerID, info_Tricker);
 //}
-//·¢ËÍµ·µ°¹íĞÅÏ¢µÄº¯Êı
+//å‘é€æ£è›‹é¬¼ä¿¡æ¯çš„å‡½æ•°
 void send_Oneself(IStudentAPI& api1, int64_t playerID)
 {
 	std::string info_Oneself = sendOneselfMessage(api1.GetSelfInfo());
 	api1.SendMessage(playerID, info_Oneself);
 }
-//·¢ËÍ×Ô¼ºĞÅÏ¢µÄº¯Êı
+//å‘é€è‡ªå·±ä¿¡æ¯çš„å‡½æ•°
 void send_Prop(IStudentAPI& api1, int64_t playerID)
 {
 	std::string info_Prop = sendPropsMessage(api1.GetProps());
 	api1.SendMessage(playerID, info_Prop);
 }
-//·¢ËÍµÀ¾ßĞÅÏ¢µÄº¯Êı
+//å‘é€é“å…·ä¿¡æ¯çš„å‡½æ•°
 //std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> receive_Door(IStudentAPI& api2)
 //{
 //	std::string info_Door = api2.GetMessage().second;
 //	std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> p1 = receiveDoorMessage(info_Door);
 //	return p1;
 //}
-//½ÓÊÕÃÅĞÅÏ¢µÄº¯Êı
+//æ¥æ”¶é—¨ä¿¡æ¯çš„å‡½æ•°
 //std::vector<std::shared_ptr<const THUAI6::Tricker>> receive_Tricker(IStudentAPI& api2)
 //{
 //	std::string info_Tricker = api2.GetMessage().second;
 //	std::vector<std::shared_ptr<const THUAI6::Tricker>> p1 = receiveTrickerMessage(info_Tricker);
 //	return p1;
 //}
-//½ÓÊÕµ·µ°¹íĞÅÏ¢µÄº¯Êı
+//æ¥æ”¶æ£è›‹é¬¼ä¿¡æ¯çš„å‡½æ•°
 std::shared_ptr<const THUAI6::Student> receive_Oneself(IStudentAPI& api2)
 {
 	std::string info_Oneself = api2.GetMessage().second;
 	std::shared_ptr<const THUAI6::Student> p1 = receiveOneselfMessage(info_Oneself);
 	return p1;
 }
-//½ÓÊÜ·¢ËÍÕß×ÔÉíĞÅÏ¢µÄº¯Êı
+//æ¥å—å‘é€è€…è‡ªèº«ä¿¡æ¯çš„å‡½æ•°
 std::vector<std::shared_ptr<const THUAI6::Prop>> receive_Prop(IStudentAPI& api2)
 {
 	std::string info_Prop = api2.GetMessage().second;
 	std::vector<std::shared_ptr<const THUAI6::Prop>> p1 = receivePropsMessage(info_Prop);
 	return p1;
 }
-//½ÓÊÜµÀ¾ßĞÅÏ¢µÄº¯Êı
+//æ¥å—é“å…·ä¿¡æ¯çš„å‡½æ•°
