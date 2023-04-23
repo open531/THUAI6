@@ -13,9 +13,9 @@ void Encoder::PushInfo(T info)
 	void* ptr = & info;
 	for (size_t i = 0; i < t; i++)
 	{
-		msg[Pointer] = ((*((unsigned char*)ptr + i)) >> 4);
+		msg[Pointer] = ((*((unsigned char*)ptr + i)) >> 4) + 'a';
 		Pointer++;
-		msg[Pointer] = ((*((unsigned char*)ptr + i)) & 0x0f);
+		msg[Pointer] = ((*((unsigned char*)ptr + i)) & 0x0f) + 'a';
 		Pointer++;
 	}
 }
@@ -37,7 +37,7 @@ T Decoder::ReadInfo()
 	size_t t = sizeof(T);
 	for (size_t i = 0; i < t; i++)
 	{
-		*((unsigned char*)ptr + i) = (((unsigned char)*(msg.c_str() + Pointer)) << 4) | (((unsigned char)*(msg.c_str() + Pointer + 1)));
+		*((unsigned char*)ptr + i) = ((((unsigned char)*(msg.c_str() + Pointer) - 'a') << 4)) | (((unsigned char)*(msg.c_str() + Pointer + 1)) - 'a');
 		Pointer += 2;
 	}
 	return obj;
@@ -55,7 +55,9 @@ void Pigeon::sendMapUpdate(int64_t dest, MapUpdateInfo muinfo)
 	Encoder enc;
 	enc.SetHeader(MapUpdate);
 	enc.PushInfo(API.GetFrameCount());
+	std::cerr << "[Encoder]" << "push " << API.GetFrameCount();
 	enc.PushInfo(muinfo);
+	std::cerr << "push " << muinfo.x << ' ' << muinfo.y;
 	sendInfo(dest, enc.ToString());
 }
 void Pigeon::sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val)
@@ -69,7 +71,10 @@ std::pair<int, MapUpdateInfo> Pigeon::receiveMapUpdate()
 	Decoder dec(buf);
 	char header = dec.ReadInfo<char>();
 	assert(header == MapUpdate);
-	return std::make_pair<int, MapUpdateInfo>(dec.ReadInfo<int>(), dec.ReadInfo<MapUpdateInfo>());
+	int frm = dec.ReadInfo<int>();
+	MapUpdateInfo muinfo = dec.ReadInfo<MapUpdateInfo>();
+	std::cerr << "[Decoder]" << "framecount = " << frm;
+	return std::make_pair<int, MapUpdateInfo>(static_cast<int&&>(frm), static_cast<MapUpdateInfo&&>(muinfo));
 }
 
 int Pigeon::receiveMessage()
@@ -77,7 +82,8 @@ int Pigeon::receiveMessage()
 	if (API.HaveMessage())
 	{
 		buf = API.GetMessage().second; // 是谁发来的好像不太重要，只取信息内容
-		return buf[0];
+		Decoder dec(buf);
+		return dec.ReadInfo<char>();
 	}
 	else return NoMessage;
 }

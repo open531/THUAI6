@@ -3,6 +3,8 @@
 #include <queue>
 #include <stack>
 #include <chrono>
+#include <format>
+#include <string>
 #include <thread>
 #include <vector>
 #include <algorithm>
@@ -64,12 +66,26 @@ void AI::play(IStudentAPI& api)
 	static int CurrentState = sDefault;
 
 	Helper.AutoUpdate();
-	if (Helper.Classroom.size() < 3)
+	int MessageType;
+	while ((MessageType = gugu.receiveMessage()) != NoMessage)
+	{
+		std::cerr << "MessageType = " << MessageType << std::endl;
+		if (MessageType == MapUpdate)
+		{
+			auto ms = gugu.receiveMapUpdate();
+			std::cerr << ms.first << std::endl;
+			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
+			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
+			Helper.Update(ms.second, ms.first);
+		}
+	}
+	std::cerr << "[FinishedClassroom]" << Helper.CountFinishedClassroom() << std::endl;
+	if (Helper.CountFinishedClassroom() > 7)
 	{
 		if (Helper.OpenGate.empty()) Helper.DirectOpeningGate(true);
-		if (Helper.OpenGate.size())
+		else
 		{
-			if (Helper.Chest.size() >= 3)
+			if (Helper.CountNonemptyChest() >= 3)
 			{
 				Helper.DirectOpeningChest(true);
 				Helper.DirectProp(Priority, 1, 1, true);
