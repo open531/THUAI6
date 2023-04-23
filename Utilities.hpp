@@ -15,15 +15,25 @@ public:
 	int x;
 	int y;
 };
+class Doors :public Point
+{
+public:
+	Doors(int x_ = 0, int y_ = 0, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
+		:Point(x_, y_), DoorStatus(ds_), DoorType(dt_) {};
+	Doors(Point p_, int ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
+		:Point(p_), DoorStatus(ds_), DoorType(dt_) {};
+	bool DoorStatus;
+	THUAI6::PlaceType DoorType;
+};
 class Node :public Point
 {
 public:
-	Node(int x_ = 0, int y_ = 0, int px_ = 0, int py_ = 0,
+	Node(int x_ = 0, int y_ = 0, int px_ = -1, int py_ = -1,
 		float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
 		:Point(x_, y_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_) {};
-	Node(Point p, int px_ = 0, int py_ = 0,
+	Node(Point p_, int px_ = -1, int py_ = -1,
 		float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
-		:Point(p), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_) {};
+		:Point(p_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_) {};
 	int parentX;
 	int parentY;
 	float fCost;
@@ -47,7 +57,7 @@ public:
 	std::vector<Point> OpenGate;
 	std::vector<Point> HiddenGate;
 	std::vector<Point> Chest;
-	std::vector<Point> Door;
+	std::vector<Doors> Door;
 
 	bool IsValidWithoutWindows(int x, int y);
 	bool IsValidWithWindows(int x, int y);
@@ -60,6 +70,8 @@ public:
 	const IFooAPI& API;
 	Point TEMP;
 	std::vector<THUAI6::PropType> Inventory;
+	static std::vector<unsigned char> PickPropPriority;
+	static std::vector<unsigned char> UsePropPriority;
 	const int UpdateInterval = 1;
 
 	void InitMap(IStudentAPI& api);
@@ -74,6 +86,7 @@ public:
 	//void UpdateDoor();
 	void AutoUpdate(); // TODO: 自动更新，检查附近的格子有没有和已知不一致的，如果有就更新并且广播
 	std::vector<THUAI6::PropType> GetInventory() { return Inventory; }	// 查看背包
+	void OrganizeInventory(std::vector<unsigned char>Priority);			// 整理背包
 
 	bool MoveTo(Point Dest, bool WithWindows);		// 往目的地动一动
 	bool MoveToNearestClassroom(bool WithWindows);	// 往最近的作业的方向动一动
@@ -90,6 +103,8 @@ public:
 	void DirectOpeningGate(bool WithWindows);		// 前往最近的关闭的校门并开门
 	void DirectGraduate(bool WithWindows);			// 前往最近的开启的校门并毕业
 	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
+	void DirectUseProp();
+	void DirectSkill();
 
 	int EstimateTime(Point Dest);					// 去目的地的预估时间
 	bool IsViewable(Point Src, Point Dest, int ViewRange);			// 判断两个位置是否可视
