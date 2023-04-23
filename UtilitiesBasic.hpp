@@ -24,9 +24,9 @@ void Utilities<IFooAPI>::InitMap(IStudentAPI& api)
 			case 9U:	// Door5
 			case 10U:	// Door6
 				Access[i][j] = 2U;
-				Door.emplace_back(Point(i, j));
+				Door.emplace_back(Point(i, j), true, api.GetPlaceType(i, j));
 				break;
-			case 4U:	// ClassRoom
+			case 4U:	// Classroom
 				Access[i][j] = 0U;
 				Classroom.emplace_back(Point(i, j));
 				break;
@@ -72,18 +72,20 @@ void Utilities<IFooAPI>::AutoUpdate()
 			{
 				newDoor = true;
 				Access[it.x][it.y] = 2U;
+				it.DoorStatus = true;
 			}
 			else if (!checkopen && Access[it.x][it.y] == 2U)
 			{
 				newDoor = true;
 				Access[it.x][it.y] = 0U;
+				it.DoorStatus = false;
 			}
 			if (newDoor)
 			{
-				gugu.sendMapUpdate(0, THUAI6::PlaceType::Door3, it.x, it.y, checkopen?2U:0U); // 这里没有区分Door3, Door5, Door6的区别，可能要改
-				gugu.sendMapUpdate(1, THUAI6::PlaceType::Door3, it.x, it.y, checkopen?2U:0U);
-				gugu.sendMapUpdate(2, THUAI6::PlaceType::Door3, it.x, it.y, checkopen?2U:0U);
-				gugu.sendMapUpdate(3, THUAI6::PlaceType::Door3, it.x, it.y, checkopen?2U:0U);
+				gugu.sendMapUpdate(0, it.DoorType, it.x, it.y, checkopen ? 2U : 0U); // 这里没有区分Door3, Door5, Door6的区别，可能要改
+				gugu.sendMapUpdate(1, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+				gugu.sendMapUpdate(2, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+				gugu.sendMapUpdate(3, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
 			}
 		}
 	}
@@ -332,7 +334,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 	{
 		for (int i = 0; i < Classroom.size(); i++)
 		{
-//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
+			//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
 			if (GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
 			{
 				Distance = WithWindows ? AStarWithWindows(Self, Classroom[i]).size() : AStarWithoutWindows(Self, Classroom[i]).size();
@@ -376,7 +378,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
 	{
 		for (int i = 0; i < Gate.size(); i++)
 		{
-//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
+			//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
 			if (GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
 			{
 				Distance = WithWindows ? AStarWithWindows(Self, Gate[i]).size() : AStarWithoutWindows(Self, Gate[i]).size();
@@ -410,7 +412,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 	{
 		for (int i = 0; i < Gate.size(); i++)
 		{
-//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
+			//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			if (GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			{
 				Distance = WithWindows ? AStarWithWindows(Self, OpenGate[i]).size() : AStarWithoutWindows(Self, OpenGate[i]).size();
@@ -464,7 +466,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
 	{
 		for (int i = 0; i < Chest.size(); i++)
 		{
-//			if (API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
+			//			if (API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
 			if (GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
 			{
 				Distance = WithWindows ? AStarWithWindows(Self, Chest[i]).size() : AStarWithoutWindows(Self, Chest[i]).size();
@@ -604,6 +606,26 @@ int Utilities<typename IFooAPI>::CountOpenGate() const
 }
 
 template<typename IFooAPI>
+void Utilities<IFooAPI>::OrganizeInventory(std::vector<unsigned char>Priority)
+{
+	if (Inventory.size() > 1)
+	{
+		for (int i = 0; i < Inventory.size(); i++)
+		{
+			for (int j = i + 1; j < Inventory.size(); j++)
+			{
+				if (Priority[(int)Inventory[i]] < Priority[(int)Inventory[j]])
+				{
+					THUAI6::PropType temp = Inventory[i];
+					Inventory[i] = Inventory[j];
+					Inventory[j] = temp;
+				}
+			}
+		}
+	}
+}
+
+template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows)
 {
 	if (Inventory.size() < 3)
@@ -631,8 +653,47 @@ void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority,
 		{
 			API.PickProp(ViewableProps[MaxNum]->type);
 			Inventory.emplace_back(ViewableProps[MaxNum]->type);
+			OrganizeInventory(Priority);
 		}
 	}
+	else
+	{
+		int MaxValue = Priority[(int)Inventory[2]], MaxNum = 0;
+		std::vector<std::shared_ptr<const THUAI6::Prop>> ViewableProps = API.GetProps();
+		int PropValue = 0;
+		for (int i = 0; i < ViewableProps.size(); i++)
+		{
+			int dx = (API.GetProps()[i]->x - API.GetSelfInfo()->x) / 1000;
+			int dy = (API.GetProps()[i]->y - API.GetSelfInfo()->y) / 1000;
+			int Distance = sqrt(dx * dx + dy * dy);
+			PropValue = (Distance * DistanceInfluence + Priority[(int)(API.GetProps()[i]->type)] * PropInfluence);
+			if (PropValue >= MaxValue)
+			{
+				MaxValue = PropValue;
+				MaxNum = i;
+			}
+		}
+		if(MaxValue > Priority[(int)Inventory[2]])
+		{
+			if (!NearPoint(Point(ViewableProps[MaxNum]->x / 1000, ViewableProps[MaxNum]->y / 1000), 0))
+			{
+				MoveTo(Point(ViewableProps[MaxNum]->x / 1000, ViewableProps[MaxNum]->y / 1000), WithWindows);
+			}
+			else
+			{
+				API.ThrowProp(Inventory[2]);
+				API.PickProp(ViewableProps[MaxNum]->type);
+				Inventory.emplace_back(ViewableProps[MaxNum]->type);
+				OrganizeInventory(Priority);
+			}
+		}
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::DirectUseProp()
+{
+	API.UseProp(Inventory[0]);
 }
 
 template<typename IFooAPI>
