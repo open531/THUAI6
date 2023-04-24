@@ -121,6 +121,24 @@ std::shared_ptr<const THUAI6::Student> receiveOneselfMessage(std::string info)
 
 }
 //自己信息的编码和解码函数
+void Pigeon::sendNeedHelp(int64_t dest,NeedHelpInfo self)
+{
+	Encoder enc;
+	enc.SetHeader(NeedHelp);
+	enc.PushInfo(API.GetFrameCount());
+	int64_t id = self->playerID;
+	enc.PushInfo(id);
+	sendInfo(dest, enc.ToString());
+}
+
+std::pair<int, int> Pigeon::receiveNeedHelp()
+{
+	Decoder dec(buf);
+	char header = dec.ReadInfo<char>();
+	assert(header == NeedHelp);
+	return std::make_pair<int,int>(dec.ReadInfo<int>(), dec.ReadInfo<int>());
+}
+
 std::string sendPropsMessage(std::vector<std::shared_ptr<const THUAI6::Prop>> prop)
 {
 	Encoder enc;

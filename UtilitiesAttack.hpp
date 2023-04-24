@@ -1,6 +1,6 @@
 #include "Utilities.hpp"
 
-void UtilitiesTricker::AssassinDefaultAttack(int stux, int stuy)//传入要攻击的学生坐标stux与stuy
+void UtilitiesTricker::AssassinDefaultAttack(int stux, int stuy)//传入学生坐标
 {
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
@@ -16,7 +16,7 @@ bool UtilitiesTricker::AssassinDefaultAttackOver(int rank)
 	double Distance = sqrt((stux - sx) * (stux - sx) + (stuy - sy) * (stuy - sy));
 	switch (API.GetStudents()[rank]->studentType)
 	{
-	case THUAI6::StudentType::Athlete://运动�?
+	case THUAI6::StudentType::Athlete://运动员
 		if (Distance<double(7400 * 400 / 3150 - 0.297 * 3150))
 			return true;
 	case THUAI6::StudentType::Teacher://老师
