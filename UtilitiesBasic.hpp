@@ -759,47 +759,11 @@ void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority,
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectUseProp(std::vector<unsigned char>Priority)
 {
-	if(!Inventory.empty())
+	if (!Inventory.empty())
 	{
 		OrganizeInventory(Priority);
 		API.UseProp(Inventory[0]);
 	}
-}
-
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::AtheleteCanBeginToCharge()
-{
-	API.UseSkill(0);
-}
-
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::TeacherPunish()
-{
-	API.UseSkill(0);
-}
-
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::StraightAStudentWriteAnswers()
-{
-	API.UseSkill(0);
-}
-
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::SunshineRouse()
-{
-	API.UseSkill(0);
-}
-
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::SunshineEncourage()
-{
-	API.UseSkill(1);
-}
-
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::SunshineInspire()
-{
-	API.UseSkill(2);
 }
 
 template<typename IFooAPI>
@@ -913,4 +877,35 @@ void Utilities<IFooAPI>::Update(MapUpdateInfo upinfo, int t_)
 	{
 		Access[upinfo.x][upinfo.y] = upinfo.val;
 	}
+}
+
+
+void UtilitiesStudent::AtheleteCanBeginToCharge()
+{
+	API.UseSkill(0);
+}
+
+void UtilitiesStudent::TeacherPunish()
+{
+	API.UseSkill(0);
+}
+
+void UtilitiesStudent::StraightAStudentWriteAnswers()
+{
+	API.UseSkill(0);
+}
+
+void UtilitiesStudent::SunshineRouse()
+{
+	API.UseSkill(0);
+}
+
+void UtilitiesStudent::SunshineEncourage()
+{
+	API.UseSkill(1);
+}
+
+void UtilitiesStudent::SunshineInspire()
+{
+	API.UseSkill(2);
 }

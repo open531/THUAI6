@@ -101,12 +101,8 @@ public:
 	void DirectGraduate(bool WithWindows);			// 前往最近的开启的校门并毕业
 	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
 	void DirectUseProp(std::vector<unsigned char>Priority);
-	void AtheleteCanBeginToCharge();
-	void TeacherPunish();
-	void StraightAStudentWriteAnswers();
-	void SunshineRouse();
-	void SunshineEncourage();
-	void SunshineInspire();
+
+
 
 	int EstimateTime(Point Dest);					// 去目的地的预估时间
 	bool IsViewable(Point Src, Point Dest, int ViewRange);			// 判断两个位置是否可视
@@ -132,6 +128,12 @@ private:
 	Pigeon& gugu;
 public:
 	UtilitiesStudent(IStudentAPI& api, Pigeon& gugu_);
+	void AtheleteCanBeginToCharge();
+	void TeacherPunish();
+	void StraightAStudentWriteAnswers();
+	void SunshineRouse();
+	void SunshineEncourage();
+	void SunshineInspire();
 	void AutoUpdate();
 };
 
@@ -142,6 +144,8 @@ public:
 	void AutoUpdate();
 	void AssassinDefaultAttack(int stux, int stuy);	// 刺客普通攻击，传入学生坐标(stux,stuy)
 	bool AssassinDefaultAttackOver(int rank);//判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
+	void AssassinBecomeInvisible();
+	void AssassinFlyingKnife(int stux, int stuy);
 };
 
 UtilitiesStudent::UtilitiesStudent(IStudentAPI& api, Pigeon& gugu_) : Utilities<IStudentAPI&>(api), gugu(gugu_) { }

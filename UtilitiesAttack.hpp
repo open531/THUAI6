@@ -31,3 +31,15 @@ bool UtilitiesTricker::AssassinDefaultAttackOver(int rank)
 	}
 	return false;
 }
+
+void UtilitiesTricker::AssassinBecomeInvisible()
+{
+	API.UseSkill(0);
+}
+void UtilitiesTricker::AssassinFlyingKnife(int stux, int stuy)
+{
+	API.UseSkill(1);
+	int sx = API.GetSelfInfo()->x;
+	int sy = API.GetSelfInfo()->y;
+	API.Attack(atan2(stuy - sy, stux - sx));
+}
