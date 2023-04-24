@@ -65,7 +65,7 @@ sPicking 去捡道具
 void AI::play(IStudentAPI& api)
 {
 	api.PrintSelfInfo();
-	static std::vector<unsigned char> Priority = { 0,1,1,1,5,2,9,7,6 };
+	static std::vector<unsigned char> Priority = { 0,1,2,3,4,5,6,7,8 };
 	static Pigeon gugu(api);
 	static UtilitiesStudent Helper(api, gugu);
 	static int CurrentState = sDefault;
@@ -93,27 +93,18 @@ void AI::play(IStudentAPI& api)
 	{
 		if (!Helper.CountOpenGate())
 		{
-<<<<<<< HEAD
-=======
-//			api.EndAllAction();
->>>>>>> ceb677d709a11f31e97f4df4b2195d189f4df231
+			//			api.EndAllAction();
 			Helper.DirectOpeningGate(true, true);
 		}
 		else
 		{
-<<<<<<< HEAD
-=======
-//			api.EndAllAction();
->>>>>>> ceb677d709a11f31e97f4df4b2195d189f4df231
+			//			api.EndAllAction();
 			Helper.DirectGraduate(true);
 		}
 	}
 	else
 	{
-<<<<<<< HEAD
-=======
-//			api.EndAllAction();
->>>>>>> ceb677d709a11f31e97f4df4b2195d189f4df231
+		//			api.EndAllAction();
 		Helper.DirectLearning(true);
 	}
 
@@ -200,55 +191,36 @@ void AI::play(ITrickerAPI& api)
 
 	switch (CurrentState)
 	{
-<<<<<<< HEAD
 	case sDefault:
+		if (stuinfo.size() > 0) CurrentState = sAttackStudent;
+		else CurrentState = sFindStudent;
 		break;
-	case sFindStudentAndAttack:
-		auto stuinfo = api.GetStudents();
-		std::cerr << "See student " << stuinfo.size();
-		if (stuinfo.size() != 0)
-		{
-			if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(self->y - stuinfo[0]->y, self->x - stuinfo[0]->x));
-			else
-			{
-				std::cerr << "[MoveTo]" << stuinfo[0]->x / 1000 << ' ' << stuinfo[0]->y / 1000;
-				Helper.MoveTo(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000);
-			}
-		}
-		else Helper.MoveToNearestClassroom(true);
+	case sFindStudent:
+		if (stuinfo.size() > 0) CurrentState = sAttackStudent;
 		break;
-=======
-		case sDefault:
-			if (stuinfo.size() > 0) CurrentState = sAttackStudent;
-			else CurrentState = sFindStudent;
-			break;
-		case sFindStudent:
-			if (stuinfo.size() > 0) CurrentState = sAttackStudent;
-			break;
-		case sAttackStudent:
-			if (stuinfo.size() == 0) CurrentState = sFindStudent;
-			break;
+	case sAttackStudent:
+		if (stuinfo.size() == 0) CurrentState = sFindStudent;
+		break;
 	}
 
 
 	switch (CurrentState)
 	{
-		case sDefault:
-			std::cerr << "CurrentState: sDefault" << std::endl;
-			break;
-		case sFindStudent:
-			std::cerr << "CurrentState: sFindStudent" << std::endl;
-			Helper.MoveToNearestClassroom(true);
-			break;
-		case sAttackStudent:
-			std::cerr << "CurrentState: sAttackStudent" << std::endl;
-			std::cerr << "See student " << stuinfo.size();
-			if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
-			else
-			{
-				Helper.MoveTo(Point(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000), true);
-			}
-			break;
->>>>>>> ceb677d709a11f31e97f4df4b2195d189f4df231
+	case sDefault:
+		std::cerr << "CurrentState: sDefault" << std::endl;
+		break;
+	case sFindStudent:
+		std::cerr << "CurrentState: sFindStudent" << std::endl;
+		Helper.MoveToNearestClassroom(true);
+		break;
+	case sAttackStudent:
+		std::cerr << "CurrentState: sAttackStudent" << std::endl;
+		std::cerr << "See student " << stuinfo.size();
+		if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+		else
+		{
+			Helper.MoveTo(Point(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000), true);
+		}
+		break;
 	}
 }
