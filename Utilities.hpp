@@ -20,7 +20,7 @@ class Doors :public Point
 public:
 	Doors(int x_ = 0, int y_ = 0, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
 		:Point(x_, y_), DoorStatus(ds_), DoorType(dt_) {};
-	Doors(Point p_, int ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
+	Doors(Point p_, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
 		:Point(p_), DoorStatus(ds_), DoorType(dt_) {};
 	bool DoorStatus;
 	THUAI6::PlaceType DoorType;
@@ -44,17 +44,15 @@ public:
 template<typename IFooAPI>
 class Utilities
 {
-private:
+protected:
 	int ProgressMem[50][50];
 	int LastUpdateFrame[50][50];
 	int LastAutoUpdateFrame;
-	Pigeon& gugu;
 public:
 	unsigned char Map[50][50];
 	unsigned char Access[50][50];
 	std::vector<Point> Classroom;
 	std::vector<Point> Gate;
-	std::vector<Point> OpenGate;
 	std::vector<Point> HiddenGate;
 	std::vector<Point> Chest;
 	std::vector<Doors> Door;
@@ -74,17 +72,16 @@ public:
 	static std::vector<unsigned char> UsePropPriority;
 	const int UpdateInterval = 1;
 
-	void InitMap(IStudentAPI& api);
+	void InitMap(IFooAPI& api);
 
 public:
-	Utilities(IFooAPI api, Pigeon& gugu_);
+	Utilities(IFooAPI api);
 
 	void Update(MapUpdateInfo upinfo, int t_);			//更新地图信息，比如门和隐藏校门，需要约定info的格式
 	//void UpdateClassroom();
 	//void UpdateGate();
 	//void UpdateChest();
 	//void UpdateDoor();
-	void AutoUpdate(); // TODO: 自动更新，检查附近的格子有没有和已知不一致的，如果有就更新并且广播
 	std::vector<THUAI6::PropType> GetInventory() { return Inventory; }	// 查看背包
 	void OrganizeInventory(std::vector<unsigned char>Priority);			// 整理背包
 
@@ -100,7 +97,7 @@ public:
 	bool NearChest();								// 已经在箱子旁边了吗？
 	void DirectLearning(bool WithWindows);			// 前往最近的作业并学习
 	void DirectOpeningChest(bool WithWindows);		// 前往最近的箱子并开箱
-	void DirectOpeningGate(bool WithWindows);		// 前往最近的关闭的校门并开门
+	void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);		// 前往最近的关闭的校门并开门
 	void DirectGraduate(bool WithWindows);			// 前往最近的开启的校门并毕业
 	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
 	void DirectUseProp();
@@ -122,10 +119,28 @@ public:
 	int GetGateProgress(Point cell) const;
 	int GetClassroomProgress(Point cell) const;
 	int GetDoorProgress(Point cell) const;
+};
 
+class UtilitiesStudent : public Utilities<IStudentAPI&>
+{
+private:
+	Pigeon& gugu;
+public:
+	UtilitiesStudent(IStudentAPI& api, Pigeon& gugu_);
+	void AutoUpdate();
+};
+
+class UtilitiesTricker : public Utilities<ITrickerAPI&>
+{
+public:
+	UtilitiesTricker(ITrickerAPI& api);
+	void AutoUpdate();
 	void AssassinDefaultAttack(int rank);	// 刺客普通攻击
 	bool AssassinDefaultAttackOver(int rank);
 };
+
+UtilitiesStudent::UtilitiesStudent(IStudentAPI& api, Pigeon& gugu_) : Utilities<IStudentAPI&>(api), gugu(gugu_) { }
+UtilitiesTricker::UtilitiesTricker(ITrickerAPI& api) : Utilities<ITrickerAPI&>(api) { }
 
 #include "UtilitiesBasic.hpp"
 #include "UtilitiesAttack.hpp"
