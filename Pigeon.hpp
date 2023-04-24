@@ -55,9 +55,7 @@ void Pigeon::sendMapUpdate(int64_t dest, MapUpdateInfo muinfo)
 	Encoder enc;
 	enc.SetHeader(MapUpdate);
 	enc.PushInfo(API.GetFrameCount());
-	std::cerr << "[Encoder]" << "push " << API.GetFrameCount();
 	enc.PushInfo(muinfo);
-	std::cerr << "push " << muinfo.x << ' ' << muinfo.y;
 	sendInfo(dest, enc.ToString());
 }
 void Pigeon::sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val)
@@ -73,7 +71,6 @@ std::pair<int, MapUpdateInfo> Pigeon::receiveMapUpdate()
 	assert(header == MapUpdate);
 	int frm = dec.ReadInfo<int>();
 	MapUpdateInfo muinfo = dec.ReadInfo<MapUpdateInfo>();
-	std::cerr << "[Decoder]" << "framecount = " << frm;
 	return std::make_pair<int, MapUpdateInfo>(static_cast<int&&>(frm), static_cast<MapUpdateInfo&&>(muinfo));
 }
 

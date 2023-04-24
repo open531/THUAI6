@@ -49,7 +49,7 @@ std::vector<Node> Utilities<IFooAPI>::MakePath(std::array<std::array<Node, 50>, 
 	}
 	catch (const std::exception& e)
 	{
-		std::cout << e.what() << std::endl;
+//		std::cout << e.what() << std::endl;
 	}
 }
 
