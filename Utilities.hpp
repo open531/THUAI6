@@ -44,11 +44,10 @@ public:
 template<typename IFooAPI>
 class Utilities
 {
-private:
+protected:
 	int ProgressMem[50][50];
 	int LastUpdateFrame[50][50];
 	int LastAutoUpdateFrame;
-	Pigeon& gugu;
 public:
 	unsigned char Map[50][50];
 	unsigned char Access[50][50];
@@ -74,17 +73,16 @@ public:
 	static std::vector<unsigned char> UsePropPriority;
 	const int UpdateInterval = 1;
 
-	void InitMap(IStudentAPI& api);
+	void InitMap(IFooAPI& api);
 
 public:
-	Utilities(IFooAPI api, Pigeon& gugu_);
+	Utilities(IFooAPI api);
 
 	void Update(MapUpdateInfo upinfo, int t_);			//更新地图信息，比如门和隐藏校门，需要约定info的格式
 	//void UpdateClassroom();
 	//void UpdateGate();
 	//void UpdateChest();
 	//void UpdateDoor();
-	void AutoUpdate(); // TODO: 自动更新，检查附近的格子有没有和已知不一致的，如果有就更新并且广播
 	std::vector<THUAI6::PropType> GetInventory() { return Inventory; }	// 查看背包
 	void OrganizeInventory(std::vector<unsigned char>Priority);			// 整理背包
 
@@ -122,10 +120,28 @@ public:
 	int GetGateProgress(Point cell) const;
 	int GetClassroomProgress(Point cell) const;
 	int GetDoorProgress(Point cell) const;
+};
 
+class UtilitiesStudent : public Utilities<IStudentAPI&>
+{
+private:
+	Pigeon& gugu;
+public:
+	UtilitiesStudent(IStudentAPI& api, Pigeon& gugu_);
+	void AutoUpdate();
+};
+
+class UtilitiesTricker : public Utilities<ITrickerAPI&>
+{
+public:
+	UtilitiesTricker(ITrickerAPI& api);
+	void AutoUpdate();
 	void AssassinDefaultAttack(int rank);	// 刺客普通攻击
 	bool AssassinDefaultAttackOver(int rank);
 };
+
+UtilitiesStudent::UtilitiesStudent(IStudentAPI& api, Pigeon& gugu_) : Utilities<IStudentAPI&>(api), gugu(gugu_) { }
+UtilitiesTricker::UtilitiesTricker(ITrickerAPI& api) : Utilities<ITrickerAPI&>(api) { }
 
 #include "UtilitiesBasic.hpp"
 #include "UtilitiesAttack.hpp"

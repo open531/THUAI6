@@ -1,7 +1,7 @@
 #include "Utilities.hpp"
 
 template<typename IFooAPI>
-void Utilities<IFooAPI>::InitMap(IStudentAPI& api)
+void Utilities<IFooAPI>::InitMap(IFooAPI& api)
 {
 	int i, j;
 	for (i = 0; i < 50; i++)
@@ -51,13 +51,12 @@ void Utilities<IFooAPI>::InitMap(IStudentAPI& api)
 }
 
 template<typename IFooAPI>
-Utilities<IFooAPI>::Utilities(IFooAPI api, Pigeon& gugu_) : API(api), gugu(gugu_), LastAutoUpdateFrame(0)
+Utilities<IFooAPI>::Utilities(IFooAPI api) : API(api), LastAutoUpdateFrame(0)
 {
 	InitMap(api);
 }
 
-template<typename IFooAPI>
-void Utilities<IFooAPI>::AutoUpdate()
+void UtilitiesStudent::AutoUpdate()
 {
 	int cntframe = API.GetFrameCount();
 	if (cntframe - LastAutoUpdateFrame < UpdateInterval) return;
@@ -222,8 +221,7 @@ void Utilities<IFooAPI>::AutoUpdate()
 //	}
 //}
 
-template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
+bool Utilities<IStudentAPI&>::MoveTo(Point Dest, bool WithWindows)
 {
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
@@ -321,6 +319,18 @@ bool Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 			j++;
 		}
 	}
+	return true;
+}
+
+bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)
+{
+	int sx = API.GetSelfInfo()->x;
+	int sy = API.GetSelfInfo()->y;
+	std::vector<Node> UsablePath;
+	UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
+	int dx = Dest.x - sx;
+	int dy = Dest.y - sy;
+	API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
 	return true;
 }
 

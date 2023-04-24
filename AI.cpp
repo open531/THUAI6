@@ -49,6 +49,7 @@ sPicking 去捡道具
 */
 #define sCantMove 0x00
 #define sDefault 0x10
+
 #define sDoClassroom 0x11
 #define sOpenGate 0x12
 #define sOpenChest 0x13
@@ -57,12 +58,14 @@ sPicking 去捡道具
 #define sEncouraging 0x16
 #define sPicking 0x17
 
+#define sFindStudentAndAttack 0x18
+
 
 void AI::play(IStudentAPI& api)
 {
 	static std::vector<unsigned char> Priority = { 0,1,2,3,4,5,6,7,8 };
 	static Pigeon gugu(api);
-	static Utilities<IStudentAPI&> Helper(api, gugu);
+	static UtilitiesStudent Helper(api, gugu);
 	static int CurrentState = sDefault;
 
 	Helper.AutoUpdate();
@@ -164,4 +167,35 @@ void AI::play(ITrickerAPI& api)
 {
 	auto self = api.GetSelfInfo();
 	api.PrintSelfInfo();
+
+	static std::vector<unsigned char> Priority = { 0,1,2,3,4,5,6,7,8 };
+	static UtilitiesTricker Helper(api);
+	static int CurrentState = sDefault;
+
+//	Helper.AutoUpdate();
+
+	if (CurrentState == sDefault)
+	{
+		CurrentState = sFindStudentAndAttack;
+	}
+
+	switch (CurrentState)
+	{
+		case sDefault:
+			break;
+		case sFindStudentAndAttack:
+			auto stuinfo = api.GetStudents();
+			std::cerr << "See student " << stuinfo.size();
+			if (stuinfo.size() != 0)
+			{
+				if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(self->y - stuinfo[0]->y, self->x - stuinfo[0]->x));
+				else
+				{
+					std::cerr << "[MoveTo]" << stuinfo[0]->x / 1000 << ' ' << stuinfo[0]->y / 1000;
+					Helper.MoveTo(stuinfo[0]->x / 1000-1, stuinfo[0]->y / 1000-1);
+				}
+			}
+			else Helper.MoveToNearestClassroom(true);
+			break;
+	}
 }
