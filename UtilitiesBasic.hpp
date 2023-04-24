@@ -225,6 +225,7 @@ void UtilitiesStudent::AutoUpdate()
 template<typename IFooAPI>
 bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
+	std::cerr << "Destination is (" << Dest.x << ',' << Dest.y << ')' << std::endl;
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
 	bool IsStuck = (sx == TEMP.x && sy == TEMP.y);
@@ -251,6 +252,10 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	std::vector<Node> UsablePath;
 	if (WithWindows) UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
 	else UsablePath = AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
+	for (auto i : UsablePath)
+	{
+		std::cerr << '(' << i.x << ',' << i.y << ')' << ';';
+	}
 	if (UsablePath.size() < 2)
 	{
 		for (int i = 0, j = 0; i < TempS.size(); i++)

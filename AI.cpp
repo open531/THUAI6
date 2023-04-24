@@ -58,7 +58,8 @@ sPicking 去捡道具
 #define sEncouraging 0x16
 #define sPicking 0x17
 
-#define sFindStudentAndAttack 0x18
+#define sFindStudent 0x20
+#define sAttackStudent 0x21
 
 
 void AI::play(IStudentAPI& api)
@@ -92,18 +93,18 @@ void AI::play(IStudentAPI& api)
 	{
 		if (!Helper.CountOpenGate())
 		{
-			api.EndAllAction();
+//			api.EndAllAction();
 			Helper.DirectOpeningGate(true, true);
 		}
 		else
 		{
-			api.EndAllAction();
+//			api.EndAllAction();
 			Helper.DirectGraduate(true);
 		}
 	}
 	else
 	{
-		api.EndAllAction();
+//			api.EndAllAction();
 		Helper.DirectLearning(true);
 	}
 
@@ -184,28 +185,42 @@ void AI::play(ITrickerAPI& api)
 
 	if (CurrentState == sDefault)
 	{
-		CurrentState = sFindStudentAndAttack;
+		CurrentState = sFindStudent;
 	}
 	auto stuinfo = api.GetStudents();
 
 	switch (CurrentState)
 	{
 		case sDefault:
+			if (stuinfo.size() > 0) CurrentState = sAttackStudent;
+			else CurrentState = sFindStudent;
 			break;
-		case sFindStudentAndAttack:
-			auto stuinfo = api.GetStudents();
+		case sFindStudent:
+			if (stuinfo.size() > 0) CurrentState = sAttackStudent;
+			break;
+		case sAttackStudent:
+			if (stuinfo.size() == 0) CurrentState = sFindStudent;
+			break;
+	}
+
+
+	switch (CurrentState)
+	{
+		case sDefault:
+			std::cerr << "CurrentState: sDefault" << std::endl;
+			break;
+		case sFindStudent:
+			std::cerr << "CurrentState: sFindStudent" << std::endl;
+			Helper.MoveToNearestClassroom(true);
+			break;
+		case sAttackStudent:
+			std::cerr << "CurrentState: sAttackStudent" << std::endl;
 			std::cerr << "See student " << stuinfo.size();
-			if (stuinfo.size() != 0)
+			if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+			else
 			{
-				if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(self->y - stuinfo[0]->y, self->x - stuinfo[0]->x));
-				else
-				{
-					std::cerr << "[MoveTo]" << stuinfo[0]->x / 1000 << ' ' << stuinfo[0]->y / 1000;
-					api.EndAllAction();
-					Helper.MoveTo(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000);
-				}
+				Helper.MoveTo(Point(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000), true);
 			}
-			else Helper.MoveToNearestClassroom(true);
 			break;
 	}
 }
