@@ -80,18 +80,17 @@ void AI::play(IStudentAPI& api)
 		}
 	}
 	std::cerr << "[FinishedClassroom]" << Helper.CountFinishedClassroom() << std::endl;
-	if (Helper.CountFinishedClassroom() > 7)
+	std::cerr << "[OpenGate]" << Helper.CountOpenGate() << std::endl;
+	for (int i = 0; i < Helper.Gate.size(); i++)
 	{
-		if (Helper.OpenGate.empty()) Helper.DirectOpeningGate(true);
+		std::cerr << "[Gate" << i << "]" << api.GetGateProgress(Helper.Gate[i].x, Helper.Gate[i].y)<< std::endl;
+	}
+	if (Helper.CountFinishedClassroom() >= 7)
+	{
+		if (!Helper.CountOpenGate()) Helper.DirectOpeningGate(true, true);
 		else
 		{
-			if (Helper.CountNonemptyChest() >= 3)
-			{
-				Helper.DirectOpeningChest(true);
-				Helper.DirectProp(Priority, 1, 1, true);
-			}
-			else
-				Helper.DirectGraduate(true);
+			Helper.DirectGraduate(true);
 		}
 	}
 	else Helper.DirectLearning(true);
