@@ -13,9 +13,9 @@ void Encoder::PushInfo(T info)
 	void* ptr = & info;
 	for (size_t i = 0; i < t; i++)
 	{
-		msg[Pointer] = ((*((unsigned char*)ptr + i)) >> 4);
+		msg[Pointer] = ((*((unsigned char*)ptr + i)) >> 4) + 'a';
 		Pointer++;
-		msg[Pointer] = ((*((unsigned char*)ptr + i)) & 0x0f);
+		msg[Pointer] = ((*((unsigned char*)ptr + i)) & 0x0f) + 'a';
 		Pointer++;
 	}
 }
@@ -37,7 +37,7 @@ T Decoder::ReadInfo()
 	size_t t = sizeof(T);
 	for (size_t i = 0; i < t; i++)
 	{
-		*((unsigned char*)ptr + i) = (((unsigned char)*(msg.c_str() + Pointer)) << 4) | (((unsigned char)*(msg.c_str() + Pointer + 1)));
+		*((unsigned char*)ptr + i) = ((((unsigned char)*(msg.c_str() + Pointer) - 'a') << 4)) | (((unsigned char)*(msg.c_str() + Pointer + 1)) - 'a');
 		Pointer += 2;
 	}
 	return obj;
@@ -77,7 +77,8 @@ int Pigeon::receiveMessage()
 	if (API.HaveMessage())
 	{
 		buf = API.GetMessage().second; // 是谁发来的好像不太重要，只取信息内容
-		return buf[0];
+		Decoder dec(buf);
+		return dec.ReadInfo<char>();
 	}
 	else return NoMessage;
 }
