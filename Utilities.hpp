@@ -135,7 +135,7 @@ class UtilitiesTricker : public Utilities<ITrickerAPI&>
 public:
 	UtilitiesTricker(ITrickerAPI& api);
 	void AutoUpdate();
-	void AssassinDefaultAttack(int rank);	// 刺客普通攻击
+	void AssassinDefaultAttack(int stux, int stuy);	// 刺客普通攻击
 	bool AssassinDefaultAttackOver(int rank);
 };
 

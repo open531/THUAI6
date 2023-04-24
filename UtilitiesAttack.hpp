@@ -1,9 +1,7 @@
 #include "Utilities.hpp"
 
-void UtilitiesTricker::AssassinDefaultAttack(int rank)//rank是要vector中要攻击的序号，当vector中仅有一个时，自动选择
+void UtilitiesTricker::AssassinDefaultAttack(int stux, int stuy)//传入要攻击的学生坐标stux与stuy
 {
-	int stux = API.GetStudents()[rank]->x;
-	int stuy = API.GetStudents()[rank]->y;
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
 	API.Attack(atan2(stuy - sy, stux - sx));
