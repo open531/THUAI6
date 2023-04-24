@@ -100,8 +100,13 @@ public:
 	void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);		// 前往最近的关闭的校门并开门
 	void DirectGraduate(bool WithWindows);			// 前往最近的开启的校门并毕业
 	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
-	void DirectUseProp();
-	void DirectSkill();
+	void DirectUseProp(std::vector<unsigned char>Priority);
+	void AtheleteCanBeginToCharge();
+	void TeacherPunish();
+	void StraightAStudentWriteAnswers();
+	void SunshineRouse();
+	void SunshineEncourage();
+	void SunshineInspire();
 
 	int EstimateTime(Point Dest);					// 去目的地的预估时间
 	bool IsViewable(Point Src, Point Dest, int ViewRange);			// 判断两个位置是否可视

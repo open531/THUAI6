@@ -752,9 +752,49 @@ void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority,
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectUseProp()
+void Utilities<typename IFooAPI>::DirectUseProp(std::vector<unsigned char>Priority)
 {
-	API.UseProp(Inventory[0]);
+	if(!Inventory.empty())
+	{
+		OrganizeInventory(Priority);
+		API.UseProp(Inventory[0]);
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::AtheleteCanBeginToCharge()
+{
+	API.UseSkill(0);
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::TeacherPunish()
+{
+	API.UseSkill(0);
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::StraightAStudentWriteAnswers()
+{
+	API.UseSkill(0);
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::SunshineRouse()
+{
+	API.UseSkill(0);
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::SunshineEncourage()
+{
+	API.UseSkill(1);
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::SunshineInspire()
+{
+	API.UseSkill(2);
 }
 
 template<typename IFooAPI>

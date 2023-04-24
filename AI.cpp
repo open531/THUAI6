@@ -64,7 +64,7 @@ sPicking 去捡道具
 void AI::play(IStudentAPI& api)
 {
 	api.PrintSelfInfo();
-	static std::vector<unsigned char> Priority = { 0,1,2,3,4,5,6,7,8 };
+	static std::vector<unsigned char> Priority = { 0,1,1,1,5,2,9,7,6 };
 	static Pigeon gugu(api);
 	static UtilitiesStudent Helper(api, gugu);
 	static int CurrentState = sDefault;
@@ -86,24 +86,21 @@ void AI::play(IStudentAPI& api)
 	std::cerr << "[OpenGate]" << Helper.CountOpenGate() << std::endl;
 	for (int i = 0; i < Helper.Gate.size(); i++)
 	{
-		std::cerr << "[Gate" << i << "]" << api.GetGateProgress(Helper.Gate[i].x, Helper.Gate[i].y)<< std::endl;
+		std::cerr << "[Gate" << i << "]" << api.GetGateProgress(Helper.Gate[i].x, Helper.Gate[i].y) << std::endl;
 	}
 	if (Helper.CountFinishedClassroom() >= 7)
 	{
 		if (!Helper.CountOpenGate())
 		{
-			api.EndAllAction();
 			Helper.DirectOpeningGate(true, true);
 		}
 		else
 		{
-			api.EndAllAction();
 			Helper.DirectGraduate(true);
 		}
 	}
 	else
 	{
-		api.EndAllAction();
 		Helper.DirectLearning(true);
 	}
 
@@ -180,7 +177,7 @@ void AI::play(ITrickerAPI& api)
 	static UtilitiesTricker Helper(api);
 	static int CurrentState = sDefault;
 
-//	Helper.AutoUpdate();
+	//	Helper.AutoUpdate();
 
 	if (CurrentState == sDefault)
 	{
@@ -190,22 +187,21 @@ void AI::play(ITrickerAPI& api)
 
 	switch (CurrentState)
 	{
-		case sDefault:
-			break;
-		case sFindStudentAndAttack:
-			auto stuinfo = api.GetStudents();
-			std::cerr << "See student " << stuinfo.size();
-			if (stuinfo.size() != 0)
+	case sDefault:
+		break;
+	case sFindStudentAndAttack:
+		auto stuinfo = api.GetStudents();
+		std::cerr << "See student " << stuinfo.size();
+		if (stuinfo.size() != 0)
+		{
+			if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(self->y - stuinfo[0]->y, self->x - stuinfo[0]->x));
+			else
 			{
-				if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(self->y - stuinfo[0]->y, self->x - stuinfo[0]->x));
-				else
-				{
-					std::cerr << "[MoveTo]" << stuinfo[0]->x / 1000 << ' ' << stuinfo[0]->y / 1000;
-					api.EndAllAction();
-					Helper.MoveTo(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000);
-				}
+				std::cerr << "[MoveTo]" << stuinfo[0]->x / 1000 << ' ' << stuinfo[0]->y / 1000;
+				Helper.MoveTo(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000);
 			}
-			else Helper.MoveToNearestClassroom(true);
-			break;
+		}
+		else Helper.MoveToNearestClassroom(true);
+		break;
 	}
 }
