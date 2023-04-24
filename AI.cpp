@@ -89,22 +89,22 @@ void AI::play(IStudentAPI& api)
 	{
 		std::cerr << "[Gate" << i << "]" << api.GetGateProgress(Helper.Gate[i].x, Helper.Gate[i].y) << std::endl;
 	}
-	if (Helper.CountFinishedClassroom() >= 7)
+	if (Helper.CountFinishedClassroom() > 7)
 	{
 		if (!Helper.CountOpenGate())
 		{
-			//			api.EndAllAction();
+//			api.EndAllAction();
 			Helper.DirectOpeningGate(true, true);
 		}
 		else
 		{
-			//			api.EndAllAction();
+//			api.EndAllAction();
 			Helper.DirectGraduate(true);
 		}
 	}
 	else
 	{
-		//			api.EndAllAction();
+//		api.EndAllAction();
 		Helper.DirectLearning(true);
 	}
 
@@ -174,6 +174,7 @@ void AI::play(IStudentAPI& api)
 
 void AI::play(ITrickerAPI& api)
 {
+	return;
 	auto self = api.GetSelfInfo();
 	api.PrintSelfInfo();
 
