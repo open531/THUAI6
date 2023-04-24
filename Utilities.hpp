@@ -135,8 +135,13 @@ class UtilitiesTricker : public Utilities<ITrickerAPI&>
 public:
 	UtilitiesTricker(ITrickerAPI& api);
 	void AutoUpdate();
+<<<<<<< HEAD
 	void AssassinDefaultAttack(int stux, int stuy);	// 刺客普通攻击
 	bool AssassinDefaultAttackOver(int rank);
+=======
+	void AssassinDefaultAttack(int stux, int stuy);	// 刺客普通攻击，传入学生坐标(stux,stuy)
+	bool AssassinDefaultAttackOver(int rank);//判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
+>>>>>>> 05492e2cc1712300f13c478de0ab7fef6aa56e3d
 };
 
 UtilitiesStudent::UtilitiesStudent(IStudentAPI& api, Pigeon& gugu_) : Utilities<IStudentAPI&>(api), gugu(gugu_) { }

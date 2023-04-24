@@ -1,6 +1,10 @@
 #include "Utilities.hpp"
 
+<<<<<<< HEAD
 void UtilitiesTricker::AssassinDefaultAttack(int stux, int stuy)//´«ÈëÒª¹¥»÷µÄÑ§Éú×ø±êstuxÓëstuy
+=======
+void UtilitiesTricker::AssassinDefaultAttack(int stux, int stuy)//ä¼ å…¥è¦æ”»å‡»çš„å­¦ç”Ÿåæ ‡stuxä¸stuy
+>>>>>>> 05492e2cc1712300f13c478de0ab7fef6aa56e3d
 {
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
@@ -16,16 +20,16 @@ bool UtilitiesTricker::AssassinDefaultAttackOver(int rank)
 	double Distance = sqrt((stux - sx) * (stux - sx) + (stuy - sy) * (stuy - sy));
 	switch (API.GetStudents()[rank]->studentType)
 	{
-	case THUAI6::StudentType::Athlete://ÔË¶¯Ô±
+	case THUAI6::StudentType::Athlete://è¿åŠ¨å‘˜
 		if (Distance<double(7400 * 400 / 3150 - 0.297 * 3150))
 			return true;
-	case THUAI6::StudentType::Teacher://ÀÏÊ¦
+	case THUAI6::StudentType::Teacher://è€å¸ˆ
 		if (Distance<double(7400 * 400 / 2700 - 0.297 * 2700))
 			return true;
-	case THUAI6::StudentType::StraightAStudent://Ñ§°Ô
+	case THUAI6::StudentType::StraightAStudent://å­¦éœ¸
 		if (Distance<double(7400 * 400 / 2880 - 0.297 * 2880))
 			return true;
-	case THUAI6::StudentType::Sunshine://ÄÌÂè
+	case THUAI6::StudentType::Sunshine://å¥¶å¦ˆ
 		if (Distance<double(7400 * 400 / 3000 - 0.297 * 3000))
 			return true;
 	}
