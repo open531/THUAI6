@@ -115,9 +115,10 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 每一帧应当按照以下顺序执行：
 
-- 调用`Helper.AutoUpdate()`进行信息更新；
-- 使`Pigeon`接收信息，并对`Pigeon`接收的信息进行处理，直到没有新信息，此时可以依据接收的信息进行状态变更的准备；
-- 决定变更状态或维持状态，并执行状态对应的行为。
+1. 调用`Helper.AutoUpdate()`进行信息更新；
+2. 使`Pigeon`接收信息，并对`Pigeon`接收的信息进行处理，直到没有新信息，此时可以依据接收的信息进行状态变更的准备；
+3. 决定变更状态或维持状态；
+4. 执行状态对应的行为。
 
 ## 5 TODO List
 
