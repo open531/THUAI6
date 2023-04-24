@@ -5,13 +5,13 @@
 #include "AI.h"
 #include<queue>
 
-/* ÐÅÏ¢Ð­Òé
-ÐÅÏ¢Í·£¨info[0]£©
-MapUpdate µØÍ¼¸üÐÂ
-TrickerInfo µ·µ°¹íÐÅÏ¢
-NeedHelp ÇëÇóÖ§Ô®
-	info[1-2]£º×ø±ê
-WantProp ÇëÇó»ñÈ¡µÀ¾ß£¨¿ÉÄÜÐèÒª·´À¡£¿²»È»Ì«Ô¶ÁËÅÜÈ¥²»»®Ëã£©
+/* ï¿½ï¿½Ï¢Ð­ï¿½ï¿½
+ï¿½ï¿½Ï¢Í·ï¿½ï¿½info[0]ï¿½ï¿½
+MapUpdate ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
+TrickerInfo ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+NeedHelp ï¿½ï¿½ï¿½ï¿½Ö§Ô®
+	info[1-2]ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+WantProp ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»Ì«Ô¶ï¿½ï¿½ï¿½ï¿½È¥ï¿½ï¿½ï¿½ï¿½ï¿½ã£©
 */
 
 #define NoMessage 0x00
@@ -66,12 +66,12 @@ public:
 	void sendMapUpdate(int64_t dest, MapUpdateInfo muinfo);
 	void sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val);
 	void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);
-	void sendNeedHelp(std::shared_ptr<const THUAI6::Student> slf);
+	void sendNeedHelp(int64_t dest,NeedHelpInfo self);
 
-	int receiveMessage(); // ·µ»Ø½ÓÊÕµ½µÄÐÅÏ¢ÀàÐÍ
+	int receiveMessage(); // ï¿½ï¿½ï¿½Ø½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
 	std::pair<int, MapUpdateInfo> receiveMapUpdate();
 	std::pair<int, TrickerInfo_t> receiveTrickerInfo();
-	std::pair<int, NeedHelpInfo> receiveNeedHelp();
+	std::pair<int, int> receiveNeedHelp();
 };
 
 #include "Pigeon.hpp"
