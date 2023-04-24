@@ -228,22 +228,24 @@ bool Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
 	bool IsStuck = (sx == TEMP.x && sy == TEMP.y);
+	std::vector<std::shared_ptr<const THUAI6::Student>> TempS = API.GetStudents();
+	std::vector<std::shared_ptr<const THUAI6::Tricker>> TempT = API.GetTrickers();
 	std::vector<unsigned char> AccessTempS;
 	std::vector<unsigned char> AccessTempT;
-	for (int i = 0; i < API.GetStudents().size(); i++)
+	for (int i = 0; i < TempS.size(); i++)
 	{
-		if ((API.GetStudents()[i]->x / 1000 != sx / 1000) && (API.GetStudents()[i]->y / 1000 != sy / 1000))
+		if ((TempS[i]->x / 1000 != sx / 1000) && (TempS[i]->y / 1000 != sy / 1000))
 		{
-			AccessTempS.emplace_back(Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000]);
-			Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = 0U;
+			AccessTempS.emplace_back(Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000]);
+			Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = 0U;
 		}
 	}
 	for (int i = 0; i < API.GetTrickers().size(); i++)
 	{
-		if ((API.GetTrickers()[i]->x / 1000 != sx / 1000) && (API.GetTrickers()[i]->y / 1000 != sy / 1000))
+		if ((TempT[i]->x / 1000 != sx / 1000) && (TempT[i]->y / 1000 != sy / 1000))
 		{
-			AccessTempT.emplace_back(Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000]);
-			Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = 0U;
+			AccessTempT.emplace_back(Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000]);
+			Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = 0U;
 		}
 	}
 	std::vector<Node> UsablePath;
@@ -251,6 +253,62 @@ bool Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	else UsablePath = AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
 	if (UsablePath.size() < 2)
 	{
+		for (int i = 0, j = 0; i < TempS.size(); i++)
+		{
+			if ((TempS[i]->x / 1000 != sx / 1000) && (TempS[i]->y / 1000 != sy / 1000))
+			{
+				Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
+				j++;
+			}
+		}
+		for (int i = 0, j = 0; i < TempT.size(); i++)
+		{
+			if ((TempT[i]->x / 1000 != sx / 1000) && (TempT[i]->y / 1000 != sy / 1000))
+			{
+				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[i];
+				j++;
+			}
+		}
+		return false;
+	}
+	else
+	{
+		int tx, ty;
+		if (UsablePath.size() >= 3
+			&& IsValidWithoutWindows(sx / 1000, sy / 1000)
+			&& IsValidWithoutWindows(UsablePath[1].x, UsablePath[1].y)
+			&& IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y)
+			&& IsValidWithoutWindows(sx / 1000, UsablePath[2].y)
+			&& IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
+		{
+			tx = UsablePath[2].x * 1000 + 500;
+			ty = UsablePath[2].y * 1000 + 500;
+		}
+		else
+		{
+			tx = UsablePath[1].x * 1000 + 500;
+			ty = UsablePath[1].y * 1000 + 500;
+		}
+		int dx = tx - sx;
+		int dy = ty - sy;
+		if (Map[tx / 1000][ty / 1000] != 7U)
+		{
+			if (!IsStuck)
+			{
+				API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
+			}
+			else
+			{
+				time_t t;
+				srand((unsigned)time(&t) + sx + sy + API.GetSelfInfo()->speed);
+				API.Move(150 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
+			}
+		}
+		else
+		{
+			API.SkipWindow();
+		}
+		TEMP.x = sx; TEMP.y = sy;
 		for (int i = 0, j = 0; i < API.GetStudents().size(); i++)
 		{
 			if ((API.GetStudents()[i]->x / 1000 != sx / 1000) && (API.GetStudents()[i]->y / 1000 != sy / 1000))
@@ -267,61 +325,8 @@ bool Utilities<typename IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 				j++;
 			}
 		}
-		return false;
+		return true;
 	}
-	int tx, ty;
-	if (UsablePath.size() >= 3
-		&& IsValidWithoutWindows(sx / 1000, sy / 1000)
-		&& IsValidWithoutWindows(UsablePath[1].x, UsablePath[1].y)
-		&& IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y)
-		&& IsValidWithoutWindows(sx / 1000, UsablePath[2].y)
-		&& IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
-	{
-		tx = UsablePath[2].x * 1000 + 500;
-		ty = UsablePath[2].y * 1000 + 500;
-	}
-	else
-	{
-		tx = UsablePath[1].x * 1000 + 500;
-		ty = UsablePath[1].y * 1000 + 500;
-	}
-	int dx = tx - sx;
-	int dy = ty - sy;
-	if (Map[tx / 1000][ty / 1000] != 7U)
-	{
-		if (!IsStuck)
-		{
-			API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
-		}
-		else
-		{
-			time_t t;
-			srand((unsigned)time(&t) + sx + sy + API.GetSelfInfo()->speed);
-			API.Move(150 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
-		}
-	}
-	else
-	{
-		API.SkipWindow();
-	}
-	TEMP.x = sx; TEMP.y = sy;
-	for (int i = 0, j = 0; i < API.GetStudents().size(); i++)
-	{
-		if ((API.GetStudents()[i]->x / 1000 != sx / 1000) && (API.GetStudents()[i]->y / 1000 != sy / 1000))
-		{
-			Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = AccessTempS[j];
-			j++;
-		}
-	}
-	for (int i = 0, j = 0; i < API.GetTrickers().size(); i++)
-	{
-		if ((API.GetTrickers()[i]->x / 1000 != sx / 1000) && (API.GetTrickers()[i]->y / 1000 != sy / 1000))
-		{
-			Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = AccessTempT[i];
-			j++;
-		}
-	}
-	return true;
 }
 
 template<typename IFooAPI>
@@ -434,7 +439,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 			//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			if (GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			{
-				Distance = WithWindows ? AStarWithWindows(Self, OpenGate[i]).size() : AStarWithoutWindows(Self, OpenGate[i]).size();
+				Distance = WithWindows ? AStarWithWindows(Self, Gate[i]).size() : AStarWithoutWindows(Self, Gate[i]).size();
 				if (Distance < minDistance && Distance != 0)
 				{
 					minDistance = Distance;
@@ -459,7 +464,7 @@ bool Utilities<typename IFooAPI>::NearGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		if (NearPoint(Gate[i], 2) && API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000) return true;
+		if (NearPoint(Gate[i], 2) && GetGateProgress(Gate[i].x, Gate[i].y) < 18000) return true;
 	}
 	return false;
 }
@@ -469,7 +474,7 @@ bool Utilities<typename IFooAPI>::NearOpenGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		if (NearPoint(Gate[i], 2) && API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000) return true;
+		if (NearPoint(Gate[i], 2) && GetGateProgress(Gate[i].x, Gate[i].y) >= 18000) return true;
 	}
 	return false;
 }
@@ -531,7 +536,6 @@ int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
 {
-	//UpdateClassroom();
 	if (!NearClassroom())
 	{
 		MoveToNearestClassroom(WithWindows);
@@ -545,7 +549,6 @@ void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
 {
-	//UpdateChest();
 	if (!NearChest())
 	{
 		MoveToNearestChest(WithWindows);
@@ -557,23 +560,35 @@ void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectOpeningGate(bool WithWindows)
+void Utilities<typename IFooAPI>::DirectOpeningGate(bool WithWindows, bool CanDirectGraduate)
 {
-	//UpdateGate();
-	if (!NearGate() && !NearOpenGate())
+	if (!NearGate())
 	{
 		MoveToNearestGate(WithWindows);
 	}
 	else
 	{
-		API.StartOpenGate();
+		if (!NearOpenGate())
+		{
+			API.StartOpenGate();
+		}
+		else
+		{
+			if (CanDirectGraduate)
+			{
+				DirectGraduate(WithWindows);
+			}
+			else
+			{
+				MoveToNearestGate(WithWindows);
+			}
+		}
 	}
 }
 
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectGraduate(bool WithWindows)
 {
-	//UpdateGate();
 	if (!NearOpenGate())
 	{
 		MoveToNearestOpenGate(WithWindows);
@@ -615,13 +630,29 @@ int Utilities<typename IFooAPI>::CountHiddenGate() const
 template<typename IFooAPI>
 int Utilities<typename IFooAPI>::CountClosedGate() const
 {
-	return Gate.size();
+	int ret = 0;
+	for (int i = 0; i < Gate.size(); i++)
+	{
+		if (API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
+		{
+			ret++;
+		}
+	}
+	return ret;
 }
 
 template<typename IFooAPI>
 int Utilities<typename IFooAPI>::CountOpenGate() const
 {
-	return OpenGate.size();
+	int ret = 0;
+	for (int i = 0; i < Gate.size(); i++)
+	{
+		if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
+		{
+			ret++;
+		}
+	}
+	return ret;
 }
 
 template<typename IFooAPI>
@@ -692,7 +723,7 @@ void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority,
 				MaxNum = i;
 			}
 		}
-		if(MaxValue > Priority[(int)Inventory[2]])
+		if (MaxValue > Priority[(int)Inventory[2]])
 		{
 			if (!NearPoint(Point(ViewableProps[MaxNum]->x / 1000, ViewableProps[MaxNum]->y / 1000), 0))
 			{
