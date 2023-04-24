@@ -89,8 +89,8 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 - [x] `void sendMapUpdate(int64_t dest, MapUpdateInfo muinfo);`
 - [x] `void sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val);`
-- [ ] `void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);`
-- [ ] `void sendNeedHelp(std::shared_ptr<const THUAI6::Student> slf);` // TODO: 由于队友信息透明，所以不用传数据
+- [x] `void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);`
+- [x] `void sendNeedHelp(int64_t dest, NeedHelpInfo self);` // TODO: 由于队友信息透明，所以不用传数据
 
 ### 接收信息
 
@@ -98,8 +98,8 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 - [x] `int receiveMessage();` // 返回接收到的信息类型
 - [x] `std::pair<int, MapUpdateInfo> receiveMapUpdate();`
-- [ ] `std::pair<int, TrickerInfo_t> receiveTrickerInfo();`
-- [ ] `std::pair<int, NeedHelpInfo> receiveNeedHelp();`
+- [x] `std::pair<int, TrickerInfo_t> receiveTrickerInfo();`
+- [x] `std::pair<int, int> receiveNeedHelp();`
 
 `Pigeon.hpp`实现通信
 
