@@ -20,7 +20,7 @@ class Doors :public Point
 public:
 	Doors(int x_ = 0, int y_ = 0, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
 		:Point(x_, y_), DoorStatus(ds_), DoorType(dt_) {};
-	Doors(Point p_, int ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
+	Doors(Point p_, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
 		:Point(p_), DoorStatus(ds_), DoorType(dt_) {};
 	bool DoorStatus;
 	THUAI6::PlaceType DoorType;
@@ -54,7 +54,6 @@ public:
 	unsigned char Access[50][50];
 	std::vector<Point> Classroom;
 	std::vector<Point> Gate;
-	std::vector<Point> OpenGate;
 	std::vector<Point> HiddenGate;
 	std::vector<Point> Chest;
 	std::vector<Doors> Door;
@@ -100,7 +99,7 @@ public:
 	bool NearChest();								// 已经在箱子旁边了吗？
 	void DirectLearning(bool WithWindows);			// 前往最近的作业并学习
 	void DirectOpeningChest(bool WithWindows);		// 前往最近的箱子并开箱
-	void DirectOpeningGate(bool WithWindows);		// 前往最近的关闭的校门并开门
+	void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);		// 前往最近的关闭的校门并开门
 	void DirectGraduate(bool WithWindows);			// 前往最近的开启的校门并毕业
 	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
 	void DirectUseProp();
