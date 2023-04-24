@@ -63,6 +63,7 @@ sPicking 去捡道具
 
 void AI::play(IStudentAPI& api)
 {
+	api.PrintSelfInfo();
 	static std::vector<unsigned char> Priority = { 0,1,2,3,4,5,6,7,8 };
 	static Pigeon gugu(api);
 	static UtilitiesStudent Helper(api, gugu);
@@ -72,7 +73,7 @@ void AI::play(IStudentAPI& api)
 	int MessageType;
 	while ((MessageType = gugu.receiveMessage()) != NoMessage)
 	{
-		std::cerr << "MessageType = " << MessageType << std::endl;
+//		std::cerr << "MessageType = " << MessageType << std::endl;
 		if (MessageType == MapUpdate)
 		{
 			auto ms = gugu.receiveMapUpdate();
@@ -90,13 +91,22 @@ void AI::play(IStudentAPI& api)
 	}
 	if (Helper.CountFinishedClassroom() >= 7)
 	{
-		if (!Helper.CountOpenGate()) Helper.DirectOpeningGate(true, true);
+		if (!Helper.CountOpenGate())
+		{
+			api.EndAllAction();
+			Helper.DirectOpeningGate(true, true);
+		}
 		else
 		{
+			api.EndAllAction();
 			Helper.DirectGraduate(true);
 		}
 	}
-	else Helper.DirectLearning(true);
+	else
+	{
+		api.EndAllAction();
+		Helper.DirectLearning(true);
+	}
 
 
 	// 公共操作
@@ -177,6 +187,7 @@ void AI::play(ITrickerAPI& api)
 	{
 		CurrentState = sFindStudentAndAttack;
 	}
+	auto stuinfo = api.GetStudents();
 
 	switch (CurrentState)
 	{
@@ -191,7 +202,8 @@ void AI::play(ITrickerAPI& api)
 				else
 				{
 					std::cerr << "[MoveTo]" << stuinfo[0]->x / 1000 << ' ' << stuinfo[0]->y / 1000;
-					Helper.MoveTo(stuinfo[0]->x / 1000-1, stuinfo[0]->y / 1000-1);
+					api.EndAllAction();
+					Helper.MoveTo(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000);
 				}
 			}
 			else Helper.MoveToNearestClassroom(true);

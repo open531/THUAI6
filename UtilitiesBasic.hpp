@@ -53,6 +53,7 @@ void Utilities<IFooAPI>::InitMap(IFooAPI& api)
 template<typename IFooAPI>
 Utilities<IFooAPI>::Utilities(IFooAPI api) : API(api), LastAutoUpdateFrame(0)
 {
+	srand(time(NULL));
 	InitMap(api);
 }
 
@@ -221,7 +222,8 @@ void UtilitiesStudent::AutoUpdate()
 //	}
 //}
 
-bool Utilities<IStudentAPI&>::MoveTo(Point Dest, bool WithWindows)
+template<typename IFooAPI>
+bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
@@ -298,7 +300,6 @@ bool Utilities<IStudentAPI&>::MoveTo(Point Dest, bool WithWindows)
 			else
 			{
 				time_t t;
-				srand((unsigned)time(&t) + sx + sy + API.GetSelfInfo()->speed);
 				API.Move(150 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
 			}
 		}
@@ -327,17 +328,17 @@ bool Utilities<IStudentAPI&>::MoveTo(Point Dest, bool WithWindows)
 	}
 }
 
-bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)
-{
-	int sx = API.GetSelfInfo()->x;
-	int sy = API.GetSelfInfo()->y;
-	std::vector<Node> UsablePath;
-	UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
-	int dx = Dest.x - sx;
-	int dy = Dest.y - sy;
-	API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
-	return true;
-}
+//bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)
+//{
+//	int sx = API.GetSelfInfo()->x;
+//	int sy = API.GetSelfInfo()->y;
+//	std::vector<Node> UsablePath;
+//	UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
+//	int dx = Dest.x - sx;
+//	int dy = Dest.y - sy;
+//	API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
+//	return true;
+//}
 
 template<typename IFooAPI>
 bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)

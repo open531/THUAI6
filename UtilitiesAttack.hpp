@@ -1,7 +1,6 @@
 #include "Utilities.hpp"
 
-template<typename IFooAPI>
-void Utilities<typename IFooAPI>::AssassinDefaultAttack(int rank)//rank是要vector中要攻击的序号，当vector中仅有一个时，自动选择
+void UtilitiesTricker::AssassinDefaultAttack(int rank)//rank是要vector中要攻击的序号，当vector中仅有一个时，自动选择
 {
 	int stux = API.GetStudents()[rank]->x;
 	int stuy = API.GetStudents()[rank]->y;
@@ -10,8 +9,7 @@ void Utilities<typename IFooAPI>::AssassinDefaultAttack(int rank)//rank是要vecto
 	API.Attack(atan2(stuy - sy, stux - sx));
 }
 
-template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::AssassinDefaultAttackOver(int rank)
+bool UtilitiesTricker::AssassinDefaultAttackOver(int rank)
 {
 	int stux = API.GetStudents()[rank]->x;
 	int stuy = API.GetStudents()[rank]->y;
