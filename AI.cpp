@@ -58,7 +58,8 @@ sPicking 去捡道具
 #define sEncouraging 0x16
 #define sPicking 0x17
 
-#define sFindStudentAndAttack 0x18
+#define sFindStudent 0x20
+#define sAttackStudent 0x21
 
 
 void AI::play(IStudentAPI& api)
@@ -92,15 +93,27 @@ void AI::play(IStudentAPI& api)
 	{
 		if (!Helper.CountOpenGate())
 		{
+<<<<<<< HEAD
+=======
+//			api.EndAllAction();
+>>>>>>> ceb677d709a11f31e97f4df4b2195d189f4df231
 			Helper.DirectOpeningGate(true, true);
 		}
 		else
 		{
+<<<<<<< HEAD
+=======
+//			api.EndAllAction();
+>>>>>>> ceb677d709a11f31e97f4df4b2195d189f4df231
 			Helper.DirectGraduate(true);
 		}
 	}
 	else
 	{
+<<<<<<< HEAD
+=======
+//			api.EndAllAction();
+>>>>>>> ceb677d709a11f31e97f4df4b2195d189f4df231
 		Helper.DirectLearning(true);
 	}
 
@@ -181,12 +194,13 @@ void AI::play(ITrickerAPI& api)
 
 	if (CurrentState == sDefault)
 	{
-		CurrentState = sFindStudentAndAttack;
+		CurrentState = sFindStudent;
 	}
 	auto stuinfo = api.GetStudents();
 
 	switch (CurrentState)
 	{
+<<<<<<< HEAD
 	case sDefault:
 		break;
 	case sFindStudentAndAttack:
@@ -203,5 +217,38 @@ void AI::play(ITrickerAPI& api)
 		}
 		else Helper.MoveToNearestClassroom(true);
 		break;
+=======
+		case sDefault:
+			if (stuinfo.size() > 0) CurrentState = sAttackStudent;
+			else CurrentState = sFindStudent;
+			break;
+		case sFindStudent:
+			if (stuinfo.size() > 0) CurrentState = sAttackStudent;
+			break;
+		case sAttackStudent:
+			if (stuinfo.size() == 0) CurrentState = sFindStudent;
+			break;
+	}
+
+
+	switch (CurrentState)
+	{
+		case sDefault:
+			std::cerr << "CurrentState: sDefault" << std::endl;
+			break;
+		case sFindStudent:
+			std::cerr << "CurrentState: sFindStudent" << std::endl;
+			Helper.MoveToNearestClassroom(true);
+			break;
+		case sAttackStudent:
+			std::cerr << "CurrentState: sAttackStudent" << std::endl;
+			std::cerr << "See student " << stuinfo.size();
+			if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+			else
+			{
+				Helper.MoveTo(Point(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000), true);
+			}
+			break;
+>>>>>>> ceb677d709a11f31e97f4df4b2195d189f4df231
 	}
 }
