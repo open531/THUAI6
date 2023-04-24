@@ -72,6 +72,20 @@ void AI::play(IStudentAPI& api)
 	Helper.AutoUpdate();
 	int MessageType;
 	while ((MessageType = gugu.receiveMessage()) != NoMessage)
+<<<<<<< HEAD
+	{
+		std::cerr << "MessageType = " << MessageType << std::endl;
+		if (MessageType == MapUpdate)
+		{
+			auto ms = gugu.receiveMapUpdate();
+			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
+			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
+			Helper.Update(ms.second, ms.first);
+		}
+	}
+	if (Helper.Classroom.size() < 3)
+=======
+>>>>>>> 35fe54f226b9ad199ef7a9181b91445b30c07af2
 	{
 //		std::cerr << "MessageType = " << MessageType << std::endl;
 		if (MessageType == MapUpdate)
