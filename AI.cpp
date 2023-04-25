@@ -58,9 +58,9 @@ sPicking 去捡道具
 #define sEncouraging 0x16
 #define sPicking 0x17
 
-#define sFindStudent 0x20
-#define sAttackStudent 0x21
-#define sChaseStudent 0x22
+#define sFindPlayer 0x20
+#define sAttackPlayer 0x21
+#define sChasePlayer 0x22
 
 
 void AI::play(IStudentAPI& api)
@@ -90,83 +90,151 @@ void AI::play(IStudentAPI& api)
 	{
 		std::cerr << "[Gate" << i << "]" << api.GetGateProgress(Helper.Gate[i].x, Helper.Gate[i].y) << std::endl;
 	}
-	if (Helper.CountFinishedClassroom() > 7)
-	{
-		if (!Helper.CountOpenGate())
-		{
-			//api.EndAllAction();
-			Helper.DirectOpeningGate(true, true);
-		}
-		else
-		{
-			//api.EndAllAction();
-			Helper.DirectGraduate(true);
-		}
-	}
-	else
-	{
-		//api.EndAllAction();
-		Helper.DirectLearning(true);
-	}
+
 
 
 	// 公共操作
 	if (this->playerID == 0)
 	{
-		//Helper.AutoUpdate();
-		//if (Helper.CountFinishedClassroom() > 7)
-		//{
-		//	if (Helper.CountOpenGate() < 1) Helper.DirectOpeningGate(true);
-		//	else Helper.DirectGraduate(true);
-		//}
-		//else Helper.DirectLearning(true);
+		auto stuinfo = api.GetStudents();
+		auto triinfo = api.GetTrickers();
+		static bool visitClassroom[10];
+		static int countVisitedClassroom = 0;
+		bool haveTricker = false;
+		if (!triinfo.empty()) haveTricker = true;
+		static bool ChaseIt = false;
+		static Point ChaseDest;
 
-		// 玩家0执行操作
+		switch (CurrentState)
+		{
+		case sDefault:
+			if (haveTricker) CurrentState = sAttackPlayer;
+			else if (ChaseIt) CurrentState = sChasePlayer;
+			else CurrentState = sFindPlayer;
+			break;
+		case sFindPlayer:
+			if (haveTricker) CurrentState = sAttackPlayer;
+			break;
+		case sAttackPlayer:
+			ChaseIt = true;
+			ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
+			if (!haveTricker) CurrentState = sChasePlayer;
+			break;
+		case sChasePlayer:
+			if (haveTricker) CurrentState = sAttackPlayer;
+			else if (Helper.NearPoint(ChaseDest.ToNormal(), 2))
+			{
+				ChaseIt = false;
+				CurrentState = sDefault;
+			}
+			break;
+		}
+
+		switch (CurrentState)
+		{
+		case sDefault:
+			std::cerr << "CurrentState: sDefault" << std::endl;
+			break;
+		case sFindPlayer:
+			std::cerr << "CurrentState: sFindPlayer" << std::endl;
+			if (Helper.NearClassroom(false))
+			{
+				for (int i = 0; i < 10; i++)
+					if (Helper.NearPoint(Helper.Classroom[i], 2))
+					{
+						visitClassroom[i] = true;
+						countVisitedClassroom++;
+					}
+			}
+			if (countVisitedClassroom == 10)
+			{
+				for (int i = 0; i < 10; i++)
+				{
+					visitClassroom[i] = false;
+				}
+				countVisitedClassroom = 0;
+			}
+			for (int i = 0; i < 10; i++)
+				if (!visitClassroom[i])
+				{
+					Helper.MoveTo(Helper.Classroom[i], 1);
+					break;
+				}
+			break;
+		case sAttackPlayer:
+			if (!Helper.TeacherPunishCD()) Helper.TeacherPunish();
+			break;
+		case sChasePlayer:
+			std::cerr << "CurrentState: sChasePlayer" << std::endl;
+			Helper.MoveTo(ChaseDest.ToNormal(), true);
+			break;
+			// 玩家0执行操作
+		}
 	}
 	else if (this->playerID == 1)
 	{
-		//Helper.DirectLearning(1);
-		//return;
-		//Helper.AutoUpdate();
-		//while (gugu.receiveMessage()); // 收信息
-
-		//std::shared_ptr<const THUAI6::Student> selfinfo = api.GetSelfInfo();
-		//std::vector<std::shared_ptr<const THUAI6::Tricker>> tinfo = api.GetTrickers();
-		//if (CurrentState != sDanger)
-		//{
-		//	if (!tinfo.empty())
-		//	{
-		//		api.EndAllAction();
-		//		gugu.sendTrickerInfo(0, tinfo);
-		//		gugu.sendTrickerInfo(2, tinfo);
-		//		gugu.sendTrickerInfo(3, tinfo);
-		//		CurrentState = sDanger;
-		//	}
-		//}
-		//if (CurrentState == sDefault)
-		//{
-		//	if (Helper.CountFinishedClassroom() <= 7) CurrentState = sDoClassroom;
-		//	else CurrentState = sOpenGate;
-		//}
-		//if (CurrentState == sDoClassroom)
-		//{
-		//	Helper.DirectLearning(1);
-		//	if (Helper.CountFinishedClassroom() > 7) CurrentState = sDefault;
-		//	// 学完了就走
-		//}
-		//else if (CurrentState == sOpenGate)
-		//{
-		//	if (!Helper.NearGate()) Helper.MoveToNearestGate(1);
-		//	else api.StartOpenGate();
-		//}
+		if (Helper.CountFinishedClassroom() > 7)
+		{
+			if (!Helper.CountOpenGate())
+			{
+				//api.EndAllAction();
+				Helper.DirectOpeningGate(true, true);
+			}
+			else
+			{
+				//api.EndAllAction();
+				Helper.DirectGraduate(true);
+			}
+		}
+		else
+		{
+			//api.EndAllAction();
+			Helper.DirectLearning(true);
+		}
 		// 玩家1执行操作
 	}
 	else if (this->playerID == 2)
 	{
+		if (Helper.CountFinishedClassroom() > 7)
+		{
+			if (!Helper.CountOpenGate())
+			{
+				//api.EndAllAction();
+				Helper.DirectOpeningGate(true, true);
+			}
+			else
+			{
+				//api.EndAllAction();
+				Helper.DirectGraduate(true);
+			}
+		}
+		else
+		{
+			//api.EndAllAction();
+			Helper.DirectLearning(true);
+		}
 		// 玩家2执行操作
 	}
 	else if (this->playerID == 3)
 	{
+		if (Helper.CountFinishedClassroom() > 7)
+		{
+			if (!Helper.CountOpenGate())
+			{
+				//api.EndAllAction();
+				Helper.DirectOpeningGate(true, true);
+			}
+			else
+			{
+				//api.EndAllAction();
+				Helper.DirectGraduate(true);
+			}
+		}
+		else
+		{
+			//api.EndAllAction();
+			Helper.DirectLearning(true);
+		}
 		// 玩家3执行操作
 	}
 	//当然可以写成if (this->playerID == 2||this->playerID == 3)之类的操作
@@ -187,7 +255,7 @@ void AI::play(ITrickerAPI& api)
 	auto stuinfo = api.GetStudents();
 
 	static bool visitClassroom[10];
-
+	static int countVisitedClassroom = 0;
 	bool haveNonAddictedStudent = false;
 	int nonAddictedId = -1;
 	for (int i = 0; i < stuinfo.size(); i++)
@@ -204,18 +272,18 @@ void AI::play(ITrickerAPI& api)
 	switch (CurrentState)
 	{
 	case sDefault:
-		if (haveNonAddictedStudent) CurrentState = sAttackStudent;
-		else if (ChaseIt) CurrentState = sChaseStudent;
-		else CurrentState = sFindStudent;
+		if (haveNonAddictedStudent) CurrentState = sAttackPlayer;
+		else if (ChaseIt) CurrentState = sChasePlayer;
+		else CurrentState = sFindPlayer;
 		break;
-	case sFindStudent:
-		if (haveNonAddictedStudent) CurrentState = sAttackStudent;
+	case sFindPlayer:
+		if (haveNonAddictedStudent) CurrentState = sAttackPlayer;
 		break;
-	case sAttackStudent:
-		if (!haveNonAddictedStudent) CurrentState = sChaseStudent;
+	case sAttackPlayer:
+		if (!haveNonAddictedStudent) CurrentState = sChasePlayer;
 		break;
-	case sChaseStudent:
-		if (haveNonAddictedStudent) CurrentState = sAttackStudent;
+	case sChasePlayer:
+		if (haveNonAddictedStudent) CurrentState = sAttackPlayer;
 		else if (Helper.NearPoint(ChaseDest.ToNormal(), 2))
 		{
 			ChaseIt = false;
@@ -229,12 +297,24 @@ void AI::play(ITrickerAPI& api)
 	case sDefault:
 		std::cerr << "CurrentState: sDefault" << std::endl;
 		break;
-	case sFindStudent:
-		std::cerr << "CurrentState: sFindStudent" << std::endl;
+	case sFindPlayer:
+		std::cerr << "CurrentState: sFindPlayer" << std::endl;
 		if (Helper.NearClassroom(false))
 		{
 			for (int i = 0; i < 10; i++)
-				if (Helper.NearPoint(Helper.Classroom[i], 2)) visitClassroom[i] = true;
+				if (Helper.NearPoint(Helper.Classroom[i], 2))
+				{
+					visitClassroom[i] = true;
+					countVisitedClassroom++;
+				}
+		}
+		if (countVisitedClassroom == 10)
+		{
+			for (int i = 0; i < 10; i++)
+			{
+				visitClassroom[i] = false;
+			}
+			countVisitedClassroom = 0;
 		}
 		for (int i = 0; i < 10; i++)
 			if (!visitClassroom[i])
@@ -243,16 +323,16 @@ void AI::play(ITrickerAPI& api)
 				break;
 			}
 		break;
-	case sAttackStudent:
-		std::cerr << "CurrentState: sAttackStudent" << std::endl;
+	case sAttackPlayer:
+		std::cerr << "CurrentState: sAttackPlayer" << std::endl;
 		std::cerr << "See student " << stuinfo.size() << std::endl;
 		std::cerr << "Decide to attack " << stuinfo[nonAddictedId]->playerID << std::endl;
 		ChaseIt = true;
 		ChaseDest = Point(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
-		if (abs(api.GetSelfInfo()->x-stuinfo[nonAddictedId]->x) + abs(api.GetSelfInfo()->y-stuinfo[nonAddictedId]->y) < 2000)
+		if (abs(api.GetSelfInfo()->x - stuinfo[nonAddictedId]->x) + abs(api.GetSelfInfo()->y - stuinfo[nonAddictedId]->y) < 2000)
 		{
 			Helper.AssassinDefaultAttack(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
-//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+			//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
 		}
 		else
 		{
@@ -260,8 +340,8 @@ void AI::play(ITrickerAPI& api)
 			Helper.MoveTo(Point(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), true);
 		}
 		break;
-	case sChaseStudent:
-		std::cerr << "CurrentState: sChaseStudent" << std::endl;
+	case sChasePlayer:
+		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		Helper.MoveTo(ChaseDest.ToNormal(), true);
 		break;
 	}
