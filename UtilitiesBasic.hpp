@@ -304,7 +304,7 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 			}
 			else
 			{
-				API.Move(250 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
+				API.Move(100 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
 			}
 		}
 		else

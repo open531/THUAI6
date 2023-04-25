@@ -99,6 +99,7 @@ void AI::play(IStudentAPI& api)
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
 		static bool visitClassroom[10];
+		static bool visitClassroomUpdated[10];
 		static int countVisitedClassroom = 0;
 		bool haveTricker = false;
 		if (!triinfo.empty()) haveTricker = true;
@@ -117,7 +118,7 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sAttackPlayer:
 			ChaseIt = true;
-			ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
+			if (!triinfo.empty()) ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
 			if (!haveTricker) CurrentState = sChasePlayer;
 			break;
 		case sChasePlayer:
@@ -143,8 +144,16 @@ void AI::play(IStudentAPI& api)
 					if (Helper.NearPoint(Helper.Classroom[i], 2))
 					{
 						visitClassroom[i] = true;
-						countVisitedClassroom++;
+						//countVisitedClassroom++;
 					}
+			}
+			for (int i = 0; i < 10; i++)
+			{
+				if (visitClassroom[i] && !visitClassroomUpdated[i])
+				{
+					countVisitedClassroom++;
+					visitClassroomUpdated[i] = true;
+				}
 			}
 			if (countVisitedClassroom == 10)
 			{
@@ -162,7 +171,30 @@ void AI::play(IStudentAPI& api)
 				}
 			break;
 		case sAttackPlayer:
-			if (!Helper.TeacherPunishCD()) Helper.TeacherPunish();
+			if (!triinfo.empty())
+				if (Helper.IsViewable(triinfo[0]->x, triinfo[0]->y, api.GetSelfInfo()->viewRange)
+					&& triinfo[0]->playerState == THUAI6::PlayerState::Climbing
+					|| triinfo[0]->playerState == THUAI6::PlayerState::Locking
+					|| triinfo[0]->playerState == THUAI6::PlayerState::Attacking
+					|| triinfo[0]->playerState == THUAI6::PlayerState::Swinging)
+				{
+					if (!Helper.TeacherPunishCD()) Helper.TeacherPunish();
+					else
+					{
+						for (int i = 0; i < 10; i++)
+							if (!visitClassroom[i])
+							{
+								Helper.MoveTo(Helper.Classroom[i], 1);
+								break;
+							}
+					}
+					//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+				}
+				else
+				{
+					//api.EndAllAction();
+					Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+				}
 			break;
 		case sChasePlayer:
 			std::cerr << "CurrentState: sChasePlayer" << std::endl;
@@ -255,6 +287,7 @@ void AI::play(ITrickerAPI& api)
 	auto stuinfo = api.GetStudents();
 
 	static bool visitClassroom[10];
+	static bool visitClassroomUpdated[10];
 	static int countVisitedClassroom = 0;
 	bool haveNonAddictedStudent = false;
 	int nonAddictedId = -1;
@@ -305,8 +338,16 @@ void AI::play(ITrickerAPI& api)
 				if (Helper.NearPoint(Helper.Classroom[i], 2))
 				{
 					visitClassroom[i] = true;
-					countVisitedClassroom++;
+					//countVisitedClassroom++;
 				}
+		}
+		for (int i = 0; i < 10; i++)
+		{
+			if (visitClassroom[i] && !visitClassroomUpdated[i])
+			{
+				countVisitedClassroom++;
+				visitClassroomUpdated[i] = true;
+			}
 		}
 		if (countVisitedClassroom == 10)
 		{
