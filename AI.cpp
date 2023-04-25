@@ -22,10 +22,10 @@ extern const bool asynchronous = false;
 // 选手需要依次将player0到player4的职业在这里定义
 
 extern const std::array<THUAI6::StudentType, 4> studentType = {
+	THUAI6::StudentType::Teacher,
 	THUAI6::StudentType::StraightAStudent,
-	THUAI6::StudentType::StraightAStudent,
-	THUAI6::StudentType::StraightAStudent,
-	THUAI6::StudentType::StraightAStudent };
+	THUAI6::StudentType::Athlete,
+	THUAI6::StudentType::Sunshine };
 
 extern const THUAI6::TrickerType trickerType = THUAI6::TrickerType::Assassin;
 
@@ -60,6 +60,7 @@ sPicking 去捡道具
 
 #define sFindStudent 0x20
 #define sAttackStudent 0x21
+#define sChaseStudent 0x22
 
 
 void AI::play(IStudentAPI& api)
@@ -183,23 +184,43 @@ void AI::play(ITrickerAPI& api)
 
 	//	Helper.AutoUpdate();
 
-	if (CurrentState == sDefault)
-	{
-		CurrentState = sFindStudent;
-	}
 	auto stuinfo = api.GetStudents();
+
+	static bool visitClassroom[10];
+
+	bool haveNonAddictedStudent = false;
+	int nonAddictedId = -1;
+	for (int i = 0; i < stuinfo.size(); i++)
+	{
+		if (stuinfo[i]->playerState != THUAI6::PlayerState::Addicted)
+		{
+			haveNonAddictedStudent = true;
+			nonAddictedId = i;
+		}
+	}
+	static bool ChaseIt = false;
+	static Point ChaseDest;
 
 	switch (CurrentState)
 	{
 	case sDefault:
-		if (stuinfo.size() > 0) CurrentState = sAttackStudent;
+		if (haveNonAddictedStudent) CurrentState = sAttackStudent;
+		else if (ChaseIt) CurrentState = sChaseStudent;
 		else CurrentState = sFindStudent;
 		break;
 	case sFindStudent:
-		if (stuinfo.size() > 0) CurrentState = sAttackStudent;
+		if (haveNonAddictedStudent) CurrentState = sAttackStudent;
 		break;
 	case sAttackStudent:
-		if (stuinfo.size() == 0) CurrentState = sFindStudent;
+		if (!haveNonAddictedStudent) CurrentState = sChaseStudent;
+		break;
+	case sChaseStudent:
+		if (haveNonAddictedStudent) CurrentState = sAttackStudent;
+		else if (Helper.NearPoint(ChaseDest, 2))
+		{
+			ChaseIt = false;
+			CurrentState = sDefault;
+		}
 		break;
 	}
 
@@ -210,17 +231,38 @@ void AI::play(ITrickerAPI& api)
 		break;
 	case sFindStudent:
 		std::cerr << "CurrentState: sFindStudent" << std::endl;
-		Helper.MoveToNearestClassroom(true);
+		if (Helper.NearClassroom(false))
+		{
+			for (int i = 0; i < 10; i++)
+				if (Helper.NearPoint(Helper.Classroom[i], 2)) visitClassroom[i] = true;
+		}
+		for (int i = 0; i < 10; i++)
+			if (!visitClassroom[i])
+			{
+				Helper.MoveTo(Helper.Classroom[i], 1);
+				break;
+			}
 		break;
 	case sAttackStudent:
 		std::cerr << "CurrentState: sAttackStudent" << std::endl;
-		std::cerr << "See student " << stuinfo.size();
-		if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+		std::cerr << "See student " << stuinfo.size() << std::endl;
+		std::cerr << "Decide to attack " << stuinfo[nonAddictedId]->playerID << std::endl;
+		ChaseIt = true;
+		ChaseDest = Point(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
+		if (abs(api.GetSelfInfo()->x-stuinfo[nonAddictedId]->x) + abs(api.GetSelfInfo()->y-stuinfo[nonAddictedId]->y) < 2000)
+		{
+			Helper.AssassinDefaultAttack(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
+//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+		}
 		else
 		{
 			//api.EndAllAction();
-			Helper.MoveTo(Point(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000), true);
+			Helper.MoveTo(Point(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), true);
 		}
+		break;
+	case sChaseStudent:
+		std::cerr << "CurrentState: sChaseStudent" << std::endl;
+		Helper.MoveTo(ChaseDest.ToNormal(), true);
 		break;
 	}
 }

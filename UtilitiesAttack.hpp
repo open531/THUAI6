@@ -17,10 +17,10 @@ bool UtilitiesTricker::AssassinDefaultAttackOver(int rank)
 	switch (API.GetStudents()[rank]->studentType)
 	{
 	case THUAI6::StudentType::Athlete://运动员
-		if (Distance<double(7400 * 400 / 3150 - 0.297 * 3150))
+		if (Distance<double(7400 * 400 / 3150 - 0.297 * 3150)) // = 4.13 ??? @dgf
 			return true;
 	case THUAI6::StudentType::Teacher://老师
-		if (Distance<double(7400 * 400 / 2700 - 0.297 * 2700))
+		if (Distance<double(7400 * 400 / 2700 - 0.297 * 2700)) // = 294
 			return true;
 	case THUAI6::StudentType::StraightAStudent://学霸
 		if (Distance<double(7400 * 400 / 2880 - 0.297 * 2880))

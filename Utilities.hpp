@@ -10,8 +10,8 @@ class Point
 {
 public:
 	Point(int x_ = 0, int y_ = 0) :x(x_), y(y_) {}
-	//	Point ToAcc() { return Point(x * 1000 + 500, y * 1000 + 500); }
-	//	Point ToNormal() { return Point(x / 1000, y / 1000); }
+	Point ToAcc() { return Point(x * 1000 + 500, y * 1000 + 500); }
+	Point ToNormal() { return Point(x / 1000, y / 1000); }
 	int x;
 	int y;
 };
@@ -91,7 +91,7 @@ public:
 	bool MoveToNearestOpenGate(bool WithWindows);	// 往最近的开启的校门旁边动一动
 	bool MoveToNearestChest(bool WithWindows);		// 往最近的箱子的方向动一动
 	bool NearPoint(Point P, int level = 1);         // level=0判断当前是否在该格子上，1判断是否在格子上或周围4格，2判断是否在格子上或周围8格
-	bool NearClassroom();							// 已经在作业旁边了吗？
+	bool NearClassroom(bool checkProgress);							// 已经在作业旁边了吗？
 	bool NearGate();								// 已经在关闭的校门旁边了吗？
 	bool NearOpenGate();							// 已经在开启的校门旁边了吗？
 	bool NearChest();								// 已经在箱子旁边了吗？

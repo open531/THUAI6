@@ -397,11 +397,11 @@ bool Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::NearClassroom()
+bool Utilities<typename IFooAPI>::NearClassroom(bool checkProgress)
 {
 	for (int i = 0; i < Classroom.size(); i++)
 	{
-		if (NearPoint(Classroom[i], 2) && API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000) return true;
+		if (NearPoint(Classroom[i], 2) && (!checkProgress || (checkProgress && GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000))) return true;
 	}
 	return false;
 }
@@ -551,7 +551,7 @@ int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
 template<typename IFooAPI>
 void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
 {
-	if (!NearClassroom())
+	if (!NearClassroom(true))
 	{
 		MoveToNearestClassroom(WithWindows);
 	}
@@ -777,7 +777,7 @@ bool Utilities<typename IFooAPI>::IsViewable(Point Src, Point Dest, int ViewRang
 		return false;
 	if (Distance < ViewRange * ViewRange)
 	{
-		int divide = std::max(std::abs(deltaX), std::abs(deltaY)) / 100;
+		double divide = std::max(std::abs(deltaX), std::abs(deltaY)) / 100.;
 		if (divide == 0)
 			return true;
 		double dx = deltaX / divide;
