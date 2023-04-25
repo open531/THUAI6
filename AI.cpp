@@ -93,18 +93,18 @@ void AI::play(IStudentAPI& api)
 	{
 		if (!Helper.CountOpenGate())
 		{
-//			api.EndAllAction();
+			api.EndAllAction();
 			Helper.DirectOpeningGate(true, true);
 		}
 		else
 		{
-//			api.EndAllAction();
+			api.EndAllAction();
 			Helper.DirectGraduate(true);
 		}
 	}
 	else
 	{
-//		api.EndAllAction();
+		api.EndAllAction();
 		Helper.DirectLearning(true);
 	}
 
