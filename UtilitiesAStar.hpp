@@ -257,3 +257,40 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithWindows(Node src, Node dest)
 		return empty;
 	}
 }
+
+// accurate position
+class GeometryPoint
+{
+private:
+	double PointX, PointY;
+
+public:
+	GeometryPoint(double PX, double PY) : PointX(PX), PointY(PY) {}
+	GeometryPoint(const GeometryPoint& P_) : PointX(P_.PointX), PointY(P_.PointY) {}
+};
+
+// with direction S->T(can be treated as a vector), right side of the segment represents inside
+class GeometrySegment
+{
+private:
+	GeometryPoint S, T;
+	GeometrySegment(GeometryPoint PS, GeometryPoint PT) : S(PS), T(PT) {}
+};
+
+template<typename IFooAPI>
+class AStarPlus
+{
+private:
+	std::vector<GeometrySegment> StableMap;
+	std::vector<GeometryPoint> StableCheckPoint;
+	std::vector<GeometrySegment> VariableMap;
+	std::vector<GeometryPoint> VariableCheckPoint;
+
+	void InitStableMap(IFooAPI& API);
+	bool InsideMap(std::vector<GeometrySegment> StableMap)
+
+public:
+	bool InsideMap();
+	void ResetVariableMap();
+	void AddPlayerObstacle();
+};
