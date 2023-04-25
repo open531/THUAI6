@@ -216,7 +216,7 @@ void AI::play(ITrickerAPI& api)
 		break;
 	case sChaseStudent:
 		if (haveNonAddictedStudent) CurrentState = sAttackStudent;
-		else if (Helper.NearPoint(ChaseDest, 2))
+		else if (Helper.NearPoint(ChaseDest.ToNormal(), 2))
 		{
 			ChaseIt = false;
 			CurrentState = sDefault;
