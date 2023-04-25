@@ -134,6 +134,12 @@ public:
 	void SunshineRouse();
 	void SunshineEncourage();
 	void SunshineInspire();
+	double AtheleteCanBeginToChargeCD();
+	double TeacherPunishCD();
+	double StraightAStudentWriteAnswersCD();
+	double SunshineRouseCD();
+	double SunshineEncourageCD();
+	double SunshineInspireCD();
 	void AutoUpdate();
 };
 
@@ -146,6 +152,7 @@ public:
 	bool AssassinDefaultAttackOver(int rank);//判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
 	void AssassinBecomeInvisible();
 	void AssassinFlyingKnife(int stux, int stuy);
+	double AssassinFlyingKnifeCD();
 };
 
 UtilitiesStudent::UtilitiesStudent(IStudentAPI& api, Pigeon& gugu_) : Utilities<IStudentAPI&>(api), gugu(gugu_) { }

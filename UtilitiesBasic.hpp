@@ -300,12 +300,11 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 		{
 			if (!IsStuck)
 			{
-				API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
+				API.Move(500 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
 			}
 			else
 			{
-				time_t t;
-				API.Move(150 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
+				API.Move(250 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
 			}
 		}
 		else
@@ -908,4 +907,34 @@ void UtilitiesStudent::SunshineEncourage()
 void UtilitiesStudent::SunshineInspire()
 {
 	API.UseSkill(2);
+}
+
+double UtilitiesStudent::AtheleteCanBeginToChargeCD()
+{
+	return API.GetSelfInfo()->timeUntilSkillAvailable[0];
+}
+
+double UtilitiesStudent::TeacherPunishCD()
+{
+	return API.GetSelfInfo()->timeUntilSkillAvailable[0];
+}
+
+double UtilitiesStudent::StraightAStudentWriteAnswersCD()
+{
+	return API.GetSelfInfo()->timeUntilSkillAvailable[0];
+}
+
+double UtilitiesStudent::SunshineRouseCD()
+{
+	return API.GetSelfInfo()->timeUntilSkillAvailable[0];
+}
+
+double UtilitiesStudent::SunshineEncourageCD()
+{
+	return API.GetSelfInfo()->timeUntilSkillAvailable[1];
+}
+
+double UtilitiesStudent::SunshineInspireCD()
+{
+	return API.GetSelfInfo()->timeUntilSkillAvailable[2];
 }

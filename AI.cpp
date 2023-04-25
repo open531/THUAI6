@@ -93,18 +93,18 @@ void AI::play(IStudentAPI& api)
 	{
 		if (!Helper.CountOpenGate())
 		{
-			api.EndAllAction();
+			//api.EndAllAction();
 			Helper.DirectOpeningGate(true, true);
 		}
 		else
 		{
-			api.EndAllAction();
+			//api.EndAllAction();
 			Helper.DirectGraduate(true);
 		}
 	}
 	else
 	{
-		api.EndAllAction();
+		//api.EndAllAction();
 		Helper.DirectLearning(true);
 	}
 
@@ -218,7 +218,7 @@ void AI::play(ITrickerAPI& api)
 		if (abs(self->x - stuinfo[0]->x) + abs(self->y - stuinfo[0]->y) < 1000) api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
 		else
 		{
-			api.EndAllAction();
+			//api.EndAllAction();
 			Helper.MoveTo(Point(stuinfo[0]->x / 1000, stuinfo[0]->y / 1000), true);
 		}
 		break;
