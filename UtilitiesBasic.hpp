@@ -359,6 +359,12 @@ bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
 	case 2:
 		return (abs(P.x - Self.x) <= 1 && abs(P.y - Self.y) <= 1) ? true : false;
 		break;
+	case 3:	// Hide Tricker
+		return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 3) ? true : false;
+		break;
+	case 4:	// Hide Tricker
+		return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 5) ? true : false;
+		break;
 	}
 }
 

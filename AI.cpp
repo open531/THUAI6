@@ -109,7 +109,7 @@ void AI::play(IStudentAPI& api)
 		switch (CurrentState)
 		{
 		case sDefault:
-			if (haveTricker) CurrentState = sAttackPlayer;
+			if (haveTricker && Helper.TeacherPunishCD() < 10) CurrentState = sAttackPlayer;
 			else if (ChaseIt) CurrentState = sChasePlayer;
 			else CurrentState = sFindPlayer;
 			break;
@@ -118,12 +118,17 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sAttackPlayer:
 			ChaseIt = true;
-			if (!triinfo.empty()) ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
+			if (haveTricker && !Helper.NearPoint(ChaseDest.ToNormal(), 3)) ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
+			if (haveTricker && Helper.NearPoint(ChaseDest.ToNormal(), 4))
+			{
+				ChaseIt = false;
+				CurrentState = sDefault;
+			}
 			if (!haveTricker) CurrentState = sChasePlayer;
 			break;
 		case sChasePlayer:
-			if (haveTricker) CurrentState = sAttackPlayer;
-			else if (Helper.NearPoint(ChaseDest.ToNormal(), 2))
+			if (haveTricker && !Helper.NearPoint(ChaseDest.ToNormal(), 4)) CurrentState = sAttackPlayer;
+			else
 			{
 				ChaseIt = false;
 				CurrentState = sDefault;
@@ -141,7 +146,7 @@ void AI::play(IStudentAPI& api)
 			if (Helper.NearClassroom(false))
 			{
 				for (int i = 0; i < 10; i++)
-					if (Helper.NearPoint(Helper.Classroom[i], 2))
+					if (Helper.NearPoint(Helper.Classroom[i], 3))
 					{
 						visitClassroom[i] = true;
 						//countVisitedClassroom++;
@@ -199,6 +204,11 @@ void AI::play(IStudentAPI& api)
 		case sChasePlayer:
 			std::cerr << "CurrentState: sChasePlayer" << std::endl;
 			Helper.MoveTo(ChaseDest.ToNormal(), true);
+			if (Helper.NearPoint(ChaseDest.ToNormal(), 3))
+			{
+				ChaseIt = false;
+				CurrentState = sDefault;
+			}
 			break;
 			// 玩家0执行操作
 		}
@@ -229,7 +239,7 @@ void AI::play(IStudentAPI& api)
 	{
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
-		
+
 		static bool visitClassroom[10];
 		static bool visitClassroomUpdated[10];
 		static int countVisitedClassroom = 0;
@@ -278,7 +288,7 @@ void AI::play(IStudentAPI& api)
 			if (Helper.NearClassroom(false))
 			{
 				for (int i = 0; i < 10; i++)
-					if (Helper.NearPoint(Helper.Classroom[i], 2))
+					if (Helper.NearPoint(Helper.Classroom[i], 3))
 					{
 						visitClassroom[i] = true;
 						//countVisitedClassroom++;
@@ -309,38 +319,38 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sAttackPlayer:
 			std::cerr << "CurrentState: sAttackPlayer" << std::endl;
-			
+
 			if (!triinfo.empty())
 			{
-					auto tritype = triinfo[0]->trickerType;
-					auto trirange = sqrt((triinfo[0]->x-api.GetSelfInfo()->x) * (triinfo[0]->x - api.GetSelfInfo()->x) + (triinfo[0]->y - api.GetSelfInfo()->y) * (triinfo[0]->y - api.GetSelfInfo()->y));
-					if (!Helper.AtheleteCanBeginToChargeCD()&&(static_cast<int>(tritype) == 1 && trirange < 1954.5 || static_cast<int>(tritype) == 2 && trirange < 2050 || static_cast<int>(tritype) == 3 && trirange < 1981.31 || static_cast<int>(tritype) == 4 && trirange < 2050))
+				auto tritype = triinfo[0]->trickerType;
+				auto trirange = sqrt((triinfo[0]->x - api.GetSelfInfo()->x) * (triinfo[0]->x - api.GetSelfInfo()->x) + (triinfo[0]->y - api.GetSelfInfo()->y) * (triinfo[0]->y - api.GetSelfInfo()->y));
+				if (!Helper.AtheleteCanBeginToChargeCD() && (static_cast<int>(tritype) == 1 && trirange < 1954.5 || static_cast<int>(tritype) == 2 && trirange < 2050 || static_cast<int>(tritype) == 3 && trirange < 1981.31 || static_cast<int>(tritype) == 4 && trirange < 2050))
 					//攻击（满足有技能，在攻击范围内）
-					{
-						Helper.AtheleteCanBeginToCharge();
-						Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
-					}
-					if (api.GetSelfInfo()->speed > 3200 && static_cast<int>(triinfo[0]->playerState) != 8)
-					{
-						Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
-					}
-					else
+				{
+					Helper.AtheleteCanBeginToCharge();
+					Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+				}
+				if (api.GetSelfInfo()->speed > 3200 && static_cast<int>(triinfo[0]->playerState) != 8)
+				{
+					Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+				}
+				else
 					//逃跑
-					{
-						for (int i = 0; i < 10; i++)
-							if (!visitClassroom[i])
-							{
-								Helper.MoveTo(Helper.Classroom[i], 1);
-								break;
-							}
-					}
-					//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+				{
+					for (int i = 0; i < 10; i++)
+						if (!visitClassroom[i])
+						{
+							Helper.MoveTo(Helper.Classroom[i], 1);
+							break;
+						}
+				}
+				//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
 			}
-				//else
-				//{
-					//api.EndAllAction();
-				//	Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
-				//}
+			//else
+			//{
+				//api.EndAllAction();
+			//	Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+			//}
 			break;
 		case sChasePlayer:
 			std::cerr << "CurrentState: sChasePlayer" << std::endl;
@@ -437,7 +447,7 @@ void AI::play(ITrickerAPI& api)
 		if (Helper.NearClassroom(false))
 		{
 			for (int i = 0; i < 10; i++)
-				if (Helper.NearPoint(Helper.Classroom[i], 2))
+				if (Helper.NearPoint(Helper.Classroom[i], 3))
 				{
 					visitClassroom[i] = true;
 					//countVisitedClassroom++;
