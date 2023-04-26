@@ -57,6 +57,7 @@ sPicking 去捡道具
 #define sRousing 0x15
 #define sEncouraging 0x16
 #define sPicking 0x17
+#define sinspiring 0x18
 
 #define sFindPlayer 0x20
 #define sAttackPlayer 0x21
@@ -109,7 +110,7 @@ void AI::play(IStudentAPI& api)
 		switch (CurrentState)
 		{
 		case sDefault:
-			if (haveTricker) CurrentState = sAttackPlayer;
+			if (haveTricker && Helper.TeacherPunishCD() < 10) CurrentState = sAttackPlayer;
 			else if (ChaseIt) CurrentState = sChasePlayer;
 			else CurrentState = sFindPlayer;
 			break;
@@ -118,12 +119,17 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sAttackPlayer:
 			ChaseIt = true;
-			if (!triinfo.empty()) ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
+			if (haveTricker && !Helper.NearPoint(ChaseDest.ToNormal(), 3)) ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
+			if (haveTricker && Helper.NearPoint(ChaseDest.ToNormal(), 4))
+			{
+				ChaseIt = false;
+				CurrentState = sDefault;
+			}
 			if (!haveTricker) CurrentState = sChasePlayer;
 			break;
 		case sChasePlayer:
-			if (haveTricker) CurrentState = sAttackPlayer;
-			else if (Helper.NearPoint(ChaseDest.ToNormal(), 2))
+			if (haveTricker && !Helper.NearPoint(ChaseDest.ToNormal(), 4)) CurrentState = sAttackPlayer;
+			else
 			{
 				ChaseIt = false;
 				CurrentState = sDefault;
@@ -141,7 +147,7 @@ void AI::play(IStudentAPI& api)
 			if (Helper.NearClassroom(false))
 			{
 				for (int i = 0; i < 10; i++)
-					if (Helper.NearPoint(Helper.Classroom[i], 2))
+					if (Helper.NearPoint(Helper.Classroom[i], 3))
 					{
 						visitClassroom[i] = true;
 						//countVisitedClassroom++;
@@ -199,6 +205,11 @@ void AI::play(IStudentAPI& api)
 		case sChasePlayer:
 			std::cerr << "CurrentState: sChasePlayer" << std::endl;
 			Helper.MoveTo(ChaseDest.ToNormal(), true);
+			if (Helper.NearPoint(ChaseDest.ToNormal(), 3))
+			{
+				ChaseIt = false;
+				CurrentState = sDefault;
+			}
 			break;
 			// 玩家0执行操作
 		}
@@ -249,25 +260,110 @@ void AI::play(IStudentAPI& api)
 	}
 	else if (this->playerID == 3)
 	{
-		if (Helper.CountFinishedClassroom() > 7)
+		auto stuinfo = api.GetStudents();
+		auto triinfo = api.GetTrickers();
+		static bool visitClassroom[10];
+		static bool visitClassroomUpdated[10];
+		static int countVisitedClassroom = 0;
+		bool haveTricker = false;
+		if (!triinfo.empty()) haveTricker = true;
+		bool haveAddictedStudent = false;
+		int AddictedId = -1;
+		static bool ChaseIt = false;
+		static Point ChaseDest;
+		for (int i = 0; i < stuinfo.size(); i++)
 		{
-			if (!Helper.CountOpenGate())
+			if (stuinfo[i]->playerState == THUAI6::PlayerState::Addicted)
 			{
-				//api.EndAllAction();
-				Helper.DirectOpeningGate(true, true);
+				haveAddictedStudent = true;
+				AddictedId = i;
+			}
+		}
+		bool Needhelp = false;
+		int NeedhelpID = -1;
+		for (int i = 0; i < stuinfo.size(); i++)
+		{
+			if (stuinfo[i]->determination < 750000)
+			{
+				Needhelp = true;
+				NeedhelpID = i;
+			}
+		}
+
+		switch (CurrentState)
+		{
+		case sDefault:
+			if (haveAddictedStudent) CurrentState = sRousing;
+			else if (Needhelp) CurrentState = sEncouraging;
+			else CurrentState = sDoClassroom;
+			break;
+		case sRousing:
+			if (!haveAddictedStudent) CurrentState = sDefault;
+			break;
+		case sEncouraging:
+			if (haveAddictedStudent) CurrentState = sRousing;
+			else if (!Needhelp && !haveAddictedStudent) CurrentState = sDefault;
+			break;
+		case sDoClassroom:
+			if (haveAddictedStudent) CurrentState = sRousing;
+			else if (Needhelp) CurrentState = sEncouraging;
+			break;
+		}
+		switch (CurrentState)
+		{
+		case sDefault:
+			std::cerr << "CurrentState: sDefault" << std::endl;
+			break;
+		case sRousing:
+			std::cerr << "CurrentState: sRousing" << std::endl;
+			ChaseIt = true;
+			ChaseDest = Point(stuinfo[AddictedId]->x, stuinfo[AddictedId]->y);
+			if ((api.GetSelfInfo()->x - stuinfo[AddictedId]->x)* (api.GetSelfInfo()->x - stuinfo[AddictedId]->x) + (api.GetSelfInfo()->y - stuinfo[AddictedId]->y)* (api.GetSelfInfo()->y - stuinfo[AddictedId]->y) < 25000000)
+			{
+				if (!Helper.SunshineRouseCD()) Helper.SunshineRouse();
+			}
+			else
+			{
+				Helper.MoveTo(Point(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), true);
+			}
+			break;
+		case sEncouraging:
+			std::cerr << "CurrentState: sEncouraging" << std::endl;
+			ChaseIt = true;
+			ChaseDest = Point(stuinfo[NeedhelpID]->x, stuinfo[NeedhelpID]->y);
+			if ((api.GetSelfInfo()->x - stuinfo[NeedhelpID]->x) * (api.GetSelfInfo()->x - stuinfo[NeedhelpID]->x) + (api.GetSelfInfo()->y - stuinfo[NeedhelpID]->y) * (api.GetSelfInfo()->y - stuinfo[NeedhelpID]->y) < 25000000)
+			{
+				if (!Helper.SunshineEncourageCD()) Helper.SunshineEncourage();
+			}
+			else
+			{
+				Helper.MoveTo(Point(stuinfo[NeedhelpID]->x / 1000, stuinfo[NeedhelpID]->y / 1000), true);
+			}
+			break;
+		case sDoClassroom:
+			std::cerr << "CurrentState: sDoClassroom" << std::endl;
+			if (Helper.CountFinishedClassroom() > 7)
+			{
+				if (!Helper.CountOpenGate())
+				{
+					//api.EndAllAction();
+					Helper.DirectOpeningGate(true, true);
+				}
+				else
+				{
+					//api.EndAllAction();
+					Helper.DirectGraduate(true);
+				}
 			}
 			else
 			{
 				//api.EndAllAction();
-				Helper.DirectGraduate(true);
+				Helper.DirectLearning(true);
 			}
+			break;
+			// 玩家3执行操作
 		}
-		else
-		{
-			//api.EndAllAction();
-			Helper.DirectLearning(true);
-		}
-		// 玩家3执行操作
+		
 	}
 	//当然可以写成if (this->playerID == 2||this->playerID == 3)之类的操作
 	// 公共操作
