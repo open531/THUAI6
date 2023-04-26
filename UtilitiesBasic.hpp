@@ -51,7 +51,7 @@ void Utilities<IFooAPI>::InitMap(IFooAPI& api)
 }
 
 template<typename IFooAPI>
-Utilities<IFooAPI>::Utilities(IFooAPI api) : API(api), LastAutoUpdateFrame(0)
+Utilities<IFooAPI>::Utilities(IFooAPI api) : API(api), LastAutoUpdateFrame(0), AStarHelper(api)
 {
 	srand(time(NULL));
 	InitMap(api);
@@ -222,6 +222,7 @@ void UtilitiesStudent::AutoUpdate()
 //	}
 //}
 
+
 template<typename IFooAPI>
 bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
@@ -330,6 +331,21 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 		}
 		return true;
 	}
+}
+
+template<typename IFooAPI>
+bool Utilities<IFooAPI>::MoveToAccurate(Point Dest, bool WithWindows)
+{
+	GeometryPoint GFrom(API.GetSelfInfo()->x, API.GetSelfInfo()->y), GDest(Dest.x*1000+500, Dest.y*1000+500);
+	auto Path = AStarHelper.FindPath(GFrom, GDest);
+	for (auto p : Path)
+	{
+		std::cerr << '(' << p.PointX << ',' << p.PointY << ')' << "->";
+	}
+	int ptr = 0;
+	while (Distance(GFrom, Path[ptr]) < 1e-4 && ptr < Path.size()) ptr++;
+	if (ptr == Path.size()) return true;
+	API.Move((int)(std::min<double>(150, Distance(Path[ptr], GFrom) / API.GetSelfInfo()->speed)), atan2(Path[ptr].PointY - GFrom.PointY, Path[ptr].PointX - GFrom.PointX));
 }
 
 //bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)
