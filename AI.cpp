@@ -331,12 +331,16 @@ void AI::play(IStudentAPI& api)
 					Helper.AtheleteCanBeginToCharge();
 					Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 				}
-				if (api.GetSelfInfo()->speed > 3200 && static_cast<int>(triinfo[0]->playerState) != 8)
+				if (api.GetSelfInfo()->speed > 6400 && static_cast<int>(triinfo[0]->playerState) != 8)
 				{
 					Helper.MoveTo(Point(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 				}
-				else
+				else if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
+				{
+					Helper.MoveTo(Point(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
+				}
 					//逃跑
+				else
 				{
 					for (int i = 0; i < 10; i++)
 						if (!visitClassroom[i])
@@ -397,6 +401,7 @@ void AI::play(IStudentAPI& api)
 		case sDefault:
 			if (haveAddictedStudent) CurrentState = sRousing;
 			else if (Needhelp) CurrentState = sEncouraging;
+			else if (haveTricker) CurrentState = sinspiring;
 			else CurrentState = sDoClassroom;
 			break;
 		case sRousing:
@@ -406,9 +411,14 @@ void AI::play(IStudentAPI& api)
 			if (haveAddictedStudent) CurrentState = sRousing;
 			else if (!Needhelp && !haveAddictedStudent) CurrentState = sDefault;
 			break;
+		case sinspiring:
+			if (haveAddictedStudent) CurrentState = sRousing;
+			else if (Needhelp) CurrentState = sEncouraging;
+			break;
 		case sDoClassroom:
 			if (haveAddictedStudent) CurrentState = sRousing;
 			else if (Needhelp) CurrentState = sEncouraging;
+			else if (haveTricker) CurrentState = sinspiring;
 			break;
 		}
 		switch (CurrentState)
@@ -440,6 +450,27 @@ void AI::play(IStudentAPI& api)
 			else
 			{
 				Helper.MoveTo(Point(stuinfo[NeedhelpID]->x / 1000, stuinfo[NeedhelpID]->y / 1000), true);
+			}
+			break;
+		case sinspiring:
+			std::cerr << "CurrentState: sinspiring" << std::endl;
+			if (!Helper.SunshineInspireCD()) Helper.SunshineInspire();
+			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
+			{
+				Helper.MoveTo(Point(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
+			}
+			else if ((api.GetSelfInfo()->x - stuinfo[2]->x) * (api.GetSelfInfo()->x - stuinfo[2]->x) + (api.GetSelfInfo()->y - stuinfo[2]->y) * (api.GetSelfInfo()->y - stuinfo[2]->y) < 25000000)
+			{
+				Helper.MoveTo(Point(stuinfo[2]->x / 1000, stuinfo[2]->y / 1000), true);
+			}
+			else
+			{
+				for (int i = 0; i < 10; i++)
+					if (!visitClassroom[i])
+					{
+						Helper.MoveTo(Helper.Classroom[i], 1);
+						break;
+					}
 			}
 			break;
 		case sDoClassroom:
