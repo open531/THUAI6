@@ -132,3 +132,4 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 - [x] ~~开启校门后没有直接毕业，而是折返，同时会报错。~~
 - [ ] 理论上已经判断了不能发给自己，但是没有成功，不过api也会判断所以不是大问题。
 - [ ] `AssassinDefaultAttackOver`判断的距离太小了，需要调整。
+- [ ] 救人可能存在偶发的解引用报错问题

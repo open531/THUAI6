@@ -133,95 +133,6 @@ void UtilitiesStudent::AutoUpdate()
 	}
 }
 
-//template<typename IFooAPI>
-//void Utilities<typename IFooAPI>::UpdateClassroom()
-//{
-//	int Size = Classroom.size();
-//	if (Size)
-//	{
-//		for (int i = 0; i < Size; i++)
-//		{
-//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) >= 10000000)
-//			{
-//				Map[Classroom[i].x][Classroom[i].y] = 2U;
-//				Classroom.erase(Classroom.begin() + i);
-//				i--; Size--;
-//			}
-//		}
-//	}
-//}
-
-//template<typename IFooAPI>
-//void Utilities<typename IFooAPI>::UpdateGate()
-//{
-//	int HiddenGateSize = HiddenGate.size();
-//	if (HiddenGateSize)
-//	{
-//		for (int i = 0; i < HiddenGateSize; i++)
-//		{
-//			if (API.GetHiddenGateState(HiddenGate[i].x, HiddenGate[i].y) == THUAI6::HiddenGateState::Opened)
-//			{
-//				Map[HiddenGate[i].x][HiddenGate[i].y] = 5U;
-//				OpenGate.emplace_back(Point(HiddenGate[i].x, HiddenGate[i].y));
-//				HiddenGate.erase(HiddenGate.begin() + i);
-//				i--; HiddenGateSize--;
-//			}
-//		}
-//	}
-//	int GateSize = Gate.size();
-//	if (GateSize)
-//	{
-//		for (int i = 0; i < GateSize; i++)
-//		{
-//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
-//			{
-//				Map[Gate[i].x][Gate[i].y] = 12U;
-//				OpenGate.emplace_back(Point(Gate[i].x, Gate[i].y));
-//				Gate.erase(Gate.begin() + i);
-//				i--; GateSize--;
-//			}
-//		}
-//	}
-//}
-
-//template<typename IFooAPI>
-//void Utilities<typename IFooAPI>::UpdateChest()
-//{
-//	int Size = Chest.size();
-//	if (Size)
-//	{
-//		for (int i = 0; i < Size; i++)
-//		{
-//			if (API.GetChestProgress(Chest[i].x, Chest[i].y) >= 10000000)
-//			{
-//				Map[Chest[i].x][Chest[i].y] = 2U;
-//				Chest.erase(Chest.begin() + i);
-//				i--; Size--;
-//			}
-//		}
-//	}
-//}
-
-//template<typename IFooAPI>
-//void Utilities<typename IFooAPI>::UpdateDoor()
-//{
-//	int Size = Door.size();
-//	if (Size)
-//	{
-//		for (int i = 0; i < Size; i++)
-//		{
-//			if (API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
-//			{
-//				Access[Door[i].x][Door[i].y] = 2U;
-//			}
-//			if (!API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
-//			{
-//				Access[Door[i].x][Door[i].y] = 0U;
-//			}
-//		}
-//	}
-//}
-
 template<typename IFooAPI>
 bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
@@ -300,11 +211,11 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 		{
 			if (!IsStuck)
 			{
-				API.Move(500 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
+				API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
 			}
 			else
 			{
-				API.Move(100 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
+				API.Move(200 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
 			}
 		}
 		else
@@ -331,18 +242,6 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 		return true;
 	}
 }
-
-//bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)
-//{
-//	int sx = API.GetSelfInfo()->x;
-//	int sy = API.GetSelfInfo()->y;
-//	std::vector<Node> UsablePath;
-//	UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
-//	int dx = Dest.x - sx;
-//	int dy = Dest.y - sy;
-//	API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
-//	return true;
-//}
 
 template<typename IFooAPI>
 bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
