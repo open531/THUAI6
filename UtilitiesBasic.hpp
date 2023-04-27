@@ -222,9 +222,9 @@ void UtilitiesStudent::AutoUpdate()
 //	}
 //}
 
-#define ASTAR_PLUS 1
+#define USE_NEW_ASTAR 1
 
-#if !ASTAR_PLUS
+#if !USE_NEW_ASTAR
 template<typename IFooAPI>
 bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
@@ -339,6 +339,7 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 template<typename IFooAPI>
 bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
+	auto self = API.GetSelfInfo();
 	GeometryPoint GFrom(API.GetSelfInfo()->x, API.GetSelfInfo()->y), GDest(Dest.x*1000+500, Dest.y*1000+500);
 	auto Path = AStarHelper.FindPath(GFrom, GDest);
 	for (auto p : Path)
@@ -352,8 +353,15 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	}
 	if (ptr == Path.size()) return true;
 	API.Move((int)std::max<double>((std::min<double>(150, Distance(Path[ptr], GFrom) / API.GetSelfInfo()->speed * 1000)), 10), atan2(Path[ptr].PointY - GFrom.PointY, Path[ptr].PointX - GFrom.PointX));
+	if (WithWindows)
+	{
+		if (self->x == TEMP.x && self->y == TEMP.y && NearWindow())
+			API.SkipWindow();
+		TEMP = Point(self->x, self->y);
+	}
 	std::cerr << "move angle = " << atan2(Path[ptr].PointY - GFrom.PointY, Path[ptr].PointX - GFrom.PointX) / acos(-1) * 180;
 }
+
 #endif
 
 //bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)
@@ -559,6 +567,17 @@ bool Utilities<typename IFooAPI>::NearChest()
 	{
 		if (NearPoint(Chest[i], 2) && API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000) return true;
 	}
+	return false;
+}
+
+template<typename IFooAPI>
+bool Utilities<typename IFooAPI>::NearWindow()
+{
+	int X = API.GetSelfInfo()->x / 1000, Y = API.GetSelfInfo()->y / 1000;
+	for (int i = X - 1; i <= X + 1; i++)
+		for (int j = Y - 1; j <= Y + 1; j++)
+			if (abs(i - X) + abs(j - Y) == 1 && API.GetPlaceType(i, j) == THUAI6::PlaceType::Window)
+				return true;
 	return false;
 }
 

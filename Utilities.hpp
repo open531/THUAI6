@@ -97,8 +97,9 @@ bool Intersect(GeometrySegment A, GeometrySegment B)
 	double CDAT = (B.S.PointX - A.T.PointX) * (B.T.PointY - A.T.PointY) - (B.S.PointY - A.T.PointY) * (B.T.PointX - A.T.PointX);
 	double CDBS = (A.S.PointX - B.S.PointX) * (A.T.PointY - B.S.PointY) - (A.S.PointY - B.S.PointY) * (A.T.PointX - B.S.PointX);
 	double CDBT = (A.S.PointX - B.T.PointX) * (A.T.PointY - B.T.PointY) - (A.S.PointY - B.T.PointY) * (A.T.PointX - B.T.PointX);
-	if (fabs(CDAS) < 1e-4 || fabs(CDAT) < 1e-4 || fabs(CDBS) < 1e-4 || fabs(CDBT) < 1e-4) return false;
-	if (CDAS * CDAT < 0 && CDBS * CDBT < 0) return true;
+	double C = (A.T.PointX - A.S.PointX) * (B.T.PointY - B.S.PointY) - (A.T.PointY - A.S.PointY) * (B.T.PointX - B.S.PointX);
+//	std::cerr << "C = " << C << std::endl;
+	if (CDAS * CDAT <= 0 && CDBS * CDBT <= 0 && C<=0) return true;
 	return false;
 }
 
@@ -113,7 +114,7 @@ private:
 	IFooAPI API;
 
 	bool IsAccessible(THUAI6::PlaceType pt);
-	bool DirectReachable(GeometryPoint A, GeometryPoint B);
+	bool DirectReachable(GeometryPoint A, GeometryPoint B, bool IsDest = false);
 	void BackwardExpand(Point Source, int H[50][50]);
 	GeometryPoint Escape(GeometryPoint P);
 
@@ -191,14 +192,13 @@ public:
 	bool NearGate();								// 已经在关闭的校门旁边了吗？
 	bool NearOpenGate();							// 已经在开启的校门旁边了吗？
 	bool NearChest();								// 已经在箱子旁边了吗？
+	bool NearWindow();								// 已经在窗户旁边了吗？
 	void DirectLearning(bool WithWindows);			// 前往最近的作业并学习
 	void DirectOpeningChest(bool WithWindows);		// 前往最近的箱子并开箱
 	void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);		// 前往最近的关闭的校门并开门
 	void DirectGraduate(bool WithWindows);			// 前往最近的开启的校门并毕业
 	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
 	void DirectUseProp(std::vector<unsigned char>Priority);
-
-
 
 	int EstimateTime(Point Dest);					// 去目的地的预估时间
 	bool IsViewable(Point Src, Point Dest, int ViewRange);			// 判断两个位置是否可视

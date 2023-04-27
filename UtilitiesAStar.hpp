@@ -300,7 +300,8 @@ bool AStarPlus<IFooAPI>::IsAccessible(THUAI6::PlaceType pt)
 		|| pt == THUAI6::PlaceType::Door3
 		|| pt == THUAI6::PlaceType::Door5
 		|| pt == THUAI6::PlaceType::Door6
-		|| pt == THUAI6::PlaceType::Grass;
+		|| pt == THUAI6::PlaceType::Grass
+		|| pt == THUAI6::PlaceType::Window;
 }
 
 template<typename IFooAPI>
@@ -337,29 +338,32 @@ void AStarPlus<IFooAPI>::BackwardExpand(Point Source, int H[50][50])
 //	}
 }
 
-static int statistic;
+// static int statistic;
 
 template<typename IFooAPI>
-bool AStarPlus<IFooAPI>::DirectReachable(GeometryPoint A, GeometryPoint B)
+bool AStarPlus<IFooAPI>::DirectReachable(GeometryPoint A, GeometryPoint B, bool IsDest) // if IsDest, allow 1 through
 {
 	GeometrySegment AB(A, B);
+	int icnt = 0;
 	for (auto s : StableMap)
 	{
-		if (Intersect(AB, s)) return false;
-		statistic++;
-		if (statistic % 10000000 == 0)
-		{
-			std::cerr << "statistic count " << statistic << std::endl;
-		}
+		if (Intersect(AB, s)) icnt++;
+		if (!IsDest && icnt == 1 || IsDest && icnt == 2) return false;
+//		statistic++;
+//		if (statistic % 10000000 == 0)
+//		{
+//			std::cerr << "statistic count " << statistic << std::endl;
+//		}
 	}
 	for (auto s : VariableMap)
 	{
-		if (Intersect(AB, s)) return false;
-		statistic++;
-		if (statistic % 10000000 == 0)
-		{
-			std::cerr << "statistic count " << statistic << std::endl;
-		}
+		if (Intersect(AB, s)) icnt++;
+		if (!IsDest && icnt == 1 || IsDest && icnt == 2) return false;
+//		statistic++;
+//		if (statistic % 10000000 == 0)
+//		{
+//			std::cerr << "statistic count " << statistic << std::endl;
+//		}
 	}
 	return true;
 }
@@ -390,7 +394,7 @@ void AStarPlus<IFooAPI>::InitStableMap()
 					if (IsAccessible(map[i][rightP+1])) RP = GeometryPoint(1000 * i + SegmentRadius, 1000 * (rightP + 1) + SegmentCompensate);
 					else RP = GeometryPoint(1000 * i + SegmentRadius, 1000 * (rightP + 1) - SegmentRadius);
 					StableMap.push_back(GeometrySegment(RP, LP));
-					std::cerr << "AddSegment (" << RP.PointX/1000 << ',' << RP.PointY/1000 << ") -> (" << LP.PointX/1000 << ',' << LP.PointY/1000 << ')' << std::endl;
+//					std::cerr << "AddSegment (" << RP.PointX/1000 << ',' << RP.PointY/1000 << ") -> (" << LP.PointX/1000 << ',' << LP.PointY/1000 << ')' << std::endl;
 				}
 				else
 				{
@@ -400,7 +404,7 @@ void AStarPlus<IFooAPI>::InitStableMap()
 					if (IsAccessible(map[i-1][rightP+1])) RP = GeometryPoint(1000 * i - SegmentRadius, 1000 * (rightP + 1) + SegmentCompensate);
 					else RP = GeometryPoint(1000 * i - SegmentRadius, 1000 * (rightP + 1) - SegmentRadius);
 					StableMap.push_back(GeometrySegment(LP, RP));
-					std::cerr << "AddSegment (" << LP.PointX/1000 << ',' << LP.PointY/1000 << ") -> (" << RP.PointX/1000 << ',' << RP.PointY/1000 << ')' << std::endl;
+//					std::cerr << "AddSegment (" << LP.PointX/1000 << ',' << LP.PointY/1000 << ") -> (" << RP.PointX/1000 << ',' << RP.PointY/1000 << ')' << std::endl;
 				}
 				leftP = rightP + 1;
 			}
@@ -426,7 +430,7 @@ void AStarPlus<IFooAPI>::InitStableMap()
 					if (IsAccessible(map[downP+1][i])) DP = GeometryPoint(1000 * (downP + 1) + SegmentCompensate, 1000 * i + SegmentRadius);
 					else DP = GeometryPoint(1000 * (downP + 1) - SegmentRadius, 1000 * i + SegmentRadius);
 					StableMap.push_back(GeometrySegment(UP, DP));
-					std::cerr << "AddSegment (" << UP.PointX/1000 << ',' << UP.PointY/1000 << ") -> (" << DP.PointX/1000 << ',' << DP.PointY/1000 << ')' << std::endl;
+//					std::cerr << "AddSegment (" << UP.PointX/1000 << ',' << UP.PointY/1000 << ") -> (" << DP.PointX/1000 << ',' << DP.PointY/1000 << ')' << std::endl;
 				}
 				else
 				{
@@ -436,7 +440,7 @@ void AStarPlus<IFooAPI>::InitStableMap()
 					if (IsAccessible(map[downP+1][i-1])) DP = GeometryPoint(1000 * (downP + 1) + SegmentCompensate, 1000 * i - SegmentRadius);
 					else DP = GeometryPoint(1000 * (downP + 1) - SegmentRadius, 1000 * i - SegmentRadius);
 					StableMap.push_back(GeometrySegment(DP, UP));
-					std::cerr << "AddSegment (" << DP.PointX/1000 << ',' << DP.PointY/1000 << ") -> (" << UP.PointX/1000 << ',' << UP.PointY/1000 << ')' << std::endl;
+//					std::cerr << "AddSegment (" << DP.PointX/1000 << ',' << DP.PointY/1000 << ") -> (" << UP.PointX/1000 << ',' << UP.PointY/1000 << ')' << std::endl;
 				}
 				upP = downP + 1;
 			}
@@ -492,7 +496,7 @@ void AStarPlus<IFooAPI>::InitStableMap()
 					CBP = GeometryPoint(1000 * i - CheckPointRadius, 1000 * j - CheckPointCompensate);
 				}
 				StableMap.push_back(GeometrySegment(AP, BP));
-				std::cerr << "AddSegment (" << AP.PointX/1000 << ',' << AP.PointY/1000 << ") -> (" << BP.PointX/1000 << ',' << BP.PointY/1000 << ')' << std::endl;
+//				std::cerr << "AddSegment (" << AP.PointX/1000 << ',' << AP.PointY/1000 << ") -> (" << BP.PointX/1000 << ',' << BP.PointY/1000 << ')' << std::endl;
 				StableCheckPoint.push_back(CAP);
 				StableCheckPoint.push_back(CBP);
 			}
@@ -505,9 +509,82 @@ bool AStarPlus<IFooAPI>::InsideObstacle(GeometryPoint P)
 {
 	double rot = 0;
 	for (auto s : StableMap) rot += s.GetTheta(P);
+	for (auto s : VariableMap) rot += s.GetTheta(P);
 	std::cerr << "Rot = " << rot / (2 * PI) << " (cycle)" << std::endl;
 	if (fabs(rot - 2 * PI) < PI*0.8) return false;
 	else return true;
+}
+
+void AStarPlus<ITrickerAPI&>::AddPlayer()
+{
+	std::cerr << "Add Player" << std::endl;
+	auto stuinfo = API.GetStudents();
+	double rads = (400 + SegmentRadius) / cos(PI / 8);
+	for (auto s : stuinfo)
+	{
+		GeometryPoint P[8], CP[8];
+		for (int i = 0; i < 8; i++)
+		{
+			double theta = i * PI / 4 + PI / 8;
+			P[i] = GeometryPoint(s->x + rads * cos(theta), s->y + rads * sin(theta));
+			CP[i] = GeometryPoint(s->x + rads * cos(theta), s->y + rads * sin(theta));
+		}
+		for (int i = 1; i < 8; i++)
+		{
+			VariableMap.push_back(GeometrySegment(P[i], P[i-1]));
+//			std::cerr << "AddSegment (" << P[i].PointX/1000 << ',' << P[i].PointY/1000 << ") -> (" << P[i-1].PointX/1000 << ',' << P[i-1].PointY/1000 << ')' << std::endl;
+			VariableCheckPoint.push_back(CP[i]);
+		}
+		VariableMap.push_back(GeometrySegment(P[0], P[7]));
+		VariableCheckPoint.push_back(CP[0]);
+	}
+}
+
+void AStarPlus<IStudentAPI&>::AddPlayer()
+{
+//	std::cerr << "Add Player" << std::endl;
+	auto stuinfo = API.GetStudents();
+	double rads = (400 + SegmentRadius) / cos(PI / 8);
+	for (auto s : stuinfo)
+	{
+		if (s->playerID == API.GetSelfInfo()->playerID) continue;
+		GeometryPoint P[8], CP[8];
+		for (int i = 0; i < 8; i++)
+		{
+			double theta = i * PI / 4 + PI / 8;
+			P[i] = GeometryPoint(s->x + rads * cos(theta), s->y + rads * sin(theta));
+			CP[i] = GeometryPoint(s->x + rads * cos(theta), s->y + rads * sin(theta));
+		}
+		for (int i = 1; i < 8; i++)
+		{
+			VariableMap.push_back(GeometrySegment(P[i], P[i-1]));
+//			std::cerr << "AddSegment (" << P[i].PointX/1000 << ',' << P[i].PointY/1000 << ") -> (" << P[i-1].PointX/1000 << ',' << P[i-1].PointY/1000 << ')' << std::endl;
+			VariableCheckPoint.push_back(CP[i]);
+		}
+		VariableMap.push_back(GeometrySegment(P[0], P[7]));
+		VariableCheckPoint.push_back(CP[0]);
+	}
+
+	auto trkinfo = API.GetTrickers();
+	for (auto s : trkinfo)
+	{
+		if (s->playerID == API.GetSelfInfo()->playerID) continue;
+		GeometryPoint P[8], CP[8];
+		for (int i = 0; i < 8; i++)
+		{
+			double theta = i * PI / 4 + PI / 8;
+			P[i] = GeometryPoint(s->x + rads * cos(theta), s->y + rads * sin(theta));
+			CP[i] = GeometryPoint(s->x + rads * cos(theta), s->y + rads * sin(theta));
+		}
+		for (int i = 1; i < 8; i++)
+		{
+			VariableMap.push_back(GeometrySegment(P[i], P[i-1]));
+//			std::cerr << "AddSegment (" << P[i].PointX/1000 << ',' << P[i].PointY/1000 << ") -> (" << P[i-1].PointX/1000 << ',' << P[i-1].PointY/1000 << ')' << std::endl;
+			VariableCheckPoint.push_back(CP[i]);
+		}
+		VariableMap.push_back(GeometrySegment(P[0], P[7]));
+		VariableCheckPoint.push_back(CP[0]);
+	}
 }
 
 class AStarPlusNode
@@ -526,11 +603,15 @@ public:
 template<typename IFooAPI>
 std::vector<GeometryPoint> AStarPlus<IFooAPI>::FindPath(GeometryPoint From_, GeometryPoint Dest_)
 {
+	std::cerr << "Destination is (" << Dest_.PointX << ' ' << Dest_.PointY << ')' << std::endl;
+	AddPlayer();
 	std::vector<GeometryPoint> Path;
 	bool x = InsideObstacle(From_);
 	if (x)
 	{
 		Path.push_back(Escape(From_));
+		VariableCheckPoint.clear();
+		VariableMap.clear();
 		return Path;
 	}
 	int preH[50][50];
@@ -554,12 +635,12 @@ std::vector<GeometryPoint> AStarPlus<IFooAPI>::FindPath(GeometryPoint From_, Geo
 		if (A.value() > (A.type ? VariableF : StableF)[A.id]) continue;
 //		if (A.type || true)
 //		{
-			std::cerr << "AStaring Point: " << APoint.PointX << ' ' << APoint.PointY << ' ' << A.value() << std::endl;
+//			std::cerr << "AStaring Point: " << APoint.PointX << ' ' << APoint.PointY << ' ' << A.value() << std::endl;
 //			std::cerr << "Last Point: " << A.parenttype << ' ' << A.parentid << std::endl;
 //		}
 		(A.type ? VariableF : StableF)[A.id] = A.value();
 		(A.type ? VariableParent : StableParent)[A.id] = std::make_pair(A.parenttype, A.parentid);
-		std::cerr << "Fine." << std::endl;
+//		std::cerr << "Fine." << std::endl;
 		if (A.type && A.id == VariableCheckPoint.size() - 1)
 		{
 			break;
@@ -576,7 +657,7 @@ std::vector<GeometryPoint> AStarPlus<IFooAPI>::FindPath(GeometryPoint From_, Geo
 //				Sleep(1000);
 			}
 		}
-		std::cerr << "Fine.2" << std::endl;
+//		std::cerr << "Fine.2" << std::endl;
 //		Sleep(1000);
 		for (int i = 0; i < VariableCheckPoint.size(); i++)
 		{
@@ -590,7 +671,7 @@ std::vector<GeometryPoint> AStarPlus<IFooAPI>::FindPath(GeometryPoint From_, Geo
 //				Sleep(1000);
 			}
 		}
-		std::cerr << "Fine.6" << std::endl;
+//		std::cerr << "Fine.6" << std::endl;
 //		Sleep(1000);
 	}
 	if (VariableParent[VariableCheckPoint.size() - 1].second != -1)
