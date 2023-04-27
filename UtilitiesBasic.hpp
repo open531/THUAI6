@@ -16,6 +16,7 @@ void Utilities<IFooAPI>::InitMap(IFooAPI& api)
 				break;
 			case 3U:	// Grass
 				Access[i][j] = 3U;
+				Grass.emplace_back(Point(i, j));
 				break;
 			case 7U:	// Window
 				Access[i][j] = 1U;
@@ -259,10 +260,10 @@ bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
 		return (abs(P.x - Self.x) <= 1 && abs(P.y - Self.y) <= 1) ? true : false;
 		break;
 	case 3:	// Hide Tricker
-		return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 3) ? true : false;
+		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 9) ? true : false;
 		break;
 	case 4:	// Hide Tricker
-		return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 5) ? true : false;
+		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 25) ? true : false;
 		break;
 	}
 }
@@ -444,6 +445,16 @@ bool Utilities<typename IFooAPI>::NearChest()
 }
 
 template<typename IFooAPI>
+bool Utilities<typename IFooAPI>::InGrass()
+{
+	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->x / 1000] == 3U)
+	{
+		return true;
+	}
+	else return false;
+}
+
+template<typename IFooAPI>
 int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
 {
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
@@ -516,6 +527,66 @@ void Utilities<typename IFooAPI>::DirectGraduate(bool WithWindows)
 	else
 	{
 		API.Graduate();
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::DirectGrass(bool WithWindows)
+{
+	if (!InGrass())
+	{
+		int minDistance = INT_MAX;
+		int minNum = -1;
+		int Distance = INT_MAX;
+		Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
+		if (!Grass.empty())
+		{
+			for (int i = 0; i < Grass.size(); i++)
+			{
+				Distance = WithWindows ? AStarWithWindows(Self, Grass[i]).size() : AStarWithoutWindows(Self, Grass[i]).size();
+				if (Distance < minDistance && Distance != 0)
+				{
+					minDistance = Distance;
+					minNum = i;
+				}
+			}
+		}
+		if (minNum >= 0)
+		{
+			MoveTo(Grass[minNum], WithWindows);
+		}
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::DirectHide(Point TrickerLocation, int TrickerViewRange, bool WithWindows)
+{
+	if (!(InGrass() && IsViewable(TrickerLocation, Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange)))
+	{
+		int minDistance = INT_MAX;
+		int minNum = -1;
+		int Distance = INT_MAX;
+		Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
+		if (!Grass.empty())
+		{
+			for (int i = 0; i < Grass.size(); i++)
+			{
+				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25
+					&& !IsViewable(TrickerLocation, Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange))
+				{
+					Distance = WithWindows ? AStarWithWindows(Self, Grass[i]).size() : AStarWithoutWindows(Self, Grass[i]).size();
+					if (Distance < minDistance && Distance != 0)
+					{
+						minDistance = Distance;
+						minNum = i;
+					}
+				}
+			}
+		}
+		if (minNum >= 0)
+		{
+			MoveTo(Grass[minNum], WithWindows);
+		}
 	}
 }
 

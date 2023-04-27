@@ -55,6 +55,7 @@ public:
 	std::vector<Point> Gate;
 	std::vector<Point> HiddenGate;
 	std::vector<Point> Chest;
+	std::vector<Point> Grass;
 	std::vector<Doors> Door;
 
 	bool IsValidWithoutWindows(int x, int y);
@@ -95,10 +96,13 @@ public:
 	bool NearGate();								// 已经在关闭的校门旁边了吗？
 	bool NearOpenGate();							// 已经在开启的校门旁边了吗？
 	bool NearChest();								// 已经在箱子旁边了吗？
+	bool InGrass();									// 已经在草丛里了吗？
 	void DirectLearning(bool WithWindows);			// 前往最近的作业并学习
 	void DirectOpeningChest(bool WithWindows);		// 前往最近的箱子并开箱
 	void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);		// 前往最近的关闭的校门并开门
 	void DirectGraduate(bool WithWindows);			// 前往最近的开启的校门并毕业
+	void DirectGrass(bool WithWindows);				// 前往最近的草丛并躲避
+	void DirectHide(Point TrickerLocation, int TrickerViewRange, bool WithWindows);				// 前往最适合的草丛并躲避
 	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
 	void DirectUseProp(std::vector<unsigned char>Priority);
 

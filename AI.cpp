@@ -58,6 +58,7 @@ sPicking 去捡道具
 #define sEncouraging 0x16
 #define sPicking 0x17
 #define sInspiring 0x18
+#define sFleeing 0x19
 
 #define sFindPlayer 0x20
 #define sAttackPlayer 0x21
@@ -110,22 +111,22 @@ void AI::play(IStudentAPI& api)
 		switch (CurrentState)
 		{
 		case sDefault:
-			if (haveTricker && Helper.TeacherPunishCD() < 10) CurrentState = sAttackPlayer;
+			if (haveTricker && Helper.TeacherPunishCD() < 2) CurrentState = sAttackPlayer;
 			else if (ChaseIt) CurrentState = sChasePlayer;
 			else CurrentState = sFindPlayer;
 			break;
 		case sFindPlayer:
-			if (haveTricker) CurrentState = sAttackPlayer;
+			if (haveTricker && Helper.TeacherPunishCD() < 2) CurrentState = sAttackPlayer;
 			break;
 		case sAttackPlayer:
 			ChaseIt = true;
-			if (haveTricker && !Helper.NearPoint(ChaseDest.ToNormal(), 3)) ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
+			if (haveTricker && !Helper.NearPoint(ChaseDest.ToNormal(), 4)) ChaseDest = Point(triinfo[0]->x, triinfo[0]->y);
 			if (haveTricker && Helper.NearPoint(ChaseDest.ToNormal(), 4))
 			{
 				ChaseIt = false;
 				CurrentState = sDefault;
 			}
-			if (!haveTricker) CurrentState = sChasePlayer;
+			if (!haveTricker) CurrentState = sFindPlayer;
 			break;
 		case sChasePlayer:
 			if (haveTricker && !Helper.NearPoint(ChaseDest.ToNormal(), 4)) CurrentState = sAttackPlayer;
@@ -144,15 +145,12 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sFindPlayer:
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
-			if (Helper.NearClassroom(false))
-			{
-				for (int i = 0; i < 10; i++)
-					if (Helper.NearPoint(Helper.Classroom[i], 3))
-					{
-						visitClassroom[i] = true;
-						//countVisitedClassroom++;
-					}
-			}
+			for (int i = 0; i < 10; i++)
+				if (Helper.NearPoint(Helper.Classroom[i], 3))
+				{
+					visitClassroom[i] = true;
+					//countVisitedClassroom++;
+				}
 			for (int i = 0; i < 10; i++)
 			{
 				if (visitClassroom[i] && !visitClassroomUpdated[i])
@@ -216,28 +214,60 @@ void AI::play(IStudentAPI& api)
 	}
 	else if (this->playerID == 1)
 	{
-		if (Helper.CountFinishedClassroom() > 7)
+		auto stuinfo = api.GetStudents();
+		auto triinfo = api.GetTrickers();
+		bool haveTricker = false;
+		if (!triinfo.empty()) haveTricker = true;
+
+		switch (CurrentState)
 		{
-			if (!Helper.CountOpenGate())
+		case sDefault:
+			if (haveTricker) CurrentState = sFleeing;
+			break;
+		case sFleeing:
+			if (!haveTricker) CurrentState = sDefault;
+			break;
+		}
+
+		switch (CurrentState)
+		{
+		case sDefault:
+			if (Helper.CountFinishedClassroom() > 7)
 			{
-				//api.EndAllAction();
-				Helper.DirectOpeningGate(true, true);
+				if (!Helper.CountOpenGate())
+				{
+					//api.EndAllAction();
+					Helper.DirectOpeningGate(true, true);
+				}
+				else
+				{
+					//api.EndAllAction();
+					Helper.DirectGraduate(true);
+				}
 			}
 			else
 			{
 				//api.EndAllAction();
-				Helper.DirectGraduate(true);
+				if (Helper.NearClassroom(true) && !Helper.StraightAStudentWriteAnswersCD())
+				{
+					Helper.StraightAStudentWriteAnswers();
+				}
+				Helper.DirectLearning(false);
 			}
-		}
-		else
-		{
-			//api.EndAllAction();
-			if (Helper.NearClassroom(true) && !Helper.StraightAStudentWriteAnswersCD())
+			break;
+		case sFleeing:
+			if (!triinfo.empty())
 			{
-				Helper.StraightAStudentWriteAnswers();
+				Helper.DirectHide(Point(triinfo[0]->x, triinfo[0]->y), triinfo[0]->viewRange, Helper.NearPoint(Point(triinfo[0]->x, triinfo[0]->y), 4) ? 1 : 0);
 			}
-			Helper.DirectLearning(false);
+			else
+			{
+				Helper.DirectGrass(1);
+			}
+			break;
 		}
+
+
 		// 玩家1执行操作
 	}
 	else if (this->playerID == 2)
@@ -291,6 +321,10 @@ void AI::play(IStudentAPI& api)
 				ChaseIt = false;
 				CurrentState = sDefault;
 			}
+			break;
+		case sRousing:
+			if (!haveAddictedStudent) CurrentState = sDefault;
+			break;
 			break;
 		}
 
@@ -379,14 +413,17 @@ void AI::play(IStudentAPI& api)
 		case sRousing:
 			std::cerr << "CurrentState: sRousing" << std::endl;
 			ChaseIt = true;
-			ChaseDest = Point(stuinfo[AddictedId]->x, stuinfo[AddictedId]->y);
-			if (Helper.NearPoint(Point(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), 2))
+			if (stuinfo.size() > AddictedId)
 			{
-				api.StartRouseMate(stuinfo[AddictedId]->playerID);
-			}
-			else
-			{
-				Helper.MoveTo(Point(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), true);
+				ChaseDest = Point(stuinfo[AddictedId]->x, stuinfo[AddictedId]->y);
+				if (Helper.NearPoint(Point(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), 2))
+				{
+					api.StartRouseMate(stuinfo[AddictedId]->playerID);
+				}
+				else
+				{
+					Helper.MoveTo(Point(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), true);
+				}
 			}
 			break;
 		}
