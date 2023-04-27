@@ -222,7 +222,9 @@ void UtilitiesStudent::AutoUpdate()
 //	}
 //}
 
+#define ASTAR_PLUS 1
 
+#if !ASTAR_PLUS
 template<typename IFooAPI>
 bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
@@ -333,8 +335,9 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 	}
 }
 
+#else
 template<typename IFooAPI>
-bool Utilities<IFooAPI>::MoveToAccurate(Point Dest, bool WithWindows)
+bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 {
 	GeometryPoint GFrom(API.GetSelfInfo()->x, API.GetSelfInfo()->y), GDest(Dest.x*1000+500, Dest.y*1000+500);
 	auto Path = AStarHelper.FindPath(GFrom, GDest);
@@ -349,7 +352,9 @@ bool Utilities<IFooAPI>::MoveToAccurate(Point Dest, bool WithWindows)
 	}
 	if (ptr == Path.size()) return true;
 	API.Move((int)std::max<double>((std::min<double>(150, Distance(Path[ptr], GFrom) / API.GetSelfInfo()->speed * 1000)), 10), atan2(Path[ptr].PointY - GFrom.PointY, Path[ptr].PointX - GFrom.PointX));
+	std::cerr << "move angle = " << atan2(Path[ptr].PointY - GFrom.PointY, Path[ptr].PointX - GFrom.PointX) / acos(-1) * 180;
 }
+#endif
 
 //bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)
 //{

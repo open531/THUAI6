@@ -78,11 +78,11 @@ double GeometrySegment::GetTheta(GeometryPoint P)
 	double CrossDot = (S.PointX - P.PointX) * (T.PointY - P.PointY) - (S.PointY - P.PointY) * (T.PointX - P.PointX);
 	double InnerDot = (S.PointX - P.PointX) * (T.PointX - P.PointX) + (S.PointY - P.PointY) * (T.PointY - P.PointY);
 	double theta = acos(InnerDot / Distance(S, P) / Distance(T, P));
-	if (fabs(CrossDot) < 1e-4)
-	{
-		std::cerr << "[Common Line Warning!]" << std::endl;
-		return 0;
-	}
+//	if (fabs(CrossDot) < 1e-4)
+//	{
+//		std::cerr << "[Common Line Warning!]" << std::endl;
+//		return 0;
+//	}
 	return CrossDot > 0 ? theta : -theta;
 }
 
@@ -118,9 +118,11 @@ private:
 	GeometryPoint Escape(GeometryPoint P);
 
 	void InitStableMap();
-	const double Radius;
+	const double CheckPointRadius;
+	double CheckPointCompensate;
+	const double SegmentRadius;
+	double SegmentCompensate;
 	const double PI;
-	const double Compensate;
 
 public:
 	AStarPlus(IFooAPI api_);

@@ -259,8 +259,11 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithWindows(Node src, Node dest)
 }
 
 template<typename IFooAPI>
-AStarPlus<IFooAPI>::AStarPlus(IFooAPI api_) : API(api_), Radius(415), PI(acos(-1)), Compensate(Radius* tan(PI / 8))
+AStarPlus<IFooAPI>::AStarPlus(IFooAPI api_) : API(api_), SegmentRadius(405), CheckPointRadius(410), PI(acos(-1))
 {
+	SegmentCompensate = SegmentRadius * tan(PI / 8);
+	CheckPointCompensate = CheckPointRadius * tan(PI / 8);
+//	std::cerr << SegmentRadius << ' '<< SegmentCompensate << std::endl;
 	InitStableMap();
 }
 
@@ -382,20 +385,20 @@ void AStarPlus<IFooAPI>::InitStableMap()
 				if (upWall)
 				{
 					GeometryPoint LP, RP;
-					if (IsAccessible(map[i][leftP-1])) LP = GeometryPoint(1000 * i + Radius, 1000 * leftP - Compensate);
-					else LP = GeometryPoint(1000 * i + Radius, 1000 * leftP + Radius);
-					if (IsAccessible(map[i][rightP+1])) RP = GeometryPoint(1000 * i + Radius, 1000 * (rightP + 1) + Compensate);
-					else RP = GeometryPoint(1000 * i + Radius, 1000 * (rightP + 1) - Radius);
+					if (IsAccessible(map[i][leftP-1])) LP = GeometryPoint(1000 * i + SegmentRadius, 1000 * leftP - SegmentCompensate);
+					else LP = GeometryPoint(1000 * i + SegmentRadius, 1000 * leftP + SegmentRadius);
+					if (IsAccessible(map[i][rightP+1])) RP = GeometryPoint(1000 * i + SegmentRadius, 1000 * (rightP + 1) + SegmentCompensate);
+					else RP = GeometryPoint(1000 * i + SegmentRadius, 1000 * (rightP + 1) - SegmentRadius);
 					StableMap.push_back(GeometrySegment(RP, LP));
 					std::cerr << "AddSegment (" << RP.PointX/1000 << ',' << RP.PointY/1000 << ") -> (" << LP.PointX/1000 << ',' << LP.PointY/1000 << ')' << std::endl;
 				}
 				else
 				{
 					GeometryPoint LP, RP;
-					if (IsAccessible(map[i-1][leftP-1])) LP = GeometryPoint(1000 * i - Radius, 1000 * leftP - Compensate);
-					else LP = GeometryPoint(1000 * i - Radius, 1000 * leftP + Radius);
-					if (IsAccessible(map[i-1][rightP+1])) RP = GeometryPoint(1000 * i - Radius, 1000 * (rightP + 1) + Compensate);
-					else RP = GeometryPoint(1000 * i - Radius, 1000 * (rightP + 1) - Radius);
+					if (IsAccessible(map[i-1][leftP-1])) LP = GeometryPoint(1000 * i - SegmentRadius, 1000 * leftP - SegmentCompensate);
+					else LP = GeometryPoint(1000 * i - SegmentRadius, 1000 * leftP + SegmentRadius);
+					if (IsAccessible(map[i-1][rightP+1])) RP = GeometryPoint(1000 * i - SegmentRadius, 1000 * (rightP + 1) + SegmentCompensate);
+					else RP = GeometryPoint(1000 * i - SegmentRadius, 1000 * (rightP + 1) - SegmentRadius);
 					StableMap.push_back(GeometrySegment(LP, RP));
 					std::cerr << "AddSegment (" << LP.PointX/1000 << ',' << LP.PointY/1000 << ") -> (" << RP.PointX/1000 << ',' << RP.PointY/1000 << ')' << std::endl;
 				}
@@ -418,20 +421,20 @@ void AStarPlus<IFooAPI>::InitStableMap()
 				if (leftWall)
 				{
 					GeometryPoint UP, DP;
-					if (IsAccessible(map[upP-1][i])) UP = GeometryPoint(1000 * upP - Compensate, 1000 * i + Radius);
-					else UP = GeometryPoint(1000 * upP + Radius, 1000 * i + Radius);
-					if (IsAccessible(map[downP+1][i])) DP = GeometryPoint(1000 * (downP + 1) + Compensate, 1000 * i + Radius);
-					else DP = GeometryPoint(1000 * (downP + 1) - Radius, 1000 * i + Radius);
+					if (IsAccessible(map[upP-1][i])) UP = GeometryPoint(1000 * upP - SegmentCompensate, 1000 * i + SegmentRadius);
+					else UP = GeometryPoint(1000 * upP + SegmentRadius, 1000 * i + SegmentRadius);
+					if (IsAccessible(map[downP+1][i])) DP = GeometryPoint(1000 * (downP + 1) + SegmentCompensate, 1000 * i + SegmentRadius);
+					else DP = GeometryPoint(1000 * (downP + 1) - SegmentRadius, 1000 * i + SegmentRadius);
 					StableMap.push_back(GeometrySegment(UP, DP));
 					std::cerr << "AddSegment (" << UP.PointX/1000 << ',' << UP.PointY/1000 << ") -> (" << DP.PointX/1000 << ',' << DP.PointY/1000 << ')' << std::endl;
 				}
 				else
 				{
 					GeometryPoint UP, DP;
-					if (IsAccessible(map[upP-1][i-1])) UP = GeometryPoint(1000 * upP - Compensate, 1000 * i - Radius);
-					else UP = GeometryPoint(1000 * upP + Radius, 1000 * i - Radius);
-					if (IsAccessible(map[downP+1][i-1])) DP = GeometryPoint(1000 * (downP + 1) + Compensate, 1000 * i - Radius);
-					else DP = GeometryPoint(1000 * (downP + 1) - Radius, 1000 * i - Radius);
+					if (IsAccessible(map[upP-1][i-1])) UP = GeometryPoint(1000 * upP - SegmentCompensate, 1000 * i - SegmentRadius);
+					else UP = GeometryPoint(1000 * upP + SegmentRadius, 1000 * i - SegmentRadius);
+					if (IsAccessible(map[downP+1][i-1])) DP = GeometryPoint(1000 * (downP + 1) + SegmentCompensate, 1000 * i - SegmentRadius);
+					else DP = GeometryPoint(1000 * (downP + 1) - SegmentRadius, 1000 * i - SegmentRadius);
 					StableMap.push_back(GeometrySegment(DP, UP));
 					std::cerr << "AddSegment (" << DP.PointX/1000 << ',' << DP.PointY/1000 << ") -> (" << UP.PointX/1000 << ',' << UP.PointY/1000 << ')' << std::endl;
 				}
@@ -446,31 +449,52 @@ void AStarPlus<IFooAPI>::InitStableMap()
 			int cntWall = (int)!IsAccessible(map[i - 1][j - 1]) + (int)!IsAccessible(map[i - 1][j]) + (int)!IsAccessible(map[i][j - 1]) + (int)!IsAccessible(map[i][j]);
 			if (cntWall == 1)
 			{
-				GeometryPoint AP, BP;
+				GeometryPoint AP, BP, CAP, CBP;
 				if (!IsAccessible(map[i - 1][j - 1]))
 				{
-					AP = GeometryPoint(1000 * i + Compensate, 1000 * j + Radius);
-					BP = GeometryPoint(1000 * i + Radius, 1000 * j + Compensate);
+					AP = GeometryPoint(1000 * i + SegmentCompensate, 1000 * j + SegmentRadius);
+					BP = GeometryPoint(1000 * i + SegmentRadius, 1000 * j + SegmentCompensate);
 				}
 				else if (!IsAccessible(map[i - 1][j]))
 				{
-					AP = GeometryPoint(1000 * i + Radius, 1000 * j - Compensate);
-					BP = GeometryPoint(1000 * i + Compensate, 1000 * j - Radius);
+					AP = GeometryPoint(1000 * i + SegmentRadius, 1000 * j - SegmentCompensate);
+					BP = GeometryPoint(1000 * i + SegmentCompensate, 1000 * j - SegmentRadius);
 				}
 				else if (!IsAccessible(map[i][j-1]))
 				{
-					AP = GeometryPoint(1000 * i - Radius, 1000 * j + Compensate);
-					BP = GeometryPoint(1000 * i - Compensate, 1000 * j + Radius);
+					AP = GeometryPoint(1000 * i - SegmentRadius, 1000 * j + SegmentCompensate);
+					BP = GeometryPoint(1000 * i - SegmentCompensate, 1000 * j + SegmentRadius);
 				}
 				else if (!IsAccessible(map[i][j]))
 				{
-					AP = GeometryPoint(1000 * i - Compensate, 1000 * j - Radius);
-					BP = GeometryPoint(1000 * i - Radius, 1000 * j - Compensate);
+					AP = GeometryPoint(1000 * i - SegmentCompensate, 1000 * j - SegmentRadius);
+					BP = GeometryPoint(1000 * i - SegmentRadius, 1000 * j - SegmentCompensate);
+				}
+
+				if (!IsAccessible(map[i - 1][j - 1]))
+				{
+					CAP = GeometryPoint(1000 * i + CheckPointCompensate, 1000 * j + CheckPointRadius);
+					CBP = GeometryPoint(1000 * i + CheckPointRadius, 1000 * j + CheckPointCompensate);
+				}
+				else if (!IsAccessible(map[i - 1][j]))
+				{
+					CAP = GeometryPoint(1000 * i + CheckPointRadius, 1000 * j - CheckPointCompensate);
+					CBP = GeometryPoint(1000 * i + CheckPointCompensate, 1000 * j - CheckPointRadius);
+				}
+				else if (!IsAccessible(map[i][j-1]))
+				{
+					CAP = GeometryPoint(1000 * i - CheckPointRadius, 1000 * j + CheckPointCompensate);
+					CBP = GeometryPoint(1000 * i - CheckPointCompensate, 1000 * j + CheckPointRadius);
+				}
+				else if (!IsAccessible(map[i][j]))
+				{
+					CAP = GeometryPoint(1000 * i - CheckPointCompensate, 1000 * j - CheckPointRadius);
+					CBP = GeometryPoint(1000 * i - CheckPointRadius, 1000 * j - CheckPointCompensate);
 				}
 				StableMap.push_back(GeometrySegment(AP, BP));
 				std::cerr << "AddSegment (" << AP.PointX/1000 << ',' << AP.PointY/1000 << ") -> (" << BP.PointX/1000 << ',' << BP.PointY/1000 << ')' << std::endl;
-				StableCheckPoint.push_back(AP);
-				StableCheckPoint.push_back(BP);
+				StableCheckPoint.push_back(CAP);
+				StableCheckPoint.push_back(CBP);
 			}
 		}
 	std::cerr << StableCheckPoint.size() << std::endl;
@@ -530,12 +554,12 @@ std::vector<GeometryPoint> AStarPlus<IFooAPI>::FindPath(GeometryPoint From_, Geo
 		if (A.value() > (A.type ? VariableF : StableF)[A.id]) continue;
 //		if (A.type || true)
 //		{
-//			std::cerr << "AStaring Point: " << APoint.PointX << ' ' << APoint.PointY << ' ' << A.value() << std::endl;
+			std::cerr << "AStaring Point: " << APoint.PointX << ' ' << APoint.PointY << ' ' << A.value() << std::endl;
 //			std::cerr << "Last Point: " << A.parenttype << ' ' << A.parentid << std::endl;
 //		}
 		(A.type ? VariableF : StableF)[A.id] = A.value();
 		(A.type ? VariableParent : StableParent)[A.id] = std::make_pair(A.parenttype, A.parentid);
-//		std::cerr << "Fine." << std::endl;
+		std::cerr << "Fine." << std::endl;
 		if (A.type && A.id == VariableCheckPoint.size() - 1)
 		{
 			break;
@@ -552,7 +576,7 @@ std::vector<GeometryPoint> AStarPlus<IFooAPI>::FindPath(GeometryPoint From_, Geo
 //				Sleep(1000);
 			}
 		}
-//		std::cerr << "Fine.2" << std::endl;
+		std::cerr << "Fine.2" << std::endl;
 //		Sleep(1000);
 		for (int i = 0; i < VariableCheckPoint.size(); i++)
 		{
@@ -566,7 +590,7 @@ std::vector<GeometryPoint> AStarPlus<IFooAPI>::FindPath(GeometryPoint From_, Geo
 //				Sleep(1000);
 			}
 		}
-//		std::cerr << "Fine.6" << std::endl;
+		std::cerr << "Fine.6" << std::endl;
 //		Sleep(1000);
 	}
 	if (VariableParent[VariableCheckPoint.size() - 1].second != -1)

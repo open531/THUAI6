@@ -16,6 +16,7 @@
 #include "Utilities.hpp"
 #include "Pigeon.h"
 
+
 // 为假则play()期间确保游戏状态不更新，为真则只保证游戏状态在调用相关方法时不更新
 extern const bool asynchronous = false;
 
@@ -290,9 +291,9 @@ void AI::play(ITrickerAPI& api)
 	static int CurrentState = sDefault;
 	static AStarPlus<ITrickerAPI&> asp(api);
 
-	Helper.MoveToAccurate(Point(48, 32));
-	return;
-	//	Helper.AutoUpdate();
+//	Helper.MoveTo(Point(41, 9), true);
+//	return;
+	// Helper.AutoUpdate();
 
 	auto stuinfo = api.GetStudents();
 
