@@ -53,7 +53,7 @@ public:
 
 double Distance(GeometryPoint A, GeometryPoint B)
 {
-	return sqrt((A.PointY - B.PointY) * (A.PointY - B.PointY) + (A.PointY - B.PointY) * (A.PointY - B.PointY));
+	return sqrt((A.PointX - B.PointX) * (A.PointX - B.PointX) + (A.PointY - B.PointY) * (A.PointY - B.PointY));
 }
 
 // with direction S->T(can be treated as a vector), right side of the segment represents inside
@@ -65,14 +65,23 @@ public:
 	double GetTheta(GeometryPoint P);
 };
 
+GeometryPoint Project(GeometrySegment S, GeometryPoint P)
+{
+	double lambda = ((P.PointX - S.S.PointX) * (S.T.PointX - S.S.PointX) + (P.PointY - S.S.PointY) * (S.T.PointY - S.S.PointY) ) / pow(Distance(S.S, S.T), 2);
+//	std::cerr << lambda << std::endl;
+	if (lambda < 0 || lambda > 1) return S.S; // simple
+	else return GeometryPoint(S.S.PointX + lambda * (S.T.PointX - S.S.PointX), S.S.PointY + lambda * (S.T.PointY - S.S.PointY));
+}
+
 double GeometrySegment::GetTheta(GeometryPoint P)
 {
 	double CrossDot = (S.PointX - P.PointX) * (T.PointY - P.PointY) - (S.PointY - P.PointY) * (T.PointX - P.PointX);
-	double InnerDot = (S.PointX - P.PointX) * (T.PointX + P.PointX) + (S.PointY - P.PointY) * (T.PointY - P.PointY);
+	double InnerDot = (S.PointX - P.PointX) * (T.PointX - P.PointX) + (S.PointY - P.PointY) * (T.PointY - P.PointY);
 	double theta = acos(InnerDot / Distance(S, P) / Distance(T, P));
 	if (fabs(CrossDot) < 1e-4)
 	{
 		std::cerr << "[Common Line Warning!]" << std::endl;
+		return 0;
 	}
 	return CrossDot > 0 ? theta : -theta;
 }
@@ -105,6 +114,8 @@ private:
 
 	bool IsAccessible(THUAI6::PlaceType pt);
 	bool DirectReachable(GeometryPoint A, GeometryPoint B);
+	void BackwardExpand(Point Source, int H[50][50]);
+	GeometryPoint Escape(GeometryPoint P);
 
 	void InitStableMap();
 	const double Radius;

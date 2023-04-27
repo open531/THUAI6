@@ -343,9 +343,12 @@ bool Utilities<IFooAPI>::MoveToAccurate(Point Dest, bool WithWindows)
 		std::cerr << '(' << p.PointX << ',' << p.PointY << ')' << "->";
 	}
 	int ptr = 0;
-	while (Distance(GFrom, Path[ptr]) < 1e-4 && ptr < Path.size()) ptr++;
+	if (Path.size() != 1)
+	{
+		while (ptr < Path.size() && Distance(GFrom, Path[ptr]) < 10) ptr++;
+	}
 	if (ptr == Path.size()) return true;
-	API.Move((int)(std::min<double>(150, Distance(Path[ptr], GFrom) / API.GetSelfInfo()->speed)), atan2(Path[ptr].PointY - GFrom.PointY, Path[ptr].PointX - GFrom.PointX));
+	API.Move((int)std::max<double>((std::min<double>(150, Distance(Path[ptr], GFrom) / API.GetSelfInfo()->speed * 1000)), 10), atan2(Path[ptr].PointY - GFrom.PointY, Path[ptr].PointX - GFrom.PointX));
 }
 
 //bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)

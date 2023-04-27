@@ -290,9 +290,8 @@ void AI::play(ITrickerAPI& api)
 	static int CurrentState = sDefault;
 	static AStarPlus<ITrickerAPI&> asp(api);
 
-	Helper.MoveToAccurate(Point(48, 30));
+	Helper.MoveToAccurate(Point(48, 32));
 	return;
-
 	//	Helper.AutoUpdate();
 
 	auto stuinfo = api.GetStudents();
