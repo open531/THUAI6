@@ -16,6 +16,7 @@ void Utilities<IFooAPI>::InitMap(IFooAPI& api)
 				break;
 			case 3U:	// Grass
 				Access[i][j] = 3U;
+				Grass.emplace_back(Point(i, j));
 				break;
 			case 7U:	// Window
 				Access[i][j] = 1U;
@@ -133,95 +134,6 @@ void UtilitiesStudent::AutoUpdate()
 	}
 }
 
-//template<typename IFooAPI>
-//void Utilities<typename IFooAPI>::UpdateClassroom()
-//{
-//	int Size = Classroom.size();
-//	if (Size)
-//	{
-//		for (int i = 0; i < Size; i++)
-//		{
-//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) >= 10000000)
-//			{
-//				Map[Classroom[i].x][Classroom[i].y] = 2U;
-//				Classroom.erase(Classroom.begin() + i);
-//				i--; Size--;
-//			}
-//		}
-//	}
-//}
-
-//template<typename IFooAPI>
-//void Utilities<typename IFooAPI>::UpdateGate()
-//{
-//	int HiddenGateSize = HiddenGate.size();
-//	if (HiddenGateSize)
-//	{
-//		for (int i = 0; i < HiddenGateSize; i++)
-//		{
-//			if (API.GetHiddenGateState(HiddenGate[i].x, HiddenGate[i].y) == THUAI6::HiddenGateState::Opened)
-//			{
-//				Map[HiddenGate[i].x][HiddenGate[i].y] = 5U;
-//				OpenGate.emplace_back(Point(HiddenGate[i].x, HiddenGate[i].y));
-//				HiddenGate.erase(HiddenGate.begin() + i);
-//				i--; HiddenGateSize--;
-//			}
-//		}
-//	}
-//	int GateSize = Gate.size();
-//	if (GateSize)
-//	{
-//		for (int i = 0; i < GateSize; i++)
-//		{
-//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
-//			{
-//				Map[Gate[i].x][Gate[i].y] = 12U;
-//				OpenGate.emplace_back(Point(Gate[i].x, Gate[i].y));
-//				Gate.erase(Gate.begin() + i);
-//				i--; GateSize--;
-//			}
-//		}
-//	}
-//}
-
-//template<typename IFooAPI>
-//void Utilities<typename IFooAPI>::UpdateChest()
-//{
-//	int Size = Chest.size();
-//	if (Size)
-//	{
-//		for (int i = 0; i < Size; i++)
-//		{
-//			if (API.GetChestProgress(Chest[i].x, Chest[i].y) >= 10000000)
-//			{
-//				Map[Chest[i].x][Chest[i].y] = 2U;
-//				Chest.erase(Chest.begin() + i);
-//				i--; Size--;
-//			}
-//		}
-//	}
-//}
-
-//template<typename IFooAPI>
-//void Utilities<typename IFooAPI>::UpdateDoor()
-//{
-//	int Size = Door.size();
-//	if (Size)
-//	{
-//		for (int i = 0; i < Size; i++)
-//		{
-//			if (API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
-//			{
-//				Access[Door[i].x][Door[i].y] = 2U;
-//			}
-//			if (!API.IsDoorOpen(Door[i].x, Door[i].y) && IsViewable(Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), Point(Door[i].x, Door[i].y), API.GetSelfInfo()->viewRange))
-//			{
-//				Access[Door[i].x][Door[i].y] = 0U;
-//			}
-//		}
-//	}
-//}
-
 #define USE_NEW_ASTAR 1
 
 #if !USE_NEW_ASTAR
@@ -303,11 +215,11 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 		{
 			if (!IsStuck)
 			{
-				API.Move(500 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
+				API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
 			}
 			else
 			{
-				API.Move(100 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
+				API.Move(200 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
 			}
 		}
 		else
@@ -364,18 +276,6 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 
 #endif
 
-//bool Utilities<ITrickerAPI&>::MoveTo(Point Dest, bool WithWindows)
-//{
-//	int sx = API.GetSelfInfo()->x;
-//	int sy = API.GetSelfInfo()->y;
-//	std::vector<Node> UsablePath;
-//	UsablePath = AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
-//	int dx = Dest.x - sx;
-//	int dy = Dest.y - sy;
-//	API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
-//	return true;
-//}
-
 template<typename IFooAPI>
 bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
 {
@@ -390,6 +290,12 @@ bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
 		break;
 	case 2:
 		return (abs(P.x - Self.x) <= 1 && abs(P.y - Self.y) <= 1) ? true : false;
+		break;
+	case 3:	// Hide Tricker
+		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 9) ? true : false;
+		break;
+	case 4:	// Hide Tricker
+		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 25) ? true : false;
 		break;
 	}
 }
@@ -582,6 +488,16 @@ bool Utilities<typename IFooAPI>::NearWindow()
 }
 
 template<typename IFooAPI>
+bool Utilities<typename IFooAPI>::InGrass()
+{
+	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->x / 1000] == 3U)
+	{
+		return true;
+	}
+	else return false;
+}
+
+template<typename IFooAPI>
 int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
 {
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
@@ -654,6 +570,66 @@ void Utilities<typename IFooAPI>::DirectGraduate(bool WithWindows)
 	else
 	{
 		API.Graduate();
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::DirectGrass(bool WithWindows)
+{
+	if (!InGrass())
+	{
+		int minDistance = INT_MAX;
+		int minNum = -1;
+		int Distance = INT_MAX;
+		Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
+		if (!Grass.empty())
+		{
+			for (int i = 0; i < Grass.size(); i++)
+			{
+				Distance = WithWindows ? AStarWithWindows(Self, Grass[i]).size() : AStarWithoutWindows(Self, Grass[i]).size();
+				if (Distance < minDistance && Distance != 0)
+				{
+					minDistance = Distance;
+					minNum = i;
+				}
+			}
+		}
+		if (minNum >= 0)
+		{
+			MoveTo(Grass[minNum], WithWindows);
+		}
+	}
+}
+
+template<typename IFooAPI>
+void Utilities<typename IFooAPI>::DirectHide(Point TrickerLocation, int TrickerViewRange, bool WithWindows)
+{
+	if (!(InGrass() && IsViewable(TrickerLocation, Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange)))
+	{
+		int minDistance = INT_MAX;
+		int minNum = -1;
+		int Distance = INT_MAX;
+		Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
+		if (!Grass.empty())
+		{
+			for (int i = 0; i < Grass.size(); i++)
+			{
+				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25
+					&& !IsViewable(TrickerLocation, Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange))
+				{
+					Distance = WithWindows ? AStarWithWindows(Self, Grass[i]).size() : AStarWithoutWindows(Self, Grass[i]).size();
+					if (Distance < minDistance && Distance != 0)
+					{
+						minDistance = Distance;
+						minNum = i;
+					}
+				}
+			}
+		}
+		if (minNum >= 0)
+		{
+			MoveTo(Grass[minNum], WithWindows);
+		}
 	}
 }
 

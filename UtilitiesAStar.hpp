@@ -15,7 +15,7 @@ bool Utilities<IFooAPI>::IsDestination(int x, int y, Node dest)
 template<typename IFooAPI>
 double Utilities<IFooAPI>::CalculateH(int x, int y, Node dest)
 {
-	double H = (sqrt((x - dest.x) * (x - dest.x) + (y - dest.y) * (y - dest.y)));
+	double H = (sqrt((x - dest.x) * (x - dest.x) * 100 + (y - dest.y) * (y - dest.y) * 100));
 	return H;
 }
 
@@ -49,7 +49,7 @@ std::vector<Node> Utilities<IFooAPI>::MakePath(std::array<std::array<Node, 50>, 
 	}
 	catch (const std::exception& e)
 	{
-//		std::cout << e.what() << std::endl;
+		//		std::cout << e.what() << std::endl;
 	}
 }
 
@@ -119,7 +119,7 @@ std::vector<Node> Utilities<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 			{
 				if (newX != 0 && newY != 0) continue;
 				double gNew, hNew, fNew;
-				if (IsValidWithoutWindows(x + newX, y + newY) || 
+				if (IsValidWithoutWindows(x + newX, y + newY) ||
 					IsDestination(x + newX, y + newY, dest))
 				{
 					if (IsDestination(x + newX, y + newY, dest))
