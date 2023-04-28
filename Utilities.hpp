@@ -41,6 +41,100 @@ public:
 	float hCost;
 };
 
+// accurate position
+class GeometryPoint
+{
+public:
+	double PointX, PointY;
+	GeometryPoint() : PointX(0), PointY(0) {}
+	GeometryPoint(double PX, double PY) : PointX(PX), PointY(PY) {}
+	GeometryPoint(const GeometryPoint& P_) : PointX(P_.PointX), PointY(P_.PointY) {}
+};
+
+double Distance(GeometryPoint A, GeometryPoint B)
+{
+	return sqrt((A.PointX - B.PointX) * (A.PointX - B.PointX) + (A.PointY - B.PointY) * (A.PointY - B.PointY));
+}
+
+// with direction S->T(can be treated as a vector), right side of the segment represents inside
+class GeometrySegment
+{
+public:
+	GeometryPoint S, T;
+	GeometrySegment(const GeometryPoint& PS, const GeometryPoint& PT) : S(PS), T(PT) {}
+	double GetTheta(GeometryPoint P);
+};
+
+GeometryPoint Project(GeometrySegment S, GeometryPoint P)
+{
+	double lambda = ((P.PointX - S.S.PointX) * (S.T.PointX - S.S.PointX) + (P.PointY - S.S.PointY) * (S.T.PointY - S.S.PointY) ) / pow(Distance(S.S, S.T), 2);
+//	std::cerr << lambda << std::endl;
+	if (lambda < 0 || lambda > 1) return S.S; // simple
+	else return GeometryPoint(S.S.PointX + lambda * (S.T.PointX - S.S.PointX), S.S.PointY + lambda * (S.T.PointY - S.S.PointY));
+}
+
+double GeometrySegment::GetTheta(GeometryPoint P)
+{
+	double CrossDot = (S.PointX - P.PointX) * (T.PointY - P.PointY) - (S.PointY - P.PointY) * (T.PointX - P.PointX);
+	double InnerDot = (S.PointX - P.PointX) * (T.PointX - P.PointX) + (S.PointY - P.PointY) * (T.PointY - P.PointY);
+	double theta = acos(InnerDot / Distance(S, P) / Distance(T, P));
+//	if (fabs(CrossDot) < 1e-4)
+//	{
+//		std::cerr << "[Common Line Warning!]" << std::endl;
+//		return 0;
+//	}
+	return CrossDot > 0 ? theta : -theta;
+}
+
+bool Intersect(GeometrySegment A, GeometrySegment B)
+{
+//	std::cerr << "CheckIntersect" << std::endl;
+//	std::cerr << '[' << A.S.PointX / 1000 << ' ' << A.S.PointY / 1000 << ']' << std::endl;
+//	std::cerr << '[' << A.T.PointX / 1000 << ' ' << A.T.PointY / 1000 << ']' << std::endl;
+//	std::cerr << '[' << B.S.PointX / 1000 << ' ' << B.S.PointY / 1000 << ']' << std::endl;
+//	std::cerr << '[' << B.T.PointX / 1000 << ' ' << B.T.PointY / 1000 << ']' << std::endl;
+	double CDAS = (B.S.PointX - A.S.PointX) * (B.T.PointY - A.S.PointY) - (B.S.PointY - A.S.PointY) * (B.T.PointX - A.S.PointX);
+	double CDAT = (B.S.PointX - A.T.PointX) * (B.T.PointY - A.T.PointY) - (B.S.PointY - A.T.PointY) * (B.T.PointX - A.T.PointX);
+	double CDBS = (A.S.PointX - B.S.PointX) * (A.T.PointY - B.S.PointY) - (A.S.PointY - B.S.PointY) * (A.T.PointX - B.S.PointX);
+	double CDBT = (A.S.PointX - B.T.PointX) * (A.T.PointY - B.T.PointY) - (A.S.PointY - B.T.PointY) * (A.T.PointX - B.T.PointX);
+	double C = (A.T.PointX - A.S.PointX) * (B.T.PointY - B.S.PointY) - (A.T.PointY - A.S.PointY) * (B.T.PointX - B.S.PointX);
+//	std::cerr << "C = " << C << std::endl;
+	if (CDAS * CDAT <= 0 && CDBS * CDBT <= 0 && C<=0) return true;
+	return false;
+}
+
+template<typename IFooAPI>
+class AStarPlus
+{
+private:
+	std::vector<GeometrySegment> StableMap;
+	std::vector<GeometryPoint> StableCheckPoint;
+	std::vector<GeometrySegment> VariableMap;
+	std::vector<GeometryPoint> VariableCheckPoint;
+	IFooAPI API;
+
+	bool IsAccessible(THUAI6::PlaceType pt);
+	bool DirectReachable(GeometryPoint A, GeometryPoint B, bool IsDest = false);
+	void BackwardExpand(Point Source, int H[50][50]);
+	GeometryPoint Escape(GeometryPoint P);
+
+	void InitStableMap();
+	const double CheckPointRadius;
+	double CheckPointCompensate;
+	const double SegmentRadius;
+	double SegmentCompensate;
+	const double PI;
+
+public:
+	AStarPlus(IFooAPI api_);
+	std::vector<GeometryPoint> FindPath(GeometryPoint From_, GeometryPoint Dest_);
+	bool InsideObstacle(GeometryPoint P);
+	void ResetVariableMap();
+	void AddPlayer();
+	void AddWindow();
+	void AddLockedDoor();
+};
+
 template<typename IFooAPI>
 class Utilities
 {
@@ -48,6 +142,8 @@ protected:
 	int ProgressMem[50][50];
 	int LastUpdateFrame[50][50];
 	int LastAutoUpdateFrame;
+	AStarPlus<IFooAPI> AStarHelper;
+
 public:
 	unsigned char Map[50][50];
 	unsigned char Access[50][50];
@@ -86,6 +182,7 @@ public:
 	std::vector<THUAI6::PropType> GetInventory() { return Inventory; }	// 查看背包
 	void OrganizeInventory(std::vector<unsigned char>Priority);			// 整理背包
 
+	bool MoveToAccurate(Point Dest, bool WithWindows = true);
 	bool MoveTo(Point Dest, bool WithWindows);		// 往目的地动一动
 	bool MoveToNearestClassroom(bool WithWindows);	// 往最近的作业的方向动一动
 	bool MoveToNearestGate(bool WithWindows);		// 往最近的关闭的校门旁边动一动
@@ -96,6 +193,7 @@ public:
 	bool NearGate();								// 已经在关闭的校门旁边了吗？
 	bool NearOpenGate();							// 已经在开启的校门旁边了吗？
 	bool NearChest();								// 已经在箱子旁边了吗？
+	bool NearWindow();								// 已经在窗户旁边了吗？
 	bool InGrass();									// 已经在草丛里了吗？
 	void DirectLearning(bool WithWindows);			// 前往最近的作业并学习
 	void DirectOpeningChest(bool WithWindows);		// 前往最近的箱子并开箱
@@ -105,8 +203,6 @@ public:
 	void DirectHide(Point TrickerLocation, int TrickerViewRange, bool WithWindows);				// 前往最适合的草丛并躲避
 	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
 	void DirectUseProp(std::vector<unsigned char>Priority);
-
-
 
 	int EstimateTime(Point Dest);					// 去目的地的预估时间
 	bool IsViewable(Point Src, Point Dest, int ViewRange);			// 判断两个位置是否可视

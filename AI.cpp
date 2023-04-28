@@ -3,10 +3,10 @@
 #include <queue>
 #include <stack>
 #include <chrono>
-#include <format>
 #include <string>
 #include <thread>
 #include <vector>
+#include <cfloat>
 #include <algorithm>
 #include <algorithm>
 #include <functional>
@@ -598,14 +598,24 @@ void AI::play(IStudentAPI& api)
 
 void AI::play(ITrickerAPI& api)
 {
+//	int cnt1 = 0;
+//	for (int i = 0; i < 10000000; i++)
+//	{
+//		cnt1 += Intersect(GeometrySegment(GeometryPoint(rand(), rand()), GeometryPoint(rand(), rand())), GeometrySegment(GeometryPoint(rand(), rand()), GeometryPoint(rand(), rand())));
+//	}
+//	std::cerr << cnt1 << std::endl;
+//	return;
 	auto self = api.GetSelfInfo();
 	api.PrintSelfInfo();
 
 	static std::vector<unsigned char> Priority = { 0,1,2,3,4,5,6,7,8 };
 	static UtilitiesTricker Helper(api);
 	static int CurrentState = sDefault;
+	static AStarPlus<ITrickerAPI&> asp(api);
 
-	//	Helper.AutoUpdate();
+//	Helper.MoveTo(Point(41, 9), true);
+//	return;
+	// Helper.AutoUpdate();
 
 	auto stuinfo = api.GetStudents();
 
