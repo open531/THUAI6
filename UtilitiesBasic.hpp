@@ -134,7 +134,7 @@ void UtilitiesStudent::AutoUpdate()
 	}
 }
 
-#define USE_NEW_ASTAR 1
+#define USE_NEW_ASTAR 0
 
 #if !USE_NEW_ASTAR
 template<typename IFooAPI>
@@ -277,7 +277,7 @@ bool Utilities<IFooAPI>::MoveTo(Point Dest, bool WithWindows)
 #endif
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
+bool Utilities<IFooAPI>::NearPoint(Point P, int level)
 {
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 	switch (level)
@@ -301,7 +301,7 @@ bool Utilities<typename IFooAPI>::NearPoint(Point P, int level)
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
+bool Utilities<IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 {
 	int minDistance = INT_MAX;
 	int minNum = -1;
@@ -335,7 +335,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::NearClassroom(bool checkProgress)
+bool Utilities<IFooAPI>::NearClassroom(bool checkProgress)
 {
 	for (int i = 0; i < Classroom.size(); i++)
 	{
@@ -345,7 +345,7 @@ bool Utilities<typename IFooAPI>::NearClassroom(bool checkProgress)
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
+bool Utilities<IFooAPI>::MoveToNearestGate(bool WithWindows)
 {
 	int minDistance = INT_MAX;
 	int minNum = -1;
@@ -379,7 +379,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestGate(bool WithWindows)
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
+bool Utilities<IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 {
 	int minDistance = INT_MAX;
 	int minNum = -1;
@@ -413,7 +413,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::NearGate()
+bool Utilities<IFooAPI>::NearGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
@@ -423,7 +423,7 @@ bool Utilities<typename IFooAPI>::NearGate()
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::NearOpenGate()
+bool Utilities<IFooAPI>::NearOpenGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
@@ -433,7 +433,7 @@ bool Utilities<typename IFooAPI>::NearOpenGate()
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
+bool Utilities<IFooAPI>::MoveToNearestChest(bool WithWindows)
 {
 	int minDistance = INT_MAX;
 	int minNum = -1;
@@ -467,7 +467,7 @@ bool Utilities<typename IFooAPI>::MoveToNearestChest(bool WithWindows)
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::NearChest()
+bool Utilities<IFooAPI>::NearChest()
 {
 	for (int i = 0; i < Chest.size(); i++)
 	{
@@ -477,7 +477,7 @@ bool Utilities<typename IFooAPI>::NearChest()
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::NearWindow()
+bool Utilities<IFooAPI>::NearWindow()
 {
 	int X = API.GetSelfInfo()->x / 1000, Y = API.GetSelfInfo()->y / 1000;
 	for (int i = X - 1; i <= X + 1; i++)
@@ -488,7 +488,7 @@ bool Utilities<typename IFooAPI>::NearWindow()
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::InGrass()
+bool Utilities<IFooAPI>::InGrass()
 {
 	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->x / 1000] == 3U)
 	{
@@ -498,7 +498,7 @@ bool Utilities<typename IFooAPI>::InGrass()
 }
 
 template<typename IFooAPI>
-int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
+int Utilities<IFooAPI>::EstimateTime(Point Dest)
 {
 	Point Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 	int Distance = AStarWithWindows(Self, Dest).size();
@@ -508,7 +508,7 @@ int Utilities<typename IFooAPI>::EstimateTime(Point Dest)
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
+void Utilities<IFooAPI>::DirectLearning(bool WithWindows)
 {
 	if (!NearClassroom(true))
 	{
@@ -521,7 +521,7 @@ void Utilities<typename IFooAPI>::DirectLearning(bool WithWindows)
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
+void Utilities<IFooAPI>::DirectOpeningChest(bool WithWindows)
 {
 	if (!NearChest())
 	{
@@ -534,7 +534,7 @@ void Utilities<typename IFooAPI>::DirectOpeningChest(bool WithWindows)
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectOpeningGate(bool WithWindows, bool CanDirectGraduate)
+void Utilities<IFooAPI>::DirectOpeningGate(bool WithWindows, bool CanDirectGraduate)
 {
 	if (!NearGate())
 	{
@@ -561,7 +561,7 @@ void Utilities<typename IFooAPI>::DirectOpeningGate(bool WithWindows, bool CanDi
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectGraduate(bool WithWindows)
+void Utilities<IFooAPI>::DirectGraduate(bool WithWindows)
 {
 	if (!NearOpenGate())
 	{
@@ -574,7 +574,7 @@ void Utilities<typename IFooAPI>::DirectGraduate(bool WithWindows)
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectGrass(bool WithWindows)
+void Utilities<IFooAPI>::DirectGrass(bool WithWindows)
 {
 	if (!InGrass())
 	{
@@ -602,7 +602,7 @@ void Utilities<typename IFooAPI>::DirectGrass(bool WithWindows)
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectHide(Point TrickerLocation, int TrickerViewRange, bool WithWindows)
+void Utilities<IFooAPI>::DirectHide(Point TrickerLocation, int TrickerViewRange, bool WithWindows)
 {
 	if (!(InGrass() && IsViewable(TrickerLocation, Point(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange)))
 	{
@@ -634,7 +634,7 @@ void Utilities<typename IFooAPI>::DirectHide(Point TrickerLocation, int TrickerV
 }
 
 template<typename IFooAPI>
-int Utilities<typename IFooAPI>::CountFinishedClassroom() const
+int Utilities<IFooAPI>::CountFinishedClassroom() const
 {
 	int cnt = 0;
 	for (auto i : Classroom)
@@ -645,7 +645,7 @@ int Utilities<typename IFooAPI>::CountFinishedClassroom() const
 }
 
 template<typename IFooAPI>
-int Utilities<typename IFooAPI>::CountNonemptyChest() const
+int Utilities<IFooAPI>::CountNonemptyChest() const
 {
 	int cnt = 0;
 	for (auto i : Chest)
@@ -656,13 +656,13 @@ int Utilities<typename IFooAPI>::CountNonemptyChest() const
 }
 
 template<typename IFooAPI>
-int Utilities<typename IFooAPI>::CountHiddenGate() const
+int Utilities<IFooAPI>::CountHiddenGate() const
 {
 	return HiddenGate.size();
 }
 
 template<typename IFooAPI>
-int Utilities<typename IFooAPI>::CountClosedGate() const
+int Utilities<IFooAPI>::CountClosedGate() const
 {
 	int ret = 0;
 	for (int i = 0; i < Gate.size(); i++)
@@ -676,7 +676,7 @@ int Utilities<typename IFooAPI>::CountClosedGate() const
 }
 
 template<typename IFooAPI>
-int Utilities<typename IFooAPI>::CountOpenGate() const
+int Utilities<IFooAPI>::CountOpenGate() const
 {
 	int ret = 0;
 	for (int i = 0; i < Gate.size(); i++)
@@ -710,7 +710,7 @@ void Utilities<IFooAPI>::OrganizeInventory(std::vector<unsigned char>Priority)
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows)
+void Utilities<IFooAPI>::DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows)
 {
 	if (Inventory.size() < 3)
 	{
@@ -775,7 +775,7 @@ void Utilities<typename IFooAPI>::DirectProp(std::vector<unsigned char>Priority,
 }
 
 template<typename IFooAPI>
-void Utilities<typename IFooAPI>::DirectUseProp(std::vector<unsigned char>Priority)
+void Utilities<IFooAPI>::DirectUseProp(std::vector<unsigned char>Priority)
 {
 	if (!Inventory.empty())
 	{
@@ -785,7 +785,7 @@ void Utilities<typename IFooAPI>::DirectUseProp(std::vector<unsigned char>Priori
 }
 
 template<typename IFooAPI>
-bool Utilities<typename IFooAPI>::IsViewable(Point Src, Point Dest, int ViewRange)
+bool Utilities<IFooAPI>::IsViewable(Point Src, Point Dest, int ViewRange)
 {
 	int deltaX = (Dest.x - Src.x) * 1000;
 	int deltaY = (Dest.y - Src.y) * 1000;

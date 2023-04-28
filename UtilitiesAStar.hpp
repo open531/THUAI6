@@ -540,7 +540,8 @@ void AStarPlus<ITrickerAPI&>::AddPlayer()
 	}
 }
 
-void AStarPlus<IStudentAPI&>::AddPlayer()
+template<typename IFooAPI>
+void AStarPlus<IFooAPI>::AddPlayer()
 {
 //	std::cerr << "Add Player" << std::endl;
 	auto stuinfo = API.GetStudents();
