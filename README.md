@@ -122,6 +122,7 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 ## 5 TODO List
 
+- **按照`Friends.hpp`的框架重构代码**
 - 防止两个角色动作冲突（同地点学习、开箱），需要通信实现
 - 防止两个角色相撞
 - 建议使用`Utilities`的继承类分别编写不同角色的技能使用方法
