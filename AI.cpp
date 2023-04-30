@@ -9,7 +9,6 @@
 #include <vector>
 #include <cstdarg>
 #include <algorithm>
-#include <algorithm>
 #include <functional>
 #include "AI.h"
 #include "API.h"
@@ -71,42 +70,45 @@ class Geos
 {
 public:
 	Geop S, T;
-	Geos(const Geop& PS, const Geop& PT) : S(PS), T(PT) {}
+	Geos(const Geop &PS, const Geop &PT) : S(PS), T(PT) {}
 	double GetTheta(Geop P);
 };
 Geop Project(Geos S, Geop P)
 {
-	double lambda = ((P.x - S.S.x) * (S.T.x - S.S.x) + (P.y - S.S.y) * (S.T.y - S.S.y) ) / pow(Distance(S.S, S.T), 2);
-//	std::cerr << lambda << std::endl;
-	if (lambda < 0 || lambda > 1) return S.S; // simple
-	else return Geop(S.S.x + lambda * (S.T.x - S.S.x), S.S.y + lambda * (S.T.y - S.S.y));
+	double lambda = ((P.x - S.S.x) * (S.T.x - S.S.x) + (P.y - S.S.y) * (S.T.y - S.S.y)) / pow(Distance(S.S, S.T), 2);
+	//	std::cerr << lambda << std::endl;
+	if (lambda < 0 || lambda > 1)
+		return S.S; // simple
+	else
+		return Geop(S.S.x + lambda * (S.T.x - S.S.x), S.S.y + lambda * (S.T.y - S.S.y));
 }
 double Geos::GetTheta(Geop P)
 {
 	double CrossDot = (S.x - P.x) * (T.y - P.y) - (S.y - P.y) * (T.x - P.x);
 	double InnerDot = (S.x - P.x) * (T.x - P.x) + (S.y - P.y) * (T.y - P.y);
 	double theta = acos(InnerDot / Distance(S, P) / Distance(T, P));
-//	if (fabs(CrossDot) < 1e-4)
-//	{
-//		std::cerr << "[Common Line Warning!]" << std::endl;
-//		return 0;
-//	}
+	//	if (fabs(CrossDot) < 1e-4)
+	//	{
+	//		std::cerr << "[Common Line Warning!]" << std::endl;
+	//		return 0;
+	//	}
 	return CrossDot > 0 ? theta : -theta;
 }
 bool Intersect(Geos A, Geos B)
 {
-//	std::cerr << "CheckIntersect" << std::endl;
-//	std::cerr << '[' << A.S.x / 1000 << ' ' << A.S.y / 1000 << ']' << std::endl;
-//	std::cerr << '[' << A.T.x / 1000 << ' ' << A.T.y / 1000 << ']' << std::endl;
-//	std::cerr << '[' << B.S.x / 1000 << ' ' << B.S.y / 1000 << ']' << std::endl;
-//	std::cerr << '[' << B.T.x / 1000 << ' ' << B.T.y / 1000 << ']' << std::endl;
+	//	std::cerr << "CheckIntersect" << std::endl;
+	//	std::cerr << '[' << A.S.x / 1000 << ' ' << A.S.y / 1000 << ']' << std::endl;
+	//	std::cerr << '[' << A.T.x / 1000 << ' ' << A.T.y / 1000 << ']' << std::endl;
+	//	std::cerr << '[' << B.S.x / 1000 << ' ' << B.S.y / 1000 << ']' << std::endl;
+	//	std::cerr << '[' << B.T.x / 1000 << ' ' << B.T.y / 1000 << ']' << std::endl;
 	double CDAS = (B.S.x - A.S.x) * (B.T.y - A.S.y) - (B.S.y - A.S.y) * (B.T.x - A.S.x);
 	double CDAT = (B.S.x - A.T.x) * (B.T.y - A.T.y) - (B.S.y - A.T.y) * (B.T.x - A.T.x);
 	double CDBS = (A.S.x - B.S.x) * (A.T.y - B.S.y) - (A.S.y - B.S.y) * (A.T.x - B.S.x);
 	double CDBT = (A.S.x - B.T.x) * (A.T.y - B.T.y) - (A.S.y - B.T.y) * (A.T.x - B.T.x);
 	double C = (A.T.x - A.S.x) * (B.T.y - B.S.y) - (A.T.y - A.S.y) * (B.T.x - B.S.x);
-//	std::cerr << "C = " << C << std::endl;
-	if (CDAS * CDAT <= 0 && CDBS * CDBT <= 0 && C<=0) return true;
+	//	std::cerr << "C = " << C << std::endl;
+	if (CDAS * CDAT <= 0 && CDBS * CDBT <= 0 && C <= 0)
+		return true;
 	return false;
 }
 
@@ -120,27 +122,27 @@ struct MapUpdateInfo
 typedef std::shared_ptr<const THUAI6::Student> NeedHelpInfo;
 typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
-class Doors :public Cell
+class Doors : public Cell
 {
 public:
 	Doors(int x_ = 0, int y_ = 0, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
-		:Cell(x_, y_), DoorStatus(ds_), DoorType(dt_) {};
+		: Cell(x_, y_), DoorStatus(ds_), DoorType(dt_){};
 	Doors(Cell p_, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
-		:Cell(p_), DoorStatus(ds_), DoorType(dt_) {};
+		: Cell(p_), DoorStatus(ds_), DoorType(dt_){};
 	bool DoorStatus;
 	THUAI6::PlaceType DoorType;
 };
 
 #if !USE_NEW_ASTAR
-class Node :public Cell
+class Node : public Cell
 {
 public:
 	Node(int x_ = 0, int y_ = 0, int px_ = -1, int py_ = -1,
-		float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
-		:Cell(x_, y_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_) {};
+		 float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
+		: Cell(x_, y_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_){};
 	Node(Cell p_, int px_ = -1, int py_ = -1,
-		float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
-		:Cell(p_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_) {};
+		 float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
+		: Cell(p_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_){};
 	int parentX;
 	int parentY;
 	float fCost;
@@ -149,25 +151,26 @@ public:
 };
 #endif
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 class Friends;
-template<typename IFooAPI>
+template <typename IFooAPI>
 class Geographer;
-template<typename IFooAPI>
+template <typename IFooAPI>
 class Pigeon;
-template<typename IFooAPI>
+template <typename IFooAPI>
 class Predictor;
-template<typename IFooAPI>
+template <typename IFooAPI>
 class CommandPost;
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 class CommandPost
 {
-    // 这是你和伙伴们所在的指挥所
+	// 这是你和伙伴们所在的指挥所
 public:
-    // 这里有你们共享的信息
+	// 这里有你们共享的信息
 	unsigned char Map[50][50];
 	unsigned char Access[50][50];
+	unsigned char Enemy[50][50];
 	std::vector<Cell> Classroom;
 	std::vector<Cell> Gate;
 	std::vector<Cell> HiddenGate;
@@ -178,12 +181,12 @@ public:
 	int LastUpdateFrame[50][50];
 	int LastAutoUpdateFrame;
 
-    IFooAPI &API;
-    Geographer<IFooAPI> Alice;
-    Predictor<IFooAPI> Bob;
-    Pigeon<IFooAPI> Gugu;
+	IFooAPI &API;
+	Geographer<IFooAPI> Alice;
+	Predictor<IFooAPI> Bob;
+	Pigeon<IFooAPI> Gugu;
 
-    // 指挥所应当能够直接解决一些基本的问题而不劳烦几位专职人员，比如当前是否在箱子旁边，以及最近的作业位置等等
+	// 指挥所应当能够直接解决一些基本的问题而不劳烦几位专职人员，比如当前是否在箱子旁边，以及最近的作业位置等等
 
 	Cell TEMP;
 	std::vector<THUAI6::PropType> Inventory;
@@ -191,38 +194,38 @@ public:
 	static std::vector<unsigned char> UsePropPriority;
 	const int UpdateInterval = 1;
 
-	void InitMap(IFooAPI& api);
+	void InitMap(IFooAPI &api);
 
 public:
 	CommandPost(IFooAPI &api);
 
-	void Update(MapUpdateInfo upinfo, int t_);			//更新地图信息，比如门和隐藏校门，需要约定info的格式
-	std::vector<THUAI6::PropType> GetInventory() { return Inventory; }	// 查看背包
-	void OrganizeInventory(std::vector<unsigned char>Priority);			// 整理背包
+	void Update(MapUpdateInfo upinfo, int t_);						   // 更新地图信息，比如门和隐藏校门，需要约定info的格式
+	std::vector<THUAI6::PropType> GetInventory() { return Inventory; } // 查看背包
+	void OrganizeInventory(std::vector<unsigned char> Priority);	   // 整理背包
 
 	bool MoveToAccurate(Cell Dest, bool WithWindows = true);
-	bool MoveTo(Cell Dest, bool WithWindows);		// 往目的地动一动
-	bool MoveToNearestClassroom(bool WithWindows);	// 往最近的作业的方向动一动
-	bool MoveToNearestGate(bool WithWindows);		// 往最近的关闭的校门旁边动一动
-	bool MoveToNearestOpenGate(bool WithWindows);	// 往最近的开启的校门旁边动一动
-	bool MoveToNearestChest(bool WithWindows);		// 往最近的箱子的方向动一动
+	bool MoveTo(Cell Dest, bool WithWindows);	   // 往目的地动一动
+	bool MoveToNearestClassroom(bool WithWindows); // 往最近的作业的方向动一动
+	bool MoveToNearestGate(bool WithWindows);	   // 往最近的关闭的校门旁边动一动
+	bool MoveToNearestOpenGate(bool WithWindows);  // 往最近的开启的校门旁边动一动
+	bool MoveToNearestChest(bool WithWindows);	   // 往最近的箱子的方向动一动
 
-	bool NearCell(Cell P, int level = 1);         // level=0判断当前是否在该格子上，1判断是否在格子上或周围4格，2判断是否在格子上或周围8格
-	bool NearClassroom(bool checkProgress);							// 已经在作业旁边了吗？
-	bool NearGate();								// 已经在关闭的校门旁边了吗？
-	bool NearOpenGate();							// 已经在开启的校门旁边了吗？
-	bool NearChest();								// 已经在箱子旁边了吗？
-	bool NearWindow();								// 已经在窗户旁边了吗？
-	bool InGrass();									// 已经在草丛里了吗？
+	bool NearCell(Cell P, int level = 1);	// level=0判断当前是否在该格子上，1判断是否在格子上或周围4格，2判断是否在格子上或周围8格
+	bool NearClassroom(bool checkProgress); // 已经在作业旁边了吗？
+	bool NearGate();						// 已经在关闭的校门旁边了吗？
+	bool NearOpenGate();					// 已经在开启的校门旁边了吗？
+	bool NearChest();						// 已经在箱子旁边了吗？
+	bool NearWindow();						// 已经在窗户旁边了吗？
+	bool InGrass();							// 已经在草丛里了吗？
 
-	void DirectLearning(bool WithWindows);			// 前往最近的作业并学习
-	void DirectOpeningChest(bool WithWindows);		// 前往最近的箱子并开箱
-	void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);		// 前往最近的关闭的校门并开门
-	void DirectGraduate(bool WithWindows);			// 前往最近的开启的校门并毕业
-	void DirectGrass(bool WithWindows);				// 前往最近的草丛并躲避
-	void DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows);				// 前往最适合的草丛并躲避
-	void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);		// 前往已知价值最高的道具并捡道具
-	void DirectUseProp(std::vector<unsigned char>Priority);
+	void DirectLearning(bool WithWindows);																			  // 前往最近的作业并学习
+	void DirectOpeningChest(bool WithWindows);																		  // 前往最近的箱子并开箱
+	void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);												  // 前往最近的关闭的校门并开门
+	void DirectGraduate(bool WithWindows);																			  // 前往最近的开启的校门并毕业
+	void DirectGrass(bool WithWindows);																				  // 前往最近的草丛并躲避
+	void DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows);									  // 前往最适合的草丛并躲避
+	void DirectProp(std::vector<unsigned char> Priority, int DistanceInfluence, int PropInfluence, bool WithWindows); // 前往已知价值最高的道具并捡道具
+	void DirectUseProp(std::vector<unsigned char> Priority);
 
 	int CountFinishedClassroom() const;
 	int CountNonemptyChest() const; // TODO: 暂未实现
@@ -240,20 +243,20 @@ public:
 	int GetDoorProgress(Cell cell) const;
 };
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 class Friends
 {
-    // Student&Tricker的伙伴们
+	// Student&Tricker的伙伴们
 protected:
-    IFooAPI &API; // 方便起见，每个人都有对api的直接引用，其实可以直接用Center.API
-    CommandPost<IFooAPI> &Center; // 你和伙伴们都可以访问自己所在的指挥所，并和其他人交流
-    Friends(IFooAPI &api, CommandPost<IFooAPI> &Center_) : API(api), Center(Center_) {}
+	IFooAPI &API;				  // 方便起见，每个人都有对api的直接引用，其实可以直接用Center.API
+	CommandPost<IFooAPI> &Center; // 你和伙伴们都可以访问自己所在的指挥所，并和其他人交流
+	Friends(IFooAPI &api, CommandPost<IFooAPI> &Center_) : API(api), Center(Center_) {}
 };
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 class Geographer : public Friends<IFooAPI>
 {
-    // 这是一位Geographer，负责告诉要怎么走
+	// 这是一位Geographer，负责告诉要怎么走
 protected:
 	std::vector<Geos> StableMap;
 	std::vector<Geop> StableCheckPoint;
@@ -278,7 +281,7 @@ protected:
 	void AddLockedDoor();
 
 public:
-	Geographer(IFooAPI& api, CommandPost<IFooAPI>& Center_);
+	Geographer(IFooAPI &api, CommandPost<IFooAPI> &Center_);
 #if !USE_NEW_ASTAR
 	bool IsValidWithoutWindows(int x, int y);
 	bool IsValidWithWindows(int x, int y);
@@ -287,11 +290,11 @@ public:
 	std::vector<Node> MakePath(std::array<std::array<Node, 50>, 50> map, Node dest);
 	std::vector<Node> AStarWithoutWindows(Node src, Node dest);
 	std::vector<Node> AStarWithWindows(Node src, Node dest);
-	int EstimateTime(Cell Dest);					// 去目的地的预估时间
+	int EstimateTime(Cell Dest); // 去目的地的预估时间
 #else
 	std::vector<Geop> FindPath(Geop From_, Geop Dest_);
 #endif
-	bool IsViewable(Cell Src, Cell Dest, int ViewRange);			// 判断两个位置是否可视
+	bool IsViewable(Cell Src, Cell Dest, int ViewRange); // 判断两个位置是否可视
 
 	Cell GetNearestGate();
 	Cell GetNearestClassroom(); // 仅在没写完的作业中找
@@ -304,10 +307,11 @@ private:
 	static const int MaxLength = 255;
 	char msg[MaxLength];
 	int Celler;
+
 public:
 	Encoder();
 	void SetHeader(char header);
-	template<typename T>
+	template <typename T>
 	void PushInfo(T info);
 	std::string ToString();
 };
@@ -317,26 +321,27 @@ class Decoder
 private:
 	std::string msg;
 	int Celler;
+
 public:
 	Decoder(std::string code);
-	template<typename T>
+	template <typename T>
 	T ReadInfo();
 };
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 class Pigeon : public Friends<IFooAPI>
 {
-    // 这是一只Pigeon，负责传递信息
+	// 这是一只Pigeon，负责传递信息
 private:
 	void sendInfo(int64_t dest, std::string info);
 	std::string buf;
 
 public:
-    Pigeon(IFooAPI &api, CommandPost<IFooAPI> &Center_) : Friends<IFooAPI>(api, Center_) {}
+	Pigeon(IFooAPI &api, CommandPost<IFooAPI> &Center_) : Friends<IFooAPI>(api, Center_) {}
 	void sendMapUpdate(int64_t dest, MapUpdateInfo muinfo);
 	void sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val);
 	void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);
-	void sendNeedHelp(int64_t dest,NeedHelpInfo self);
+	void sendNeedHelp(int64_t dest, NeedHelpInfo self);
 
 	int receiveMessage(); // ���ؽ��յ�����Ϣ����
 	std::pair<int, MapUpdateInfo> receiveMapUpdate();
@@ -344,18 +349,28 @@ public:
 	std::pair<int, int> receiveNeedHelp();
 };
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 class Predictor : public Friends<IFooAPI>
 {
-    // 这是一位Predictor，负责告诉其他人可能在哪里
+	// 这是一位Predictor，负责告诉其他人可能在哪里
+protected:
+	std::vector<double> DangerAlertLog;
+	std::vector<double> TrickDesireLog;
+	std::vector<double> ClassVolumeLog;
+
 public:
-    Predictor(IFooAPI &api, CommandPost<IFooAPI> &Center_) : Friends<IFooAPI>(api, Center_) {}
+	Predictor(IFooAPI &api, CommandPost<IFooAPI> &Center_) : Friends<IFooAPI>(api, Center_) {}
+
+	void FindEnemy();
+	void SaveDangerAlertLog(int maxNum);
+	void SaveTrickDesireLog(int maxNum);
+	void SaveClassVolumeLog(int maxNum);
 };
 
 class CommandPostStudent : public CommandPost<IStudentAPI>
 {
 public:
-	CommandPostStudent(IStudentAPI& api) : CommandPost(api) {}
+	CommandPostStudent(IStudentAPI &api) : CommandPost(api) {}
 	void AutoUpdate();
 
 	void TeacherPunish();
@@ -378,16 +393,15 @@ public:
 class CommandPostTricker : public CommandPost<ITrickerAPI>
 {
 public:
-	CommandPostTricker(ITrickerAPI& api) : CommandPost(api) {}
+	CommandPostTricker(ITrickerAPI &api) : CommandPost(api) {}
 	void AutoUpdate();
 
-	void AssassinDefaultAttack(int stux, int stuy);	// 刺客普通攻击，传入学生坐标(stux,stuy)
-	bool AssassinDefaultAttackOver(int rank);//判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
+	void AssassinDefaultAttack(int stux, int stuy); // 刺客普通攻击，传入学生坐标(stux,stuy)
+	bool AssassinDefaultAttackOver(int rank);		// 判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
 	void AssassinBecomeInvisible();
 	void AssassinFlyingKnife(int stux, int stuy);
 	double AssassinFlyingKnifeCD();
 };
-
 
 #ifndef _PIGEON_H
 #define _PIGEON_H
@@ -407,20 +421,20 @@ WantProp �����ȡ���ߣ�������Ҫ�������
 #define NeedHelp 0x03
 #define WantProp 0x04
 
-Encoder::Encoder() :Celler(0)
+Encoder::Encoder() : Celler(0)
 {
 	memset(msg, 0, sizeof(msg));
 }
-template<typename T>
+template <typename T>
 void Encoder::PushInfo(T info)
 {
 	size_t t = sizeof(T);
-	void* ptr = & info;
+	void *ptr = &info;
 	for (size_t i = 0; i < t; i++)
 	{
-		msg[Celler] = ((*((unsigned char*)ptr + i)) >> 4) + 'a';
+		msg[Celler] = ((*((unsigned char *)ptr + i)) >> 4) + 'a';
 		Celler++;
-		msg[Celler] = ((*((unsigned char*)ptr + i)) & 0x0f) + 'a';
+		msg[Celler] = ((*((unsigned char *)ptr + i)) & 0x0f) + 'a';
 		Celler++;
 	}
 }
@@ -433,28 +447,29 @@ std::string Encoder::ToString()
 	return std::string(msg, msg + MaxLength);
 }
 
-Decoder::Decoder(std::string code) :msg(code), Celler(0) {}
-template<typename T>
+Decoder::Decoder(std::string code) : msg(code), Celler(0) {}
+template <typename T>
 T Decoder::ReadInfo()
 {
 	T obj;
-	void* ptr = &obj;
+	void *ptr = &obj;
 	size_t t = sizeof(T);
 	for (size_t i = 0; i < t; i++)
 	{
-		*((unsigned char*)ptr + i) = ((((unsigned char)*(msg.c_str() + Celler) - 'a') << 4)) | (((unsigned char)*(msg.c_str() + Celler + 1)) - 'a');
+		*((unsigned char *)ptr + i) = ((((unsigned char)*(msg.c_str() + Celler) - 'a') << 4)) | (((unsigned char)*(msg.c_str() + Celler + 1)) - 'a');
 		Celler += 2;
 	}
 	return obj;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void Pigeon<IFooAPI>::sendInfo(int64_t dest, std::string info)
 {
-	if (dest != this->API.GetSelfInfo()->guid) this->API.SendMessage(dest, info);
+	if (dest != this->API.GetSelfInfo()->guid)
+		this->API.SendMessage(dest, info);
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void Pigeon<IFooAPI>::sendMapUpdate(int64_t dest, MapUpdateInfo muinfo)
 {
 	Encoder enc;
@@ -463,14 +478,14 @@ void Pigeon<IFooAPI>::sendMapUpdate(int64_t dest, MapUpdateInfo muinfo)
 	enc.PushInfo(muinfo);
 	sendInfo(dest, enc.ToString());
 }
-template<typename IFooAPI>
+template <typename IFooAPI>
 void Pigeon<IFooAPI>::sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val)
 {
-	MapUpdateInfo muinfo = { type, x, y, val };
+	MapUpdateInfo muinfo = {type, x, y, val};
 	sendMapUpdate(dest, muinfo);
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 std::pair<int, MapUpdateInfo> Pigeon<IFooAPI>::receiveMapUpdate()
 {
 	Decoder dec(buf);
@@ -478,10 +493,10 @@ std::pair<int, MapUpdateInfo> Pigeon<IFooAPI>::receiveMapUpdate()
 	assert(header == MapUpdate);
 	int frm = dec.ReadInfo<int>();
 	MapUpdateInfo muinfo = dec.ReadInfo<MapUpdateInfo>();
-	return std::make_pair<int, MapUpdateInfo>(static_cast<int&&>(frm), static_cast<MapUpdateInfo&&>(muinfo));
+	return std::make_pair<int, MapUpdateInfo>(static_cast<int &&>(frm), static_cast<MapUpdateInfo &&>(muinfo));
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int Pigeon<IFooAPI>::receiveMessage()
 {
 	if (this->API.HaveMessage())
@@ -490,10 +505,11 @@ int Pigeon<IFooAPI>::receiveMessage()
 		Decoder dec(buf);
 		return dec.ReadInfo<char>();
 	}
-	else return NoMessage;
+	else
+		return NoMessage;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void Pigeon<IFooAPI>::sendTrickerInfo(int64_t dest, TrickerInfo_t tricker)
 {
 	Encoder enc;
@@ -501,10 +517,9 @@ void Pigeon<IFooAPI>::sendTrickerInfo(int64_t dest, TrickerInfo_t tricker)
 	enc.PushInfo(this->API.GetFrameCount());
 	enc.PushInfo<std::vector<std::shared_ptr<const THUAI6::Tricker>>>(tricker);
 	sendInfo(dest, enc.ToString());
-
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 std::pair<int, TrickerInfo_t> Pigeon<IFooAPI>::receiveTrickerInfo()
 {
 	Decoder dec(buf);
@@ -512,7 +527,7 @@ std::pair<int, TrickerInfo_t> Pigeon<IFooAPI>::receiveTrickerInfo()
 	assert(header == TrickerInfo);
 	return std::make_pair<int, TrickerInfo_t>(dec.ReadInfo<int>(), dec.ReadInfo<TrickerInfo_t>());
 }
-//捣蛋鬼信息的编码和解码函数
+// 捣蛋鬼信息的编码和解码函数
 std::string sendOneselfMessage(std::shared_ptr<const THUAI6::Student> self)
 {
 	Encoder enc;
@@ -528,12 +543,11 @@ std::shared_ptr<const THUAI6::Student> receiveOneselfMessage(std::string info)
 	char header = dec.ReadInfo<char>();
 	std::shared_ptr<const THUAI6::Student> p1 = dec.ReadInfo<std::shared_ptr<const THUAI6::Student>>();
 	return p1;
-
 }
 
-//自己信息的编码和解码函数
-template<typename IFooAPI>
-void Pigeon<IFooAPI>::sendNeedHelp(int64_t dest,NeedHelpInfo self)
+// 自己信息的编码和解码函数
+template <typename IFooAPI>
+void Pigeon<IFooAPI>::sendNeedHelp(int64_t dest, NeedHelpInfo self)
 {
 	Encoder enc;
 	enc.SetHeader(NeedHelp);
@@ -543,13 +557,13 @@ void Pigeon<IFooAPI>::sendNeedHelp(int64_t dest,NeedHelpInfo self)
 	sendInfo(dest, enc.ToString());
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 std::pair<int, int> Pigeon<IFooAPI>::receiveNeedHelp()
 {
 	Decoder dec(buf);
 	char header = dec.ReadInfo<char>();
 	assert(header == NeedHelp);
-	return std::make_pair<int,int>(dec.ReadInfo<int>(), dec.ReadInfo<int>());
+	return std::make_pair<int, int>(dec.ReadInfo<int>(), dec.ReadInfo<int>());
 }
 
 std::string sendPropsMessage(std::vector<std::shared_ptr<const THUAI6::Prop>> prop)
@@ -568,8 +582,8 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receivePropsMessage(std::string
 	std::vector<std::shared_ptr<const THUAI6::Prop>> p1 = dec.ReadInfo<std::vector<std::shared_ptr<const THUAI6::Prop>>>();
 	return p1;
 }
-//道具信息的编码和解码函数
-//void send_Door(IStudentAPI& api1, int64_t playerID)
+// 道具信息的编码和解码函数
+// void send_Door(IStudentAPI& api1, int64_t playerID)
 //{
 //	int i, j, n = 0;
 //	int a[6], b[6];
@@ -591,58 +605,58 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receivePropsMessage(std::string
 //
 //	api1.SendMessage(playerID, info_Door);
 //
-//}
-//发送门信息的函数
-//void send_Tricker(IStudentAPI& api1, int64_t playerID)
+// }
+// 发送门信息的函数
+// void send_Tricker(IStudentAPI& api1, int64_t playerID)
 //{
 //	std::string info_Tricker = sendTrickerMessage(api1.GetTrickers());
 //	api1.SendMessage(playerID, info_Tricker);
-//}
-//发送捣蛋鬼信息的函数
-void send_Oneself(IStudentAPI& api1, int64_t playerID)
+// }
+// 发送捣蛋鬼信息的函数
+void send_Oneself(IStudentAPI &api1, int64_t playerID)
 {
 	std::string info_Oneself = sendOneselfMessage(api1.GetSelfInfo());
 	api1.SendMessage(playerID, info_Oneself);
 }
-//发送自己信息的函数
-void send_Prop(IStudentAPI& api1, int64_t playerID)
+// 发送自己信息的函数
+void send_Prop(IStudentAPI &api1, int64_t playerID)
 {
 	std::string info_Prop = sendPropsMessage(api1.GetProps());
 	api1.SendMessage(playerID, info_Prop);
 }
-//发送道具信息的函数
-//std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> receive_Door(IStudentAPI& api2)
+// 发送道具信息的函数
+// std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> receive_Door(IStudentAPI& api2)
 //{
 //	std::string info_Door = api2.GetMessage().second;
 //	std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> p1 = receiveDoorMessage(info_Door);
 //	return p1;
-//}
-//接收门信息的函数
-//std::vector<std::shared_ptr<const THUAI6::Tricker>> receive_Tricker(IStudentAPI& api2)
+// }
+// 接收门信息的函数
+// std::vector<std::shared_ptr<const THUAI6::Tricker>> receive_Tricker(IStudentAPI& api2)
 //{
 //	std::string info_Tricker = api2.GetMessage().second;
 //	std::vector<std::shared_ptr<const THUAI6::Tricker>> p1 = receiveTrickerMessage(info_Tricker);
 //	return p1;
-//}
-//接收捣蛋鬼信息的函数
-std::shared_ptr<const THUAI6::Student> receive_Oneself(IStudentAPI& api2)
+// }
+// 接收捣蛋鬼信息的函数
+std::shared_ptr<const THUAI6::Student> receive_Oneself(IStudentAPI &api2)
 {
 	std::string info_Oneself = api2.GetMessage().second;
 	std::shared_ptr<const THUAI6::Student> p1 = receiveOneselfMessage(info_Oneself);
 	return p1;
 }
-//接受发送者自身信息的函数
-std::vector<std::shared_ptr<const THUAI6::Prop>> receive_Prop(IStudentAPI& api2)
+// 接受发送者自身信息的函数
+std::vector<std::shared_ptr<const THUAI6::Prop>> receive_Prop(IStudentAPI &api2)
 {
 	std::string info_Prop = api2.GetMessage().second;
 	std::vector<std::shared_ptr<const THUAI6::Prop>> p1 = receivePropsMessage(info_Prop);
 	return p1;
 }
-//接受道具信息的函数
+// 接受道具信息的函数
 
 #endif
-template<typename IFooAPI>
-void CommandPost<IFooAPI>::InitMap(IFooAPI& api)
+template <typename IFooAPI>
+void CommandPost<IFooAPI>::InitMap(IFooAPI &api)
 {
 	int i, j;
 	for (i = 0; i < 50; i++)
@@ -652,35 +666,35 @@ void CommandPost<IFooAPI>::InitMap(IFooAPI& api)
 			Map[i][j] = (unsigned char)api.GetPlaceType(i, j);
 			switch (Map[i][j])
 			{
-			case 2U:	// Wall
+			case 2U: // Wall
 				Access[i][j] = 0U;
 				break;
-			case 3U:	// Grass
+			case 3U: // Grass
 				Access[i][j] = 3U;
 				Grass.emplace_back(Cell(i, j));
 				break;
-			case 7U:	// Window
+			case 7U: // Window
 				Access[i][j] = 1U;
 				break;
-			case 8U:	// Door3
-			case 9U:	// Door5
-			case 10U:	// Door6
+			case 8U:  // Door3
+			case 9U:  // Door5
+			case 10U: // Door6
 				Access[i][j] = 2U;
 				Door.emplace_back(Cell(i, j), true, api.GetPlaceType(i, j));
 				break;
-			case 4U:	// Classroom
+			case 4U: // Classroom
 				Access[i][j] = 0U;
 				Classroom.emplace_back(Cell(i, j));
 				break;
-			case 5U:	// Gate
+			case 5U: // Gate
 				Access[i][j] = 0U;
 				Gate.emplace_back(Cell(i, j));
 				break;
-			case 6U:	// HiddenGate
+			case 6U: // HiddenGate
 				Access[i][j] = 0U;
 				HiddenGate.emplace_back(Cell(i, j));
 				break;
-			case 11U:	// Chest
+			case 11U: // Chest
 				Access[i][j] = 0U;
 				Chest.emplace_back(Cell(i, j));
 				break;
@@ -692,7 +706,7 @@ void CommandPost<IFooAPI>::InitMap(IFooAPI& api)
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 CommandPost<IFooAPI>::CommandPost(IFooAPI &api) : API(api), LastAutoUpdateFrame(0), Alice(api, *this), Bob(api, *this), Gugu(api, *this)
 {
 	srand(time(NULL));
@@ -702,7 +716,8 @@ CommandPost<IFooAPI>::CommandPost(IFooAPI &api) : API(api), LastAutoUpdateFrame(
 void CommandPostStudent::AutoUpdate()
 {
 	int cntframe = API.GetFrameCount();
-	if (cntframe - LastAutoUpdateFrame < UpdateInterval) return;
+	if (cntframe - LastAutoUpdateFrame < UpdateInterval)
+		return;
 	std::shared_ptr<const THUAI6::Student> selfinfo = API.GetSelfInfo();
 	LastAutoUpdateFrame = cntframe;
 	for (auto it : Door)
@@ -776,7 +791,7 @@ void CommandPostStudent::AutoUpdate()
 }
 
 #if !USE_NEW_ASTAR
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 {
 	std::cerr << "Destination is (" << Dest.x << ',' << Dest.y << ')' << std::endl;
@@ -804,8 +819,10 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		}
 	}
 	std::vector<Node> UsablePath;
-	if (WithWindows) UsablePath = Alice.AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
-	else UsablePath = Alice.AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
+	if (WithWindows)
+		UsablePath = Alice.AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
+	else
+		UsablePath = Alice.AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
 	for (auto i : UsablePath)
 	{
 		std::cerr << '(' << i.x << ',' << i.y << ')' << ';';
@@ -833,12 +850,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	else
 	{
 		int tx, ty;
-		if (UsablePath.size() >= 3
-			&& Alice.IsValidWithoutWindows(sx / 1000, sy / 1000)
-			&& Alice.IsValidWithoutWindows(UsablePath[1].x, UsablePath[1].y)
-			&& Alice.IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y)
-			&& Alice.IsValidWithoutWindows(sx / 1000, UsablePath[2].y)
-			&& Alice.IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
+		if (UsablePath.size() >= 3 && Alice.IsValidWithoutWindows(sx / 1000, sy / 1000) && Alice.IsValidWithoutWindows(UsablePath[1].x, UsablePath[1].y) && Alice.IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y) && Alice.IsValidWithoutWindows(sx / 1000, UsablePath[2].y) && Alice.IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
 		{
 			tx = UsablePath[2].x * 1000 + 500;
 			ty = UsablePath[2].y * 1000 + 500;
@@ -865,7 +877,8 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		{
 			API.SkipWindow();
 		}
-		TEMP.x = sx; TEMP.y = sy;
+		TEMP.x = sx;
+		TEMP.y = sy;
 		for (int i = 0, j = 0; i < API.GetStudents().size(); i++)
 		{
 			if ((API.GetStudents()[i]->x / 1000 != sx / 1000) && (API.GetStudents()[i]->y / 1000 != sy / 1000))
@@ -887,11 +900,11 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 }
 
 #else
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 {
 	auto self = API.GetSelfInfo();
-	Geop GFrom(API.GetSelfInfo()->x, API.GetSelfInfo()->y), GDest(Dest.x*1000+500, Dest.y*1000+500);
+	Geop GFrom(API.GetSelfInfo()->x, API.GetSelfInfo()->y), GDest(Dest.x * 1000 + 500, Dest.y * 1000 + 500);
 	auto Path = Alice.FindPath(GFrom, GDest);
 	for (auto p : Path)
 	{
@@ -900,9 +913,11 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	int ptr = 0;
 	if (Path.size() != 1)
 	{
-		while (ptr < Path.size() && Distance(GFrom, Path[ptr]) < 10) ptr++;
+		while (ptr < Path.size() && Distance(GFrom, Path[ptr]) < 10)
+			ptr++;
 	}
-	if (ptr == Path.size()) return true;
+	if (ptr == Path.size())
+		return true;
 	API.Move((int)std::max<double>((std::min<double>(150, Distance(Path[ptr], GFrom) / API.GetSelfInfo()->speed * 1000)), 10), atan2(Path[ptr].y - GFrom.y, Path[ptr].x - GFrom.x));
 	if (WithWindows)
 	{
@@ -915,7 +930,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 
 #endif
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::NearCell(Cell P, int level)
 {
 	Cell Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
@@ -930,10 +945,10 @@ bool CommandPost<IFooAPI>::NearCell(Cell P, int level)
 	case 2:
 		return (abs(P.x - Self.x) <= 1 && abs(P.y - Self.y) <= 1) ? true : false;
 		break;
-	case 3:	// Hide Tricker
+	case 3: // Hide Tricker
 		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 9) ? true : false;
 		break;
-	case 4:	// Hide Tricker
+	case 4: // Hide Tricker
 		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 25) ? true : false;
 		break;
 	}
@@ -941,7 +956,7 @@ bool CommandPost<IFooAPI>::NearCell(Cell P, int level)
 
 #if !USE_NEW_ASTAR
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 {
 	int minDistance = INT_MAX;
@@ -977,19 +992,20 @@ bool CommandPost<IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 
 #endif
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::NearClassroom(bool checkProgress)
 {
 	for (int i = 0; i < Classroom.size(); i++)
 	{
-		if (NearCell(Classroom[i], 2) && (!checkProgress || (checkProgress && GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000))) return true;
+		if (NearCell(Classroom[i], 2) && (!checkProgress || (checkProgress && GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)))
+			return true;
 	}
 	return false;
 }
 
 #if !USE_NEW_ASTAR
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::MoveToNearestGate(bool WithWindows)
 {
 	int minDistance = INT_MAX;
@@ -1023,7 +1039,7 @@ bool CommandPost<IFooAPI>::MoveToNearestGate(bool WithWindows)
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 {
 	int minDistance = INT_MAX;
@@ -1059,27 +1075,29 @@ bool CommandPost<IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 
 #endif
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::NearGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		if (NearCell(Gate[i], 2) && GetGateProgress(Gate[i].x, Gate[i].y) < 18000) return true;
+		if (NearCell(Gate[i], 2) && GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
+			return true;
 	}
 	return false;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::NearOpenGate()
 {
 	for (int i = 0; i < Gate.size(); i++)
 	{
-		if (NearCell(Gate[i], 2) && GetGateProgress(Gate[i].x, Gate[i].y) >= 18000) return true;
+		if (NearCell(Gate[i], 2) && GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
+			return true;
 	}
 	return false;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::MoveToNearestChest(bool WithWindows)
 {
 	int minDistance = INT_MAX;
@@ -1113,17 +1131,18 @@ bool CommandPost<IFooAPI>::MoveToNearestChest(bool WithWindows)
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::NearChest()
 {
 	for (int i = 0; i < Chest.size(); i++)
 	{
-		if (NearCell(Chest[i], 2) && API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000) return true;
+		if (NearCell(Chest[i], 2) && API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
+			return true;
 	}
 	return false;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::NearWindow()
 {
 	int X = API.GetSelfInfo()->x / 1000, Y = API.GetSelfInfo()->y / 1000;
@@ -1134,19 +1153,20 @@ bool CommandPost<IFooAPI>::NearWindow()
 	return false;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool CommandPost<IFooAPI>::InGrass()
 {
 	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->x / 1000] == 3U)
 	{
 		return true;
 	}
-	else return false;
+	else
+		return false;
 }
 
 #if !USE_NEW_ASTAR
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int Geographer<IFooAPI>::EstimateTime(Cell Dest)
 {
 	Cell Self(this->API.GetSelfInfo()->x / 1000, this->API.GetSelfInfo()->y / 1000);
@@ -1158,7 +1178,7 @@ int Geographer<IFooAPI>::EstimateTime(Cell Dest)
 
 #endif
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectLearning(bool WithWindows)
 {
 	if (!NearClassroom(true))
@@ -1171,7 +1191,7 @@ void CommandPost<IFooAPI>::DirectLearning(bool WithWindows)
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectOpeningChest(bool WithWindows)
 {
 	if (!NearChest())
@@ -1184,7 +1204,7 @@ void CommandPost<IFooAPI>::DirectOpeningChest(bool WithWindows)
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectOpeningGate(bool WithWindows, bool CanDirectGraduate)
 {
 	if (!NearGate())
@@ -1211,7 +1231,7 @@ void CommandPost<IFooAPI>::DirectOpeningGate(bool WithWindows, bool CanDirectGra
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectGraduate(bool WithWindows)
 {
 	if (!NearOpenGate())
@@ -1225,7 +1245,7 @@ void CommandPost<IFooAPI>::DirectGraduate(bool WithWindows)
 }
 
 #if !USE_NEW_ASTAR
-template<typename IFooAPI>
+template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectGrass(bool WithWindows)
 {
 	if (!InGrass())
@@ -1253,7 +1273,7 @@ void CommandPost<IFooAPI>::DirectGrass(bool WithWindows)
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows)
 {
 	if (!(InGrass() && Alice.IsViewable(TrickerLocation, Cell(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange)))
@@ -1266,8 +1286,7 @@ void CommandPost<IFooAPI>::DirectHide(Cell TrickerLocation, int TrickerViewRange
 		{
 			for (int i = 0; i < Grass.size(); i++)
 			{
-				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25
-					&& !Alice.IsViewable(TrickerLocation, Cell(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange))
+				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25 && !Alice.IsViewable(TrickerLocation, Cell(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange))
 				{
 					Distance = WithWindows ? Alice.AStarWithWindows(Self, Grass[i]).size() : Alice.AStarWithoutWindows(Self, Grass[i]).size();
 					if (Distance < minDistance && Distance != 0)
@@ -1286,35 +1305,37 @@ void CommandPost<IFooAPI>::DirectHide(Cell TrickerLocation, int TrickerViewRange
 }
 #endif
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::CountFinishedClassroom() const
 {
 	int cnt = 0;
 	for (auto i : Classroom)
 	{
-		if (ProgressMem[i.x][i.y] >= 10000000) cnt++;
+		if (ProgressMem[i.x][i.y] >= 10000000)
+			cnt++;
 	}
 	return cnt;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::CountNonemptyChest() const
 {
 	int cnt = 0;
 	for (auto i : Chest)
 	{
-		if (ProgressMem[i.x][i.y] < 10000000) cnt++;
+		if (ProgressMem[i.x][i.y] < 10000000)
+			cnt++;
 	}
 	return cnt;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::CountHiddenGate() const
 {
 	return HiddenGate.size();
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::CountClosedGate() const
 {
 	int ret = 0;
@@ -1328,7 +1349,7 @@ int CommandPost<IFooAPI>::CountClosedGate() const
 	return ret;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::CountOpenGate() const
 {
 	int ret = 0;
@@ -1342,8 +1363,8 @@ int CommandPost<IFooAPI>::CountOpenGate() const
 	return ret;
 }
 
-template<typename IFooAPI>
-void CommandPost<IFooAPI>::OrganizeInventory(std::vector<unsigned char>Priority)
+template <typename IFooAPI>
+void CommandPost<IFooAPI>::OrganizeInventory(std::vector<unsigned char> Priority)
 {
 	if (Inventory.size() > 1)
 	{
@@ -1362,8 +1383,8 @@ void CommandPost<IFooAPI>::OrganizeInventory(std::vector<unsigned char>Priority)
 	}
 }
 
-template<typename IFooAPI>
-void CommandPost<IFooAPI>::DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows)
+template <typename IFooAPI>
+void CommandPost<IFooAPI>::DirectProp(std::vector<unsigned char> Priority, int DistanceInfluence, int PropInfluence, bool WithWindows)
 {
 	if (Inventory.size() < 3)
 	{
@@ -1427,8 +1448,8 @@ void CommandPost<IFooAPI>::DirectProp(std::vector<unsigned char>Priority, int Di
 	}
 }
 
-template<typename IFooAPI>
-void CommandPost<IFooAPI>::DirectUseProp(std::vector<unsigned char>Priority)
+template <typename IFooAPI>
+void CommandPost<IFooAPI>::DirectUseProp(std::vector<unsigned char> Priority)
 {
 	if (!Inventory.empty())
 	{
@@ -1437,7 +1458,7 @@ void CommandPost<IFooAPI>::DirectUseProp(std::vector<unsigned char>Priority)
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 {
 	int deltaX = (Dest.x - Src.x) * 1000;
@@ -1445,7 +1466,7 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 	int Distance = deltaX * deltaX + deltaY * deltaY;
 	unsigned char SrcType = this->Center.Map[Src.x][Src.y];
 	unsigned char DestType = this->Center.Map[Dest.x][Dest.y];
-	if (DestType == 3U && SrcType != 3U)  // 草丛外必不可能看到草丛内
+	if (DestType == 3U && SrcType != 3U) // 草丛外必不可能看到草丛内
 		return false;
 	if (Distance < ViewRange * ViewRange)
 	{
@@ -1456,7 +1477,7 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 		double dy = deltaY / divide;
 		double myX = double(Src.x * 1000);
 		double myY = double(Src.y * 1000);
-		if (DestType == 3U && SrcType == 3U)  // 都在草丛内，要另作判断
+		if (DestType == 3U && SrcType == 3U) // 都在草丛内，要另作判断
 			for (int i = 0; i < divide; i++)
 			{
 				myX += dx;
@@ -1464,7 +1485,7 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] != 3U)
 					return false;
 			}
-		else  // 不在草丛内，只需要没有墙即可
+		else // 不在草丛内，只需要没有墙即可
 			for (int i = 0; i < divide; i++)
 			{
 				myX += dx;
@@ -1478,78 +1499,81 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 		return false;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetChestProgress(int cellx, int celly)
 {
-	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange)) return API.GetChestProgress(cellx, celly);
-	else return ProgressMem[cellx][celly];
+	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange))
+		return API.GetChestProgress(cellx, celly);
+	else
+		return ProgressMem[cellx][celly];
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetGateProgress(int cellx, int celly)
 {
-	if (Alice.IsViewable((Grid(API.GetSelfInfo()->x, API.GetSelfInfo()->y)).ToCell(), Cell(cellx, celly), API.GetSelfInfo()->viewRange)) return API.GetGateProgress(cellx, celly);
-	else return ProgressMem[cellx][celly];
+	if (Alice.IsViewable((Grid(API.GetSelfInfo()->x, API.GetSelfInfo()->y)).ToCell(), Cell(cellx, celly), API.GetSelfInfo()->viewRange))
+		return API.GetGateProgress(cellx, celly);
+	else
+		return ProgressMem[cellx][celly];
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetClassroomProgress(int cellx, int celly)
 {
-	if (Alice.IsViewable((Grid(API.GetSelfInfo()->x, API.GetSelfInfo()->y)).ToCell(), Cell(cellx, celly), API.GetSelfInfo()->viewRange)) return API.GetClassroomProgress(cellx, celly);
-	else return ProgressMem[cellx][celly];
+	if (Alice.IsViewable((Grid(API.GetSelfInfo()->x, API.GetSelfInfo()->y)).ToCell(), Cell(cellx, celly), API.GetSelfInfo()->viewRange))
+		return API.GetClassroomProgress(cellx, celly);
+	else
+		return ProgressMem[cellx][celly];
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetDoorProgress(int cellx, int celly)
 {
-	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange)) return API.GetDoorProgress(cellx, celly);
-	else return ProgressMem[cellx][celly];
+	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange))
+		return API.GetDoorProgress(cellx, celly);
+	else
+		return ProgressMem[cellx][celly];
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetChestProgress(Cell cell) const
 {
 	return GetChestProgress(cell.x, cell.y);
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetGateProgress(Cell cell) const
 {
 	return GetGateProgress(cell.x, cell.y);
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetClassroomProgress(Cell cell) const
 {
 	return GetClassroomProgress(cell.x, cell.y);
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetDoorProgress(Cell cell) const
 {
 	return GetDoorProgress(cell.x, cell.y);
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void CommandPost<IFooAPI>::Update(MapUpdateInfo upinfo, int t_)
 {
-	if (t_ < LastUpdateFrame[upinfo.x][upinfo.y]) return;
+	if (t_ < LastUpdateFrame[upinfo.x][upinfo.y])
+		return;
 	LastUpdateFrame[upinfo.x][upinfo.y] = t_;
-	if (upinfo.type == THUAI6::PlaceType::Chest
-		|| upinfo.type == THUAI6::PlaceType::ClassRoom
-		|| upinfo.type == THUAI6::PlaceType::Gate
-		|| upinfo.type == THUAI6::PlaceType::HiddenGate)
+	if (upinfo.type == THUAI6::PlaceType::Chest || upinfo.type == THUAI6::PlaceType::ClassRoom || upinfo.type == THUAI6::PlaceType::Gate || upinfo.type == THUAI6::PlaceType::HiddenGate)
 	{
 		ProgressMem[upinfo.x][upinfo.y] = upinfo.val;
 	}
-	else if (upinfo.type == THUAI6::PlaceType::Door3
-		|| upinfo.type == THUAI6::PlaceType::Door5
-		|| upinfo.type == THUAI6::PlaceType::Door6)
+	else if (upinfo.type == THUAI6::PlaceType::Door3 || upinfo.type == THUAI6::PlaceType::Door5 || upinfo.type == THUAI6::PlaceType::Door6)
 	{
 		Access[upinfo.x][upinfo.y] = upinfo.val;
 	}
 }
-
 
 void CommandPostStudent::AtheleteCanBeginToCharge()
 {
@@ -1611,8 +1635,7 @@ double CommandPostStudent::SunshineInspireCD()
 	return API.GetSelfInfo()->timeUntilSkillAvailable[2];
 }
 
-
-void CommandPostTricker::AssassinDefaultAttack(int stux, int stuy)//传入学生坐标
+void CommandPostTricker::AssassinDefaultAttack(int stux, int stuy) // 传入学生坐标
 {
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
@@ -1628,17 +1651,17 @@ bool CommandPostTricker::AssassinDefaultAttackOver(int rank)
 	double Distance = sqrt((stux - sx) * (stux - sx) + (stuy - sy) * (stuy - sy));
 	switch (API.GetStudents()[rank]->studentType)
 	{
-	case THUAI6::StudentType::Athlete://运动员
-		if (Distance<double(7400 * 400 / 3150 - 0.297 * 3150)) // = 4.13 ??? @dgf
+	case THUAI6::StudentType::Athlete:							 // 运动员
+		if (Distance < double(7400 * 400 / 3150 - 0.297 * 3150)) // = 4.13 ??? @dgf
 			return true;
-	case THUAI6::StudentType::Teacher://老师
-		if (Distance<double(7400 * 400 / 2700 - 0.297 * 2700)) // = 294
+	case THUAI6::StudentType::Teacher:							 // 老师
+		if (Distance < double(7400 * 400 / 2700 - 0.297 * 2700)) // = 294
 			return true;
-	case THUAI6::StudentType::StraightAStudent://学霸
-		if (Distance<double(7400 * 400 / 2880 - 0.297 * 2880))
+	case THUAI6::StudentType::StraightAStudent: // 学霸
+		if (Distance < double(7400 * 400 / 2880 - 0.297 * 2880))
 			return true;
-	case THUAI6::StudentType::Sunshine://奶妈
-		if (Distance<double(7400 * 400 / 3000 - 0.297 * 3000))
+	case THUAI6::StudentType::Sunshine: // 奶妈
+		if (Distance < double(7400 * 400 / 3000 - 0.297 * 3000))
 			return true;
 	}
 	return false;
@@ -1658,26 +1681,32 @@ void CommandPostTricker::AssassinFlyingKnife(int stux, int stuy)
 
 #if !USE_NEW_ASTAR
 
-template<typename IFooAPI>
-bool Geographer<IFooAPI>::IsValidWithoutWindows(int x, int y) { return (bool)(this->Center.Access[x][y] / 2); }
-
-template<typename IFooAPI>
-bool Geographer<IFooAPI>::IsValidWithWindows(int x, int y) { return (bool)this->Center.Access[x][y]; }
-
-template<typename IFooAPI>
-bool Geographer<IFooAPI>::IsDestination(int x, int y, Node dest)
+template <typename IFooAPI>
+bool Geographer<IFooAPI>::IsValidWithoutWindows(int x, int y)
 {
-	if (x == dest.x && y == dest.y) return true; else return false;
+	return (bool)(this->Center.Access[x][y] / 2);
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
+bool Geographer<IFooAPI>::IsValidWithWindows(int x, int y) { return (bool)this->Center.Access[x][y]; }
+
+template <typename IFooAPI>
+bool Geographer<IFooAPI>::IsDestination(int x, int y, Node dest)
+{
+	if (x == dest.x && y == dest.y)
+		return true;
+	else
+		return false;
+}
+
+template <typename IFooAPI>
 double Geographer<IFooAPI>::CalculateH(int x, int y, Node dest)
 {
 	double H = (sqrt((x - dest.x) * (x - dest.x) * 100 + (y - dest.y) * (y - dest.y) * 100));
 	return H;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 std::vector<Node> Geographer<IFooAPI>::MakePath(std::array<std::array<Node, 50>, 50> map, Node dest)
 {
 	try
@@ -1686,15 +1715,13 @@ std::vector<Node> Geographer<IFooAPI>::MakePath(std::array<std::array<Node, 50>,
 		int y = dest.y;
 		std::stack<Node> Path;
 		std::vector<Node> UsablePath;
-		while (!(map[x][y].parentX == x && map[x][y].parentY == y)
-			&& map[x][y].x != -1 && map[x][y].y != -1)
+		while (!(map[x][y].parentX == x && map[x][y].parentY == y) && map[x][y].x != -1 && map[x][y].y != -1)
 		{
 			Path.push(map[x][y]);
 			int tempX = map[x][y].parentX;
 			int tempY = map[x][y].parentY;
 			x = tempX;
 			y = tempY;
-
 		}
 		Path.push(map[x][y]);
 		while (!Path.empty())
@@ -1705,26 +1732,26 @@ std::vector<Node> Geographer<IFooAPI>::MakePath(std::array<std::array<Node, 50>,
 		}
 		return UsablePath;
 	}
-	catch (const std::exception& e)
+	catch (const std::exception &e)
 	{
 		//		std::cout << e.what() << std::endl;
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 {
 	std::vector<Node> empty;
-	//if (IsValidWithoutWindows(dest.x, dest.y) == false)
+	// if (IsValidWithoutWindows(dest.x, dest.y) == false)
 	//{
 	//	return empty;
-	//}
+	// }
 	if (IsDestination(src.x, src.y, dest))
 	{
 		return empty;
 	}
 	bool ClosedList[50][50];
-	std::array<std::array < Node, 50>, 50> AStarMap;
+	std::array<std::array<Node, 50>, 50> AStarMap;
 	for (int x = 0; x < 50; x++)
 	{
 		for (int y = 0; y < 50; y++)
@@ -1775,7 +1802,8 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 		{
 			for (int newY = -1; newY <= 1; newY++)
 			{
-				if (newX != 0 && newY != 0) continue;
+				if (newX != 0 && newY != 0)
+					continue;
 				double gNew, hNew, fNew;
 				if (IsValidWithoutWindows(x + newX, y + newY) ||
 					IsDestination(x + newX, y + newY, dest))
@@ -1813,21 +1841,21 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 	}
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 {
 	std::cout << src.x << src.y;
 	std::vector<Node> empty;
-	//if (IsValidWithWindows(dest.x, dest.y) == false)
+	// if (IsValidWithWindows(dest.x, dest.y) == false)
 	//{
 	//	return empty;
-	//}
+	// }
 	if (IsDestination(src.x, src.y, dest))
 	{
 		return empty;
 	}
 	bool ClosedList[50][50];
-	std::array<std::array < Node, 50>, 50> AStarMap;
+	std::array<std::array<Node, 50>, 50> AStarMap;
 	for (int x = 0; x < 50; x++)
 	{
 		for (int y = 0; y < 50; y++)
@@ -1860,7 +1888,7 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 			float temp = FLT_MAX;
 			std::vector<Node>::iterator itNode;
 			for (std::vector<Node>::iterator it = OpenList.begin();
-				it != OpenList.end(); it = next(it))
+				 it != OpenList.end(); it = next(it))
 			{
 				Node n = *it;
 				if (n.fCost < temp)
@@ -1879,7 +1907,8 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 		{
 			for (int newY = -1; newY <= 1; newY++)
 			{
-				if (newX != 0 && newY != 0) continue;
+				if (newX != 0 && newY != 0)
+					continue;
 				double gNew, hNew, fNew;
 				if (IsValidWithWindows(x + newX, y + newY) || IsDestination(x + newX, y + newY, dest))
 				{
@@ -1918,16 +1947,16 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 
 #endif
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 Geographer<IFooAPI>::Geographer(IFooAPI &api_, CommandPost<IFooAPI> &Center_) : Friends<IFooAPI>(api_, Center_), SegmentRadius(405), CheckPointRadius(410)
 {
 	SegmentCompensate = SegmentRadius * tan(PI / 8);
 	CheckPointCompensate = CheckPointRadius * tan(PI / 8);
-//	std::cerr << SegmentRadius << ' '<< SegmentCompensate << std::endl;
+	//	std::cerr << SegmentRadius << ' '<< SegmentCompensate << std::endl;
 	InitStableMap();
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 Geop Geographer<IFooAPI>::Escape(Geop P)
 {
 	Geop Q(1500, 1500);
@@ -1953,18 +1982,13 @@ Geop Geographer<IFooAPI>::Escape(Geop P)
 	return Q;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool Geographer<IFooAPI>::IsAccessible(THUAI6::PlaceType pt)
 {
-	return pt == THUAI6::PlaceType::Land
-		|| pt == THUAI6::PlaceType::Door3
-		|| pt == THUAI6::PlaceType::Door5
-		|| pt == THUAI6::PlaceType::Door6
-		|| pt == THUAI6::PlaceType::Grass
-		|| pt == THUAI6::PlaceType::Window;
+	return pt == THUAI6::PlaceType::Land || pt == THUAI6::PlaceType::Door3 || pt == THUAI6::PlaceType::Door5 || pt == THUAI6::PlaceType::Door6 || pt == THUAI6::PlaceType::Grass || pt == THUAI6::PlaceType::Window;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void Geographer<IFooAPI>::BackwardExpand(Cell Source, int H[50][50])
 {
 	for (int i = 0; i < 50; i++)
@@ -1977,7 +2001,7 @@ void Geographer<IFooAPI>::BackwardExpand(Cell Source, int H[50][50])
 	{
 		Cell now(bfs.front());
 		bfs.pop();
-//		std::cerr << "bfs " << now.x << ' ' << now.y << std::endl;
+		//		std::cerr << "bfs " << now.x << ' ' << now.y << std::endl;
 		for (int i = now.x - 1; i <= now.x + 1; i++)
 			for (int j = now.y - 1; j <= now.y + 1; j++)
 				if (abs(i - now.x) + abs(j - now.y) == 1 && i >= 0 && i < 50 && j >= 0 && j < 50 && IsAccessible(this->API.GetPlaceType(i, j)))
@@ -1986,49 +2010,53 @@ void Geographer<IFooAPI>::BackwardExpand(Cell Source, int H[50][50])
 					{
 						H[i][j] = H[now.x][now.y] + 10000;
 						bfs.push(Cell(i, j));
-//						std::cerr << "bfs next" << i << ' ' << j << std::endl;
+						//						std::cerr << "bfs next" << i << ' ' << j << std::endl;
 					}
 				}
 	}
-//	for (int i = 0; i < 50; i++)
-//	{
-//		for (int j = 0; j < 50; j++)
-//			std::cerr << (H[i][j] == 10000000 ? -1 : H[i][j]) << ' ';
-//		std::cerr << std::endl;
-//	}
+	//	for (int i = 0; i < 50; i++)
+	//	{
+	//		for (int j = 0; j < 50; j++)
+	//			std::cerr << (H[i][j] == 10000000 ? -1 : H[i][j]) << ' ';
+	//		std::cerr << std::endl;
+	//	}
 }
 
 // static int statistic;
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool Geographer<IFooAPI>::DirectReachable(Geop A, Geop B, bool IsDest) // if IsDest, allow 1 through
 {
 	Geos AB(A, B);
 	int icnt = 0;
 	for (auto s : StableMap)
 	{
-		if (Intersect(AB, s)) icnt++;
-		if (!IsDest && icnt == 1 || IsDest && icnt == 2) return false;
-//		statistic++;
-//		if (statistic % 10000000 == 0)
-//		{
-//			std::cerr << "statistic count " << statistic << std::endl;
-//		}
+		if (Intersect(AB, s))
+			icnt++;
+		if (!IsDest && icnt == 1 || IsDest && icnt == 2)
+			return false;
+		//		statistic++;
+		//		if (statistic % 10000000 == 0)
+		//		{
+		//			std::cerr << "statistic count " << statistic << std::endl;
+		//		}
 	}
 	for (auto s : VariableMap)
 	{
-		if (Intersect(AB, s)) icnt++;
-		if (!IsDest && icnt == 1 || IsDest && icnt == 2) return false;
-//		statistic++;
-//		if (statistic % 10000000 == 0)
-//		{
-//			std::cerr << "statistic count " << statistic << std::endl;
-//		}
+		if (Intersect(AB, s))
+			icnt++;
+		if (!IsDest && icnt == 1 || IsDest && icnt == 2)
+			return false;
+		//		statistic++;
+		//		if (statistic % 10000000 == 0)
+		//		{
+		//			std::cerr << "statistic count " << statistic << std::endl;
+		//		}
 	}
 	return true;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void Geographer<IFooAPI>::InitStableMap()
 {
 	auto map = this->API.GetFullMap();
@@ -2040,31 +2068,41 @@ void Geographer<IFooAPI>::InitStableMap()
 		int leftP = 0;
 		while (leftP < 50)
 		{
-			if (IsAccessible(map[i - 1][leftP]) == IsAccessible(map[i][leftP])) leftP++;
+			if (IsAccessible(map[i - 1][leftP]) == IsAccessible(map[i][leftP]))
+				leftP++;
 			else
 			{
 				int rightP = leftP;
 				bool upWall = IsAccessible(map[i][leftP]);
-				while (IsAccessible(map[i - 1][rightP + 1]) == IsAccessible(map[i - 1][leftP]) && IsAccessible(map[i][rightP + 1]) == IsAccessible(map[i][leftP])) rightP++;
+				while (IsAccessible(map[i - 1][rightP + 1]) == IsAccessible(map[i - 1][leftP]) && IsAccessible(map[i][rightP + 1]) == IsAccessible(map[i][leftP]))
+					rightP++;
 				if (upWall)
 				{
 					Geop LP, RP;
-					if (IsAccessible(map[i][leftP-1])) LP = Geop(1000 * i + SegmentRadius, 1000 * leftP - SegmentCompensate);
-					else LP = Geop(1000 * i + SegmentRadius, 1000 * leftP + SegmentRadius);
-					if (IsAccessible(map[i][rightP+1])) RP = Geop(1000 * i + SegmentRadius, 1000 * (rightP + 1) + SegmentCompensate);
-					else RP = Geop(1000 * i + SegmentRadius, 1000 * (rightP + 1) - SegmentRadius);
+					if (IsAccessible(map[i][leftP - 1]))
+						LP = Geop(1000 * i + SegmentRadius, 1000 * leftP - SegmentCompensate);
+					else
+						LP = Geop(1000 * i + SegmentRadius, 1000 * leftP + SegmentRadius);
+					if (IsAccessible(map[i][rightP + 1]))
+						RP = Geop(1000 * i + SegmentRadius, 1000 * (rightP + 1) + SegmentCompensate);
+					else
+						RP = Geop(1000 * i + SegmentRadius, 1000 * (rightP + 1) - SegmentRadius);
 					StableMap.push_back(Geos(RP, LP));
-//					std::cerr << "AddSegment (" << RP.x/1000 << ',' << RP.y/1000 << ") -> (" << LP.x/1000 << ',' << LP.y/1000 << ')' << std::endl;
+					//					std::cerr << "AddSegment (" << RP.x/1000 << ',' << RP.y/1000 << ") -> (" << LP.x/1000 << ',' << LP.y/1000 << ')' << std::endl;
 				}
 				else
 				{
 					Geop LP, RP;
-					if (IsAccessible(map[i-1][leftP-1])) LP = Geop(1000 * i - SegmentRadius, 1000 * leftP - SegmentCompensate);
-					else LP = Geop(1000 * i - SegmentRadius, 1000 * leftP + SegmentRadius);
-					if (IsAccessible(map[i-1][rightP+1])) RP = Geop(1000 * i - SegmentRadius, 1000 * (rightP + 1) + SegmentCompensate);
-					else RP = Geop(1000 * i - SegmentRadius, 1000 * (rightP + 1) - SegmentRadius);
+					if (IsAccessible(map[i - 1][leftP - 1]))
+						LP = Geop(1000 * i - SegmentRadius, 1000 * leftP - SegmentCompensate);
+					else
+						LP = Geop(1000 * i - SegmentRadius, 1000 * leftP + SegmentRadius);
+					if (IsAccessible(map[i - 1][rightP + 1]))
+						RP = Geop(1000 * i - SegmentRadius, 1000 * (rightP + 1) + SegmentCompensate);
+					else
+						RP = Geop(1000 * i - SegmentRadius, 1000 * (rightP + 1) - SegmentRadius);
 					StableMap.push_back(Geos(LP, RP));
-//					std::cerr << "AddSegment (" << LP.x/1000 << ',' << LP.y/1000 << ") -> (" << RP.x/1000 << ',' << RP.y/1000 << ')' << std::endl;
+					//					std::cerr << "AddSegment (" << LP.x/1000 << ',' << LP.y/1000 << ") -> (" << RP.x/1000 << ',' << RP.y/1000 << ')' << std::endl;
 				}
 				leftP = rightP + 1;
 			}
@@ -2076,31 +2114,41 @@ void Geographer<IFooAPI>::InitStableMap()
 		int upP = 0;
 		while (upP < 50)
 		{
-			if (IsAccessible(map[upP][i - 1]) == IsAccessible(map[upP][i])) upP++;
+			if (IsAccessible(map[upP][i - 1]) == IsAccessible(map[upP][i]))
+				upP++;
 			else
 			{
 				int downP = upP;
 				bool leftWall = IsAccessible(map[upP][i]);
-				while (IsAccessible(map[downP+1][i-1]) == IsAccessible(map[upP][i-1]) && IsAccessible(map[downP+1][i]) == IsAccessible(map[upP][i])) downP++;
+				while (IsAccessible(map[downP + 1][i - 1]) == IsAccessible(map[upP][i - 1]) && IsAccessible(map[downP + 1][i]) == IsAccessible(map[upP][i]))
+					downP++;
 				if (leftWall)
 				{
 					Geop UP, DP;
-					if (IsAccessible(map[upP-1][i])) UP = Geop(1000 * upP - SegmentCompensate, 1000 * i + SegmentRadius);
-					else UP = Geop(1000 * upP + SegmentRadius, 1000 * i + SegmentRadius);
-					if (IsAccessible(map[downP+1][i])) DP = Geop(1000 * (downP + 1) + SegmentCompensate, 1000 * i + SegmentRadius);
-					else DP = Geop(1000 * (downP + 1) - SegmentRadius, 1000 * i + SegmentRadius);
+					if (IsAccessible(map[upP - 1][i]))
+						UP = Geop(1000 * upP - SegmentCompensate, 1000 * i + SegmentRadius);
+					else
+						UP = Geop(1000 * upP + SegmentRadius, 1000 * i + SegmentRadius);
+					if (IsAccessible(map[downP + 1][i]))
+						DP = Geop(1000 * (downP + 1) + SegmentCompensate, 1000 * i + SegmentRadius);
+					else
+						DP = Geop(1000 * (downP + 1) - SegmentRadius, 1000 * i + SegmentRadius);
 					StableMap.push_back(Geos(UP, DP));
-//					std::cerr << "AddSegment (" << UP.x/1000 << ',' << UP.y/1000 << ") -> (" << DP.x/1000 << ',' << DP.y/1000 << ')' << std::endl;
+					//					std::cerr << "AddSegment (" << UP.x/1000 << ',' << UP.y/1000 << ") -> (" << DP.x/1000 << ',' << DP.y/1000 << ')' << std::endl;
 				}
 				else
 				{
 					Geop UP, DP;
-					if (IsAccessible(map[upP-1][i-1])) UP = Geop(1000 * upP - SegmentCompensate, 1000 * i - SegmentRadius);
-					else UP = Geop(1000 * upP + SegmentRadius, 1000 * i - SegmentRadius);
-					if (IsAccessible(map[downP+1][i-1])) DP = Geop(1000 * (downP + 1) + SegmentCompensate, 1000 * i - SegmentRadius);
-					else DP = Geop(1000 * (downP + 1) - SegmentRadius, 1000 * i - SegmentRadius);
+					if (IsAccessible(map[upP - 1][i - 1]))
+						UP = Geop(1000 * upP - SegmentCompensate, 1000 * i - SegmentRadius);
+					else
+						UP = Geop(1000 * upP + SegmentRadius, 1000 * i - SegmentRadius);
+					if (IsAccessible(map[downP + 1][i - 1]))
+						DP = Geop(1000 * (downP + 1) + SegmentCompensate, 1000 * i - SegmentRadius);
+					else
+						DP = Geop(1000 * (downP + 1) - SegmentRadius, 1000 * i - SegmentRadius);
 					StableMap.push_back(Geos(DP, UP));
-//					std::cerr << "AddSegment (" << DP.x/1000 << ',' << DP.y/1000 << ") -> (" << UP.x/1000 << ',' << UP.y/1000 << ')' << std::endl;
+					//					std::cerr << "AddSegment (" << DP.x/1000 << ',' << DP.y/1000 << ") -> (" << UP.x/1000 << ',' << UP.y/1000 << ')' << std::endl;
 				}
 				upP = downP + 1;
 			}
@@ -2124,7 +2172,7 @@ void Geographer<IFooAPI>::InitStableMap()
 					AP = Geop(1000 * i + SegmentRadius, 1000 * j - SegmentCompensate);
 					BP = Geop(1000 * i + SegmentCompensate, 1000 * j - SegmentRadius);
 				}
-				else if (!IsAccessible(map[i][j-1]))
+				else if (!IsAccessible(map[i][j - 1]))
 				{
 					AP = Geop(1000 * i - SegmentRadius, 1000 * j + SegmentCompensate);
 					BP = Geop(1000 * i - SegmentCompensate, 1000 * j + SegmentRadius);
@@ -2145,7 +2193,7 @@ void Geographer<IFooAPI>::InitStableMap()
 					CAP = Geop(1000 * i + CheckPointRadius, 1000 * j - CheckPointCompensate);
 					CBP = Geop(1000 * i + CheckPointCompensate, 1000 * j - CheckPointRadius);
 				}
-				else if (!IsAccessible(map[i][j-1]))
+				else if (!IsAccessible(map[i][j - 1]))
 				{
 					CAP = Geop(1000 * i - CheckPointRadius, 1000 * j + CheckPointCompensate);
 					CBP = Geop(1000 * i - CheckPointCompensate, 1000 * j + CheckPointRadius);
@@ -2156,7 +2204,7 @@ void Geographer<IFooAPI>::InitStableMap()
 					CBP = Geop(1000 * i - CheckPointRadius, 1000 * j - CheckPointCompensate);
 				}
 				StableMap.push_back(Geos(AP, BP));
-//				std::cerr << "AddSegment (" << AP.x/1000 << ',' << AP.y/1000 << ") -> (" << BP.x/1000 << ',' << BP.y/1000 << ')' << std::endl;
+				//				std::cerr << "AddSegment (" << AP.x/1000 << ',' << AP.y/1000 << ") -> (" << BP.x/1000 << ',' << BP.y/1000 << ')' << std::endl;
 				StableCheckPoint.push_back(CAP);
 				StableCheckPoint.push_back(CBP);
 			}
@@ -2164,26 +2212,31 @@ void Geographer<IFooAPI>::InitStableMap()
 	std::cerr << StableCheckPoint.size() << std::endl;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 bool Geographer<IFooAPI>::InsideObstacle(Geop P)
 {
 	double rot = 0;
-	for (auto s : StableMap) rot += s.GetTheta(P);
-	for (auto s : VariableMap) rot += s.GetTheta(P);
+	for (auto s : StableMap)
+		rot += s.GetTheta(P);
+	for (auto s : VariableMap)
+		rot += s.GetTheta(P);
 	std::cerr << "Rot = " << rot / (2 * PI) << " (cycle)" << std::endl;
-	if (fabs(rot - 2 * PI) < PI*0.8) return false;
-	else return true;
+	if (fabs(rot - 2 * PI) < PI * 0.8)
+		return false;
+	else
+		return true;
 }
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 void Geographer<IFooAPI>::AddPlayer()
 {
-//	std::cerr << "Add Player" << std::endl;
+	//	std::cerr << "Add Player" << std::endl;
 	auto stuinfo = this->API.GetStudents();
 	double rads = (400 + SegmentRadius) / cos(PI / 8);
 	for (auto s : stuinfo)
 	{
-		if (s->playerID == this->API.GetSelfInfo()->playerID) continue;
+		if (s->playerID == this->API.GetSelfInfo()->playerID)
+			continue;
 		Geop P[8], CP[8];
 		for (int i = 0; i < 8; i++)
 		{
@@ -2193,8 +2246,8 @@ void Geographer<IFooAPI>::AddPlayer()
 		}
 		for (int i = 1; i < 8; i++)
 		{
-			VariableMap.push_back(Geos(P[i], P[i-1]));
-//			std::cerr << "AddSegment (" << P[i].x/1000 << ',' << P[i].y/1000 << ") -> (" << P[i-1].x/1000 << ',' << P[i-1].y/1000 << ')' << std::endl;
+			VariableMap.push_back(Geos(P[i], P[i - 1]));
+			//			std::cerr << "AddSegment (" << P[i].x/1000 << ',' << P[i].y/1000 << ") -> (" << P[i-1].x/1000 << ',' << P[i-1].y/1000 << ')' << std::endl;
 			VariableCheckPoint.push_back(CP[i]);
 		}
 		VariableMap.push_back(Geos(P[0], P[7]));
@@ -2204,7 +2257,8 @@ void Geographer<IFooAPI>::AddPlayer()
 	auto trkinfo = this->API.GetTrickers();
 	for (auto s : trkinfo)
 	{
-		if (s->playerID == this->API.GetSelfInfo()->playerID) continue;
+		if (s->playerID == this->API.GetSelfInfo()->playerID)
+			continue;
 		Geop P[8], CP[8];
 		for (int i = 0; i < 8; i++)
 		{
@@ -2214,8 +2268,8 @@ void Geographer<IFooAPI>::AddPlayer()
 		}
 		for (int i = 1; i < 8; i++)
 		{
-			VariableMap.push_back(Geos(P[i], P[i-1]));
-//			std::cerr << "AddSegment (" << P[i].x/1000 << ',' << P[i].y/1000 << ") -> (" << P[i-1].x/1000 << ',' << P[i-1].y/1000 << ')' << std::endl;
+			VariableMap.push_back(Geos(P[i], P[i - 1]));
+			//			std::cerr << "AddSegment (" << P[i].x/1000 << ',' << P[i].y/1000 << ") -> (" << P[i-1].x/1000 << ',' << P[i-1].y/1000 << ')' << std::endl;
 			VariableCheckPoint.push_back(CP[i]);
 		}
 		VariableMap.push_back(Geos(P[0], P[7]));
@@ -2227,18 +2281,18 @@ class GeographerNode
 {
 public:
 	double valueQ, valueH;
-	bool parenttype,type;
+	bool parenttype, type;
 	int parentid, id;
 	double value() const { return valueQ + valueH; }
 	GeographerNode(double valueQ_, double valueH_, bool type_, int id_, bool parenttype_, int parentid_)
 		: valueQ(valueQ_), valueH(valueH_), type(type_), id(id_), parenttype(parenttype_), parentid(parentid_) {}
 
-	bool operator< (const GeographerNode& n) const { return value() > n.value(); }
+	bool operator<(const GeographerNode &n) const { return value() > n.value(); }
 };
 
 #if USE_NEW_ASTAR
 
-template<typename IFooAPI>
+template <typename IFooAPI>
 std::vector<Geop> Geographer<IFooAPI>::FindPath(Geop From_, Geop Dest_)
 {
 	std::cerr << "Destination is (" << Dest_.x << ' ' << Dest_.y << ')' << std::endl;
@@ -2259,26 +2313,27 @@ std::vector<Geop> Geographer<IFooAPI>::FindPath(Geop From_, Geop Dest_)
 	VariableCheckPoint.push_back(Dest_);
 	std::vector<double> VariableF(VariableCheckPoint.size(), 1e10);
 
-	std::vector<std::pair<double, int> > StableParent(StableCheckPoint.size());
-	std::vector<std::pair<double, int> > VariableParent(VariableCheckPoint.size());
+	std::vector<std::pair<double, int>> StableParent(StableCheckPoint.size());
+	std::vector<std::pair<double, int>> VariableParent(VariableCheckPoint.size());
 	VariableParent[VariableCheckPoint.size() - 1].second = -1;
 	std::priority_queue<GeographerNode> Q;
-	Q.push(GeographerNode(0, preH[(int)From_.x/1000][(int)From_.y/1000], 1, VariableCheckPoint.size() - 2, 1, VariableCheckPoint.size() - 2));
+	Q.push(GeographerNode(0, preH[(int)From_.x / 1000][(int)From_.y / 1000], 1, VariableCheckPoint.size() - 2, 1, VariableCheckPoint.size() - 2));
 	int cnt1 = 0, cnt2 = 0;
 	while (true)
 	{
 		GeographerNode A(Q.top());
 		Q.pop();
 		Geop ACell = (A.type ? VariableCheckPoint : StableCheckPoint)[A.id];
-		if (A.value() > (A.type ? VariableF : StableF)[A.id]) continue;
-//		if (A.type || true)
-//		{
-//			std::cerr << "AStaring Cell: " << ACell.x << ' ' << ACell.y << ' ' << A.value() << std::endl;
-//			std::cerr << "Last Cell: " << A.parenttype << ' ' << A.parentid << std::endl;
-//		}
+		if (A.value() > (A.type ? VariableF : StableF)[A.id])
+			continue;
+		//		if (A.type || true)
+		//		{
+		//			std::cerr << "AStaring Cell: " << ACell.x << ' ' << ACell.y << ' ' << A.value() << std::endl;
+		//			std::cerr << "Last Cell: " << A.parenttype << ' ' << A.parentid << std::endl;
+		//		}
 		(A.type ? VariableF : StableF)[A.id] = A.value();
 		(A.type ? VariableParent : StableParent)[A.id] = std::make_pair(A.parenttype, A.parentid);
-//		std::cerr << "Fine." << std::endl;
+		//		std::cerr << "Fine." << std::endl;
 		if (A.type && A.id == VariableCheckPoint.size() - 1)
 		{
 			break;
@@ -2290,13 +2345,13 @@ std::vector<Geop> Geographer<IFooAPI>::FindPath(Geop From_, Geop Dest_)
 			if (DirectReachable(ACell, p))
 			{
 				cnt2++;
-//				std::cerr << "AStaring Next Cell: " << p.x << ' ' << p.y << std::endl;
-				Q.push(GeographerNode(A.valueQ + Distance(ACell, p) + 1, preH[(int)p.x/1000][(int)p.y/1000], 0, i, A.type, A.id));
-//				Sleep(1000);
+				//				std::cerr << "AStaring Next Cell: " << p.x << ' ' << p.y << std::endl;
+				Q.push(GeographerNode(A.valueQ + Distance(ACell, p) + 1, preH[(int)p.x / 1000][(int)p.y / 1000], 0, i, A.type, A.id));
+				//				Sleep(1000);
 			}
 		}
-//		std::cerr << "Fine.2" << std::endl;
-//		Sleep(1000);
+		//		std::cerr << "Fine.2" << std::endl;
+		//		Sleep(1000);
 		for (int i = 0; i < VariableCheckPoint.size(); i++)
 		{
 			cnt1++;
@@ -2304,13 +2359,13 @@ std::vector<Geop> Geographer<IFooAPI>::FindPath(Geop From_, Geop Dest_)
 			if (DirectReachable(ACell, p))
 			{
 				cnt2++;
-//				std::cerr << "AStaring Next Cell: " << p.x << ' ' << p.y << std::endl;
-				Q.push(GeographerNode(A.valueQ + Distance(ACell, p) + 1, preH[(int)p.x/1000][(int)p.y/1000], 1, i, A.type, A.id));
-//				Sleep(1000);
+				//				std::cerr << "AStaring Next Cell: " << p.x << ' ' << p.y << std::endl;
+				Q.push(GeographerNode(A.valueQ + Distance(ACell, p) + 1, preH[(int)p.x / 1000][(int)p.y / 1000], 1, i, A.type, A.id));
+				//				Sleep(1000);
 			}
 		}
-//		std::cerr << "Fine.6" << std::endl;
-//		Sleep(1000);
+		//		std::cerr << "Fine.6" << std::endl;
+		//		Sleep(1000);
 	}
 	if (VariableParent[VariableCheckPoint.size() - 1].second != -1)
 	{
@@ -2324,7 +2379,7 @@ std::vector<Geop> Geographer<IFooAPI>::FindPath(Geop From_, Geop Dest_)
 			tp = pr.first;
 			id = pr.second;
 			Geop last = (tp ? VariableCheckPoint : StableCheckPoint)[id];
-//			std::cerr << "AStaring Traceback Cell: " << last.x << ' ' << last.y << std::endl;
+			//			std::cerr << "AStaring Traceback Cell: " << last.x << ' ' << last.y << std::endl;
 			Path.push_back(last);
 		}
 	}
@@ -2336,6 +2391,48 @@ std::vector<Geop> Geographer<IFooAPI>::FindPath(Geop From_, Geop Dest_)
 }
 #endif
 
+template <typename IFooAPI>
+void Predictor<IFooAPI>::SaveDangerAlertLog(int maxNum)
+{
+	if (DangerAlertLog.size() < maxNum)
+	{
+		DangerAlertLog.push_back(this->API.GetSelfInfo()->dangerAlert);
+	}
+	else
+	{
+		DangerAlertLog.erase(DangerAlertLog.begin());
+		DangerAlertLog.push_back(this->API.GetSelfInfo()->dangerAlert);
+	}
+}
+
+template <typename IFooAPI>
+void Predictor<IFooAPI>::SaveTrickDesireLog(int maxNum)
+{
+	if (TrickDesireLog.size() < maxNum)
+	{
+		TrickDesireLog.push_back(this->API.GetSelfInfo()->trickDesire);
+	}
+	else
+	{
+		TrickDesireLog.erase(TrickDesireLog.begin());
+		TrickDesireLog.push_back(this->API.GetSelfInfo()->trickDesire);
+	}
+}
+
+template <typename IFooAPI>
+void Predictor<IFooAPI>::SaveClassVolumeLog(int maxNum)
+{
+	if (ClassVolumeLog.size() < maxNum)
+	{
+		ClassVolumeLog.push_back(this->API.GetSelfInfo()->classVolume);
+	}
+	else
+	{
+		ClassVolumeLog.erase(ClassVolumeLog.begin());
+		ClassVolumeLog.push_back(this->API.GetSelfInfo()->classVolume);
+	}
+}
+
 // 为假则play()期间确保游戏状态不更新，为真则只保证游戏状态在调用相关方法时不更新
 extern const bool asynchronous = false;
 
@@ -2345,11 +2442,11 @@ extern const std::array<THUAI6::StudentType, 4> studentType = {
 	THUAI6::StudentType::Teacher,
 	THUAI6::StudentType::StraightAStudent,
 	THUAI6::StudentType::Athlete,
-	THUAI6::StudentType::Sunshine };
+	THUAI6::StudentType::Sunshine};
 
 extern const THUAI6::TrickerType trickerType = THUAI6::TrickerType::Assassin;
 
-//可以在AI.cpp内部声明变量与函数
+// 可以在AI.cpp内部声明变量与函数
 
 /* 人物状态
 sCantMove 动弹不得（沉迷/前后摇/毕业……）
@@ -2488,6 +2585,7 @@ void AI::play(IStudentAPI &api)
 				for (int i = 0; i < 10; i++)
 				{
 					visitClassroom[i] = false;
+					visitClassroomUpdated[i] = false;
 				}
 				countVisitedClassroom = 0;
 			}
