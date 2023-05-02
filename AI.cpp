@@ -70,7 +70,7 @@ class Geos
 {
 public:
 	Geop S, T;
-	Geos(const Geop &PS, const Geop &PT) : S(PS), T(PT) {}
+	Geos(const Geop& PS, const Geop& PT) : S(PS), T(PT) {}
 	double GetTheta(Geop P);
 };
 Geop Project(Geos S, Geop P)
@@ -126,9 +126,9 @@ class Doors : public Cell
 {
 public:
 	Doors(int x_ = 0, int y_ = 0, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
-		: Cell(x_, y_), DoorStatus(ds_), DoorType(dt_){};
+		: Cell(x_, y_), DoorStatus(ds_), DoorType(dt_) {};
 	Doors(Cell p_, bool ds_ = true, THUAI6::PlaceType dt_ = THUAI6::PlaceType::Door3)
-		: Cell(p_), DoorStatus(ds_), DoorType(dt_){};
+		: Cell(p_), DoorStatus(ds_), DoorType(dt_) {};
 	bool DoorStatus;
 	THUAI6::PlaceType DoorType;
 };
@@ -138,11 +138,11 @@ class Node : public Cell
 {
 public:
 	Node(int x_ = 0, int y_ = 0, int px_ = -1, int py_ = -1,
-		 float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
-		: Cell(x_, y_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_){};
+		float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
+		: Cell(x_, y_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_) {};
 	Node(Cell p_, int px_ = -1, int py_ = -1,
-		 float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
-		: Cell(p_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_){};
+		float fc_ = FLT_MAX, float gc_ = FLT_MAX, float hc_ = FLT_MAX)
+		: Cell(p_), parentX(px_), parentY(py_), fCost(fc_), gCost(gc_), hCost(hc_) {};
 	int parentX;
 	int parentY;
 	float fCost;
@@ -181,7 +181,7 @@ public:
 	int LastUpdateFrame[50][50];
 	int LastAutoUpdateFrame;
 
-	IFooAPI &API;
+	IFooAPI& API;
 	Geographer<IFooAPI> Alice;
 	Predictor<IFooAPI> Bob;
 	Pigeon<IFooAPI> Gugu;
@@ -194,10 +194,10 @@ public:
 	static std::vector<unsigned char> UsePropPriority;
 	const int UpdateInterval = 1;
 
-	void InitMap(IFooAPI &api);
+	void InitMap(IFooAPI& api);
 
 public:
-	CommandPost(IFooAPI &api);
+	CommandPost(IFooAPI& api);
 
 	void Update(MapUpdateInfo upinfo, int t_);						   // 更新地图信息，比如门和隐藏校门，需要约定info的格式
 	std::vector<THUAI6::PropType> GetInventory() { return Inventory; } // 查看背包
@@ -248,9 +248,9 @@ class Friends
 {
 	// Student&Tricker的伙伴们
 protected:
-	IFooAPI &API;				  // 方便起见，每个人都有对api的直接引用，其实可以直接用Center.API
-	CommandPost<IFooAPI> &Center; // 你和伙伴们都可以访问自己所在的指挥所，并和其他人交流
-	Friends(IFooAPI &api, CommandPost<IFooAPI> &Center_) : API(api), Center(Center_) {}
+	IFooAPI& API;				  // 方便起见，每个人都有对api的直接引用，其实可以直接用Center.API
+	CommandPost<IFooAPI>& Center; // 你和伙伴们都可以访问自己所在的指挥所，并和其他人交流
+	Friends(IFooAPI& api, CommandPost<IFooAPI>& Center_) : API(api), Center(Center_) {}
 };
 
 template <typename IFooAPI>
@@ -281,7 +281,7 @@ protected:
 	void AddLockedDoor();
 
 public:
-	Geographer(IFooAPI &api, CommandPost<IFooAPI> &Center_);
+	Geographer(IFooAPI& api, CommandPost<IFooAPI>& Center_);
 #if !USE_NEW_ASTAR
 	bool IsValidWithoutWindows(int x, int y);
 	bool IsValidWithWindows(int x, int y);
@@ -337,7 +337,7 @@ private:
 	std::string buf;
 
 public:
-	Pigeon(IFooAPI &api, CommandPost<IFooAPI> &Center_) : Friends<IFooAPI>(api, Center_) {}
+	Pigeon(IFooAPI& api, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api, Center_) {}
 	void sendMapUpdate(int64_t dest, MapUpdateInfo muinfo);
 	void sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val);
 	void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);
@@ -359,7 +359,7 @@ protected:
 	std::vector<double> ClassVolumeLog;
 
 public:
-	Predictor(IFooAPI &api, CommandPost<IFooAPI> &Center_) : Friends<IFooAPI>(api, Center_) {}
+	Predictor(IFooAPI& api, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api, Center_) {}
 
 	void FindEnemy();
 	void SaveDangerAlertLog(int maxNum);
@@ -370,7 +370,7 @@ public:
 class CommandPostStudent : public CommandPost<IStudentAPI>
 {
 public:
-	CommandPostStudent(IStudentAPI &api) : CommandPost(api) {}
+	CommandPostStudent(IStudentAPI& api) : CommandPost(api) {}
 	void AutoUpdate();
 
 	void TeacherPunish();
@@ -393,12 +393,13 @@ public:
 class CommandPostTricker : public CommandPost<ITrickerAPI>
 {
 public:
-	CommandPostTricker(ITrickerAPI &api) : CommandPost(api) {}
+	CommandPostTricker(ITrickerAPI& api) : CommandPost(api) {}
 	void AutoUpdate();
 
 	void AssassinDefaultAttack(int stux, int stuy); // 刺客普通攻击，传入学生坐标(stux,stuy)
 	bool AssassinDefaultAttackOver(int rank);		// 判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
 	void AssassinBecomeInvisible();
+	double AssassinBecomeInvisibleCD();
 	void AssassinFlyingKnife(int stux, int stuy);
 	double AssassinFlyingKnifeCD();
 };
@@ -429,12 +430,12 @@ template <typename T>
 void Encoder::PushInfo(T info)
 {
 	size_t t = sizeof(T);
-	void *ptr = &info;
+	void* ptr = &info;
 	for (size_t i = 0; i < t; i++)
 	{
-		msg[Celler] = ((*((unsigned char *)ptr + i)) >> 4) + 'a';
+		msg[Celler] = ((*((unsigned char*)ptr + i)) >> 4) + 'a';
 		Celler++;
-		msg[Celler] = ((*((unsigned char *)ptr + i)) & 0x0f) + 'a';
+		msg[Celler] = ((*((unsigned char*)ptr + i)) & 0x0f) + 'a';
 		Celler++;
 	}
 }
@@ -452,11 +453,11 @@ template <typename T>
 T Decoder::ReadInfo()
 {
 	T obj;
-	void *ptr = &obj;
+	void* ptr = &obj;
 	size_t t = sizeof(T);
 	for (size_t i = 0; i < t; i++)
 	{
-		*((unsigned char *)ptr + i) = ((((unsigned char)*(msg.c_str() + Celler) - 'a') << 4)) | (((unsigned char)*(msg.c_str() + Celler + 1)) - 'a');
+		*((unsigned char*)ptr + i) = ((((unsigned char)*(msg.c_str() + Celler) - 'a') << 4)) | (((unsigned char)*(msg.c_str() + Celler + 1)) - 'a');
 		Celler += 2;
 	}
 	return obj;
@@ -466,7 +467,7 @@ template <typename IFooAPI>
 void Pigeon<IFooAPI>::sendInfo(int64_t dest, std::string info)
 {
 	if (dest != this->API.GetSelfInfo()->guid)
-		this->API.SendMessage(dest, info);
+		this->API.SendBinaryMessage(dest, info);
 }
 
 template <typename IFooAPI>
@@ -481,7 +482,7 @@ void Pigeon<IFooAPI>::sendMapUpdate(int64_t dest, MapUpdateInfo muinfo)
 template <typename IFooAPI>
 void Pigeon<IFooAPI>::sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val)
 {
-	MapUpdateInfo muinfo = {type, x, y, val};
+	MapUpdateInfo muinfo = { type, x, y, val };
 	sendMapUpdate(dest, muinfo);
 }
 
@@ -493,7 +494,7 @@ std::pair<int, MapUpdateInfo> Pigeon<IFooAPI>::receiveMapUpdate()
 	assert(header == MapUpdate);
 	int frm = dec.ReadInfo<int>();
 	MapUpdateInfo muinfo = dec.ReadInfo<MapUpdateInfo>();
-	return std::make_pair<int, MapUpdateInfo>(static_cast<int &&>(frm), static_cast<MapUpdateInfo &&>(muinfo));
+	return std::make_pair<int, MapUpdateInfo>(static_cast<int&&>(frm), static_cast<MapUpdateInfo&&>(muinfo));
 }
 
 template <typename IFooAPI>
@@ -603,26 +604,26 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receivePropsMessage(std::string
 //	}
 //	std::string info_Door = sendDoorMessage(a, b, n, c);
 //
-//	api1.SendMessage(playerID, info_Door);
+//	api1.SendBinaryMessage(playerID, info_Door);
 //
 // }
 // 发送门信息的函数
 // void send_Tricker(IStudentAPI& api1, int64_t playerID)
 //{
 //	std::string info_Tricker = sendTrickerMessage(api1.GetTrickers());
-//	api1.SendMessage(playerID, info_Tricker);
+//	api1.SendBinaryMessage(playerID, info_Tricker);
 // }
 // 发送捣蛋鬼信息的函数
-void send_Oneself(IStudentAPI &api1, int64_t playerID)
+void send_Oneself(IStudentAPI& api1, int64_t playerID)
 {
 	std::string info_Oneself = sendOneselfMessage(api1.GetSelfInfo());
-	api1.SendMessage(playerID, info_Oneself);
+	api1.SendBinaryMessage(playerID, info_Oneself);
 }
 // 发送自己信息的函数
-void send_Prop(IStudentAPI &api1, int64_t playerID)
+void send_Prop(IStudentAPI& api1, int64_t playerID)
 {
 	std::string info_Prop = sendPropsMessage(api1.GetProps());
-	api1.SendMessage(playerID, info_Prop);
+	api1.SendBinaryMessage(playerID, info_Prop);
 }
 // 发送道具信息的函数
 // std::pair<char, std::vector<std::pair<std::pair<int, int>, char>>> receive_Door(IStudentAPI& api2)
@@ -639,14 +640,14 @@ void send_Prop(IStudentAPI &api1, int64_t playerID)
 //	return p1;
 // }
 // 接收捣蛋鬼信息的函数
-std::shared_ptr<const THUAI6::Student> receive_Oneself(IStudentAPI &api2)
+std::shared_ptr<const THUAI6::Student> receive_Oneself(IStudentAPI& api2)
 {
 	std::string info_Oneself = api2.GetMessage().second;
 	std::shared_ptr<const THUAI6::Student> p1 = receiveOneselfMessage(info_Oneself);
 	return p1;
 }
 // 接受发送者自身信息的函数
-std::vector<std::shared_ptr<const THUAI6::Prop>> receive_Prop(IStudentAPI &api2)
+std::vector<std::shared_ptr<const THUAI6::Prop>> receive_Prop(IStudentAPI& api2)
 {
 	std::string info_Prop = api2.GetMessage().second;
 	std::vector<std::shared_ptr<const THUAI6::Prop>> p1 = receivePropsMessage(info_Prop);
@@ -656,7 +657,7 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receive_Prop(IStudentAPI &api2)
 
 #endif
 template <typename IFooAPI>
-void CommandPost<IFooAPI>::InitMap(IFooAPI &api)
+void CommandPost<IFooAPI>::InitMap(IFooAPI& api)
 {
 	int i, j;
 	for (i = 0; i < 50; i++)
@@ -707,7 +708,7 @@ void CommandPost<IFooAPI>::InitMap(IFooAPI &api)
 }
 
 template <typename IFooAPI>
-CommandPost<IFooAPI>::CommandPost(IFooAPI &api) : API(api), LastAutoUpdateFrame(0), Alice(api, *this), Bob(api, *this), Gugu(api, *this)
+CommandPost<IFooAPI>::CommandPost(IFooAPI& api) : API(api), LastAutoUpdateFrame(0), Alice(api, *this), Bob(api, *this), Gugu(api, *this)
 {
 	srand(time(NULL));
 	InitMap(api);
@@ -1671,12 +1672,23 @@ void CommandPostTricker::AssassinBecomeInvisible()
 {
 	API.UseSkill(0);
 }
+
+double CommandPostTricker::AssassinBecomeInvisibleCD()
+{
+	return API.GetSelfInfo()->timeUntilSkillAvailable[0];
+}
+
 void CommandPostTricker::AssassinFlyingKnife(int stux, int stuy)
 {
 	API.UseSkill(1);
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
 	API.Attack(atan2(stuy - sy, stux - sx));
+}
+
+double CommandPostTricker::AssassinFlyingKnifeCD()
+{
+	return API.GetSelfInfo()->timeUntilSkillAvailable[1];
 }
 
 #if !USE_NEW_ASTAR
@@ -1732,7 +1744,7 @@ std::vector<Node> Geographer<IFooAPI>::MakePath(std::array<std::array<Node, 50>,
 		}
 		return UsablePath;
 	}
-	catch (const std::exception &e)
+	catch (const std::exception& e)
 	{
 		//		std::cout << e.what() << std::endl;
 	}
@@ -1888,7 +1900,7 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 			float temp = FLT_MAX;
 			std::vector<Node>::iterator itNode;
 			for (std::vector<Node>::iterator it = OpenList.begin();
-				 it != OpenList.end(); it = next(it))
+				it != OpenList.end(); it = next(it))
 			{
 				Node n = *it;
 				if (n.fCost < temp)
@@ -1948,7 +1960,7 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 #endif
 
 template <typename IFooAPI>
-Geographer<IFooAPI>::Geographer(IFooAPI &api_, CommandPost<IFooAPI> &Center_) : Friends<IFooAPI>(api_, Center_), SegmentRadius(405), CheckPointRadius(410)
+Geographer<IFooAPI>::Geographer(IFooAPI& api_, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api_, Center_), SegmentRadius(405), CheckPointRadius(410)
 {
 	SegmentCompensate = SegmentRadius * tan(PI / 8);
 	CheckPointCompensate = CheckPointRadius * tan(PI / 8);
@@ -2287,7 +2299,7 @@ public:
 	GeographerNode(double valueQ_, double valueH_, bool type_, int id_, bool parenttype_, int parentid_)
 		: valueQ(valueQ_), valueH(valueH_), type(type_), id(id_), parenttype(parenttype_), parentid(parentid_) {}
 
-	bool operator<(const GeographerNode &n) const { return value() > n.value(); }
+	bool operator<(const GeographerNode& n) const { return value() > n.value(); }
 };
 
 #if USE_NEW_ASTAR
@@ -2439,10 +2451,10 @@ extern const bool asynchronous = false;
 // 选手需要依次将player0到player4的职业在这里定义
 
 extern const std::array<THUAI6::StudentType, 4> studentType = {
-	THUAI6::StudentType::Teacher,
 	THUAI6::StudentType::StraightAStudent,
-	THUAI6::StudentType::Athlete,
-	THUAI6::StudentType::Sunshine};
+	THUAI6::StudentType::StraightAStudent,
+	THUAI6::StudentType::Teacher,
+	THUAI6::StudentType::Sunshine };
 
 extern const THUAI6::TrickerType trickerType = THUAI6::TrickerType::Assassin;
 
@@ -2481,10 +2493,10 @@ sPicking 去捡道具
 #define sAttackPlayer 0x21
 #define sChasePlayer 0x22
 
-void AI::play(IStudentAPI &api)
+void AI::play(IStudentAPI& api)
 {
 	api.PrintSelfInfo();
-	static std::vector<unsigned char> Priority = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+	static std::vector<unsigned char> Priority = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
 	static CommandPostStudent Center(api);
 	static int CurrentState = sDefault;
 
@@ -2511,6 +2523,290 @@ void AI::play(IStudentAPI &api)
 	// 公共操作
 	if (this->playerID == 0)
 	{
+		auto stuinfo = api.GetStudents();
+		auto triinfo = api.GetTrickers();
+		bool haveTricker = false;
+		if (!triinfo.empty())
+			haveTricker = true;
+
+		switch (CurrentState)
+		{
+		case sDefault:
+			if (haveTricker)
+				CurrentState = sFleeing;
+			break;
+		case sFleeing:
+			if (!haveTricker)
+				CurrentState = sDefault;
+			break;
+		}
+
+		switch (CurrentState)
+		{
+		case sDefault:
+			if (Center.CountFinishedClassroom() > 7)
+			{
+				if (!Center.CountOpenGate())
+				{
+					// api.EndAllAction();
+					Center.DirectOpeningGate(true, true);
+				}
+				else
+				{
+					// api.EndAllAction();
+					Center.DirectGraduate(true);
+				}
+			}
+			else
+			{
+				// api.EndAllAction();
+				if (Center.NearClassroom(true) && !Center.StraightAStudentWriteAnswersCD())
+				{
+					Center.StraightAStudentWriteAnswers();
+				}
+				Center.DirectLearning(false);
+			}
+			break;
+		case sFleeing:
+			if (!triinfo.empty())
+			{
+				Center.DirectHide(Cell(triinfo[0]->x, triinfo[0]->y), triinfo[0]->viewRange, Center.NearCell(Cell(triinfo[0]->x, triinfo[0]->y), 4) ? 1 : 0);
+			}
+			else
+			{
+				Center.DirectGrass(1);
+			}
+			break;
+		}
+	}
+	else if (this->playerID == 1)
+	{
+		auto stuinfo = api.GetStudents();
+		auto triinfo = api.GetTrickers();
+		bool haveTricker = false;
+		if (!triinfo.empty())
+			haveTricker = true;
+
+		switch (CurrentState)
+		{
+		case sDefault:
+			if (haveTricker)
+				CurrentState = sFleeing;
+			break;
+		case sFleeing:
+			if (!haveTricker)
+				CurrentState = sDefault;
+			break;
+		}
+
+		switch (CurrentState)
+		{
+		case sDefault:
+			if (Center.CountFinishedClassroom() > 7)
+			{
+				if (!Center.CountOpenGate())
+				{
+					// api.EndAllAction();
+					Center.DirectOpeningGate(true, true);
+				}
+				else
+				{
+					// api.EndAllAction();
+					Center.DirectGraduate(true);
+				}
+			}
+			else
+			{
+				// api.EndAllAction();
+				if (Center.NearClassroom(true) && !Center.StraightAStudentWriteAnswersCD())
+				{
+					Center.StraightAStudentWriteAnswers();
+				}
+				Center.DirectLearning(false);
+			}
+			break;
+		case sFleeing:
+			if (!triinfo.empty())
+			{
+				Center.DirectHide(Cell(triinfo[0]->x, triinfo[0]->y), triinfo[0]->viewRange, Center.NearCell(Cell(triinfo[0]->x, triinfo[0]->y), 4) ? 1 : 0);
+			}
+			else
+			{
+				Center.DirectGrass(1);
+			}
+			break;
+		}
+
+		// 玩家1执行操作
+	}
+	else if (this->playerID == 2)
+	{
+		//auto stuinfo = api.GetStudents();
+		//auto triinfo = api.GetTrickers();
+
+		//static bool visitClassroom[10];
+		//static bool visitClassroomUpdated[10];
+		//static int countVisitedClassroom = 0;
+		//bool haveTricker = false;
+		//if (!triinfo.empty())
+		//	haveTricker = true;
+		//static bool ChaseIt = false;
+		//static Grid ChaseDest;
+		//bool haveAddictedStudent = false;
+		//int AddictedId = -1;
+		//for (int i = 0; i < stuinfo.size(); i++)
+		//{
+		//	if (stuinfo[i]->playerState == THUAI6::PlayerState::Addicted && stuinfo[i]->guid != api.GetSelfInfo()->guid)
+		//	{
+		//		haveAddictedStudent = true;
+		//		AddictedId = i;
+		//	}
+		//}
+
+		//switch (CurrentState)
+		//{
+		//case sDefault:
+		//	if (haveTricker && !Center.AtheleteCanBeginToChargeCD())
+		//		CurrentState = sAttackPlayer;
+		//	else if (ChaseIt)
+		//		CurrentState = sChasePlayer;
+		//	else if (haveAddictedStudent)
+		//		CurrentState = sRousing;
+		//	else
+		//		CurrentState = sFindPlayer;
+		//	break;
+		//case sFindPlayer:
+		//	if (haveTricker)
+		//		CurrentState = sAttackPlayer;
+		//	break;
+		//case sAttackPlayer:
+		//	ChaseIt = true;
+		//	if (!triinfo.empty())
+		//		ChaseDest = Grid(triinfo[0]->x, triinfo[0]->y);
+		//	if (!haveTricker && !Center.AtheleteCanBeginToChargeCD())
+		//		CurrentState = sChasePlayer;
+		//	if (Center.AtheleteCanBeginToChargeCD())
+		//	{
+		//		ChaseIt = false;
+		//		CurrentState = sDefault;
+		//	}
+		//	break;
+		//case sChasePlayer:
+		//	if (haveTricker)
+		//		CurrentState = sAttackPlayer;
+		//	else if (Center.NearCell(ChaseDest.ToCell(), 2))
+		//	{
+		//		ChaseIt = false;
+		//		CurrentState = sDefault;
+		//	}
+		//	break;
+		//case sRousing:
+		//	if (!haveAddictedStudent)
+		//		CurrentState = sDefault;
+		//	break;
+		//	break;
+		//}
+
+		//switch (CurrentState)
+		//{
+		//case sDefault:
+		//	std::cerr << "CurrentState: sDefault" << std::endl;
+		//	break;
+		//case sFindPlayer:
+		//	std::cerr << "CurrentState: sFindPlayer" << std::endl;
+		//	if (Center.NearClassroom(false))
+		//	{
+		//		for (int i = 0; i < 10; i++)
+		//			if (Center.NearCell(Center.Classroom[i], 3))
+		//			{
+		//				visitClassroom[i] = true;
+		//				// countVisitedClassroom++;
+		//			}
+		//	}
+		//	for (int i = 0; i < 10; i++)
+		//	{
+		//		if (visitClassroom[i] && !visitClassroomUpdated[i])
+		//		{
+		//			countVisitedClassroom++;
+		//			visitClassroomUpdated[i] = true;
+		//		}
+		//	}
+		//	if (countVisitedClassroom == 10)
+		//	{
+		//		for (int i = 0; i < 10; i++)
+		//		{
+		//			visitClassroom[i] = false;
+		//			visitClassroomUpdated[i] = false;
+		//		}
+		//		countVisitedClassroom = 0;
+		//	}
+		//	for (int i = 0; i < 10; i++)
+		//		if (!visitClassroom[i])
+		//		{
+		//			Center.MoveTo(Center.Classroom[i], 1);
+		//			break;
+		//		}
+		//	break;
+		//case sAttackPlayer:
+		//	std::cerr << "CurrentState: sAttackPlayer" << std::endl;
+
+		//	if (!triinfo.empty())
+		//	{
+		//		auto tritype = triinfo[0]->trickerType;
+		//		auto trirange = sqrt((triinfo[0]->x - api.GetSelfInfo()->x) * (triinfo[0]->x - api.GetSelfInfo()->x) + (triinfo[0]->y - api.GetSelfInfo()->y) * (triinfo[0]->y - api.GetSelfInfo()->y));
+		//		if (!Center.AtheleteCanBeginToChargeCD() && (static_cast<int>(tritype) == 1 && trirange < 1954.5 || static_cast<int>(tritype) == 2 && trirange < 2050 || static_cast<int>(tritype) == 3 && trirange < 1981.31 || static_cast<int>(tritype) == 4 && trirange < 2050))
+		//		// 攻击（满足有技能，在攻击范围内）
+		//		{
+		//			Center.AtheleteCanBeginToCharge();
+		//			Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+		//		}
+		//		if (api.GetSelfInfo()->speed > 6400 && static_cast<int>(triinfo[0]->playerState) != 8)
+		//		{
+		//			Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+		//		}
+		//		else if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
+		//		{
+		//			Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
+		//		}
+		//		// 逃跑
+		//		else
+		//		{
+		//			for (int i = 0; i < 10; i++)
+		//				if (!visitClassroom[i])
+		//				{
+		//					Center.MoveTo(Center.Classroom[i], 1);
+		//					break;
+		//				}
+		//		}
+		//		//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
+		//	}
+		//	// else
+		//	//{
+		//	// api.EndAllAction();
+		//	//	Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+		//	//}
+		//	break;
+		//case sChasePlayer:
+		//	std::cerr << "CurrentState: sChasePlayer" << std::endl;
+		//	Center.MoveTo(ChaseDest.ToCell(), true);
+		//	break;
+		//case sRousing:
+		//	std::cerr << "CurrentState: sRousing" << std::endl;
+		//	ChaseIt = true;
+		//	if (stuinfo.size() > AddictedId)
+		//	{
+		//		ChaseDest = Grid(stuinfo[AddictedId]->x, stuinfo[AddictedId]->y);
+		//		if (Center.NearCell(Cell(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), 2))
+		//		{
+		//			api.StartRouseMate(stuinfo[AddictedId]->playerID);
+		//		}
+		//		else
+		//		{
+		//			Center.MoveTo(Cell(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), true);
+		//		}
+		//	}
+		//	break;
+		//}
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
 		static bool visitClassroom[10];
@@ -2628,238 +2924,7 @@ void AI::play(IStudentAPI &api)
 				CurrentState = sDefault;
 			}
 			break;
-			// 玩家0执行操作
 		}
-	}
-	else if (this->playerID == 1)
-	{
-		auto stuinfo = api.GetStudents();
-		auto triinfo = api.GetTrickers();
-		bool haveTricker = false;
-		if (!triinfo.empty())
-			haveTricker = true;
-
-		switch (CurrentState)
-		{
-		case sDefault:
-			if (haveTricker)
-				CurrentState = sFleeing;
-			break;
-		case sFleeing:
-			if (!haveTricker)
-				CurrentState = sDefault;
-			break;
-		}
-
-		switch (CurrentState)
-		{
-		case sDefault:
-			if (Center.CountFinishedClassroom() > 7)
-			{
-				if (!Center.CountOpenGate())
-				{
-					// api.EndAllAction();
-					Center.DirectOpeningGate(true, true);
-				}
-				else
-				{
-					// api.EndAllAction();
-					Center.DirectGraduate(true);
-				}
-			}
-			else
-			{
-				// api.EndAllAction();
-				if (Center.NearClassroom(true) && !Center.StraightAStudentWriteAnswersCD())
-				{
-					Center.StraightAStudentWriteAnswers();
-				}
-				Center.DirectLearning(false);
-			}
-			break;
-		case sFleeing:
-			if (!triinfo.empty())
-			{
-				Center.DirectHide(Cell(triinfo[0]->x, triinfo[0]->y), triinfo[0]->viewRange, Center.NearCell(Cell(triinfo[0]->x, triinfo[0]->y), 4) ? 1 : 0);
-			}
-			else
-			{
-				Center.DirectGrass(1);
-			}
-			break;
-		}
-
-		// 玩家1执行操作
-	}
-	else if (this->playerID == 2)
-	{
-		auto stuinfo = api.GetStudents();
-		auto triinfo = api.GetTrickers();
-
-		static bool visitClassroom[10];
-		static bool visitClassroomUpdated[10];
-		static int countVisitedClassroom = 0;
-		bool haveTricker = false;
-		if (!triinfo.empty())
-			haveTricker = true;
-		static bool ChaseIt = false;
-		static Grid ChaseDest;
-		bool haveAddictedStudent = false;
-		int AddictedId = -1;
-		for (int i = 0; i < stuinfo.size(); i++)
-		{
-			if (stuinfo[i]->playerState == THUAI6::PlayerState::Addicted && stuinfo[i]->guid != api.GetSelfInfo()->guid)
-			{
-				haveAddictedStudent = true;
-				AddictedId = i;
-			}
-		}
-
-		switch (CurrentState)
-		{
-		case sDefault:
-			if (haveTricker && !Center.AtheleteCanBeginToChargeCD())
-				CurrentState = sAttackPlayer;
-			else if (ChaseIt)
-				CurrentState = sChasePlayer;
-			else if (haveAddictedStudent)
-				CurrentState = sRousing;
-			else
-				CurrentState = sFindPlayer;
-			break;
-		case sFindPlayer:
-			if (haveTricker)
-				CurrentState = sAttackPlayer;
-			break;
-		case sAttackPlayer:
-			ChaseIt = true;
-			if (!triinfo.empty())
-				ChaseDest = Grid(triinfo[0]->x, triinfo[0]->y);
-			if (!haveTricker && !Center.AtheleteCanBeginToChargeCD())
-				CurrentState = sChasePlayer;
-			if (Center.AtheleteCanBeginToChargeCD())
-			{
-				ChaseIt = false;
-				CurrentState = sDefault;
-			}
-			break;
-		case sChasePlayer:
-			if (haveTricker)
-				CurrentState = sAttackPlayer;
-			else if (Center.NearCell(ChaseDest.ToCell(), 2))
-			{
-				ChaseIt = false;
-				CurrentState = sDefault;
-			}
-			break;
-		case sRousing:
-			if (!haveAddictedStudent)
-				CurrentState = sDefault;
-			break;
-			break;
-		}
-
-		switch (CurrentState)
-		{
-		case sDefault:
-			std::cerr << "CurrentState: sDefault" << std::endl;
-			break;
-		case sFindPlayer:
-			std::cerr << "CurrentState: sFindPlayer" << std::endl;
-			if (Center.NearClassroom(false))
-			{
-				for (int i = 0; i < 10; i++)
-					if (Center.NearCell(Center.Classroom[i], 3))
-					{
-						visitClassroom[i] = true;
-						// countVisitedClassroom++;
-					}
-			}
-			for (int i = 0; i < 10; i++)
-			{
-				if (visitClassroom[i] && !visitClassroomUpdated[i])
-				{
-					countVisitedClassroom++;
-					visitClassroomUpdated[i] = true;
-				}
-			}
-			if (countVisitedClassroom == 10)
-			{
-				for (int i = 0; i < 10; i++)
-				{
-					visitClassroom[i] = false;
-					visitClassroomUpdated[i] = false;
-				}
-				countVisitedClassroom = 0;
-			}
-			for (int i = 0; i < 10; i++)
-				if (!visitClassroom[i])
-				{
-					Center.MoveTo(Center.Classroom[i], 1);
-					break;
-				}
-			break;
-		case sAttackPlayer:
-			std::cerr << "CurrentState: sAttackPlayer" << std::endl;
-
-			if (!triinfo.empty())
-			{
-				auto tritype = triinfo[0]->trickerType;
-				auto trirange = sqrt((triinfo[0]->x - api.GetSelfInfo()->x) * (triinfo[0]->x - api.GetSelfInfo()->x) + (triinfo[0]->y - api.GetSelfInfo()->y) * (triinfo[0]->y - api.GetSelfInfo()->y));
-				if (!Center.AtheleteCanBeginToChargeCD() && (static_cast<int>(tritype) == 1 && trirange < 1954.5 || static_cast<int>(tritype) == 2 && trirange < 2050 || static_cast<int>(tritype) == 3 && trirange < 1981.31 || static_cast<int>(tritype) == 4 && trirange < 2050))
-				// 攻击（满足有技能，在攻击范围内）
-				{
-					Center.AtheleteCanBeginToCharge();
-					Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
-				}
-				if (api.GetSelfInfo()->speed > 6400 && static_cast<int>(triinfo[0]->playerState) != 8)
-				{
-					Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
-				}
-				else if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
-				{
-					Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
-				}
-				// 逃跑
-				else
-				{
-					for (int i = 0; i < 10; i++)
-						if (!visitClassroom[i])
-						{
-							Center.MoveTo(Center.Classroom[i], 1);
-							break;
-						}
-				}
-				//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
-			}
-			// else
-			//{
-			// api.EndAllAction();
-			//	Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
-			//}
-			break;
-		case sChasePlayer:
-			std::cerr << "CurrentState: sChasePlayer" << std::endl;
-			Center.MoveTo(ChaseDest.ToCell(), true);
-			break;
-		case sRousing:
-			std::cerr << "CurrentState: sRousing" << std::endl;
-			ChaseIt = true;
-			if (stuinfo.size() > AddictedId)
-			{
-				ChaseDest = Grid(stuinfo[AddictedId]->x, stuinfo[AddictedId]->y);
-				if (Center.NearCell(Cell(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), 2))
-				{
-					api.StartRouseMate(stuinfo[AddictedId]->playerID);
-				}
-				else
-				{
-					Center.MoveTo(Cell(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), true);
-				}
-			}
-			break;
-		}
-
 		// 玩家2执行操作
 	}
 	else if (this->playerID == 3)
@@ -3041,7 +3106,7 @@ void AI::play(IStudentAPI &api)
 	//  公共操作
 }
 
-void AI::play(ITrickerAPI &api)
+void AI::play(ITrickerAPI& api)
 {
 	//	int cnt1 = 0;
 	//	for (int i = 0; i < 10000000; i++)
@@ -3053,7 +3118,7 @@ void AI::play(ITrickerAPI &api)
 	auto self = api.GetSelfInfo();
 	api.PrintSelfInfo();
 
-	static std::vector<unsigned char> Priority = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+	static std::vector<unsigned char> Priority = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
 	static CommandPostTricker Center(api);
 	static int CurrentState = sDefault;
 
@@ -3078,6 +3143,9 @@ void AI::play(ITrickerAPI &api)
 	}
 	static bool ChaseIt = false;
 	static Grid ChaseDest;
+
+	if (!Center.AssassinBecomeInvisibleCD()) Center.AssassinBecomeInvisible();
+	if (!Center.AssassinFlyingKnifeCD()) api.UseSkill(1);
 
 	switch (CurrentState)
 	{
