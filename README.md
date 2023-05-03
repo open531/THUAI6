@@ -4,35 +4,37 @@
 
 ## 0 基本信息
 
-已经整合为单文件`AI.cpp`。
+已经整合为单文件 `AI.cpp`。
 
-每个`Student/Tricker`都有三个好朋友，地理学家`Alice`、预言家`Bob`和鸽子`Gugu`。他们能力各异，但是都很热心地帮助`S/T`。
+每个 `Student/Tricker` 都有三个好朋友，地理学家 `Alice`、预言家 `Bob` 和鸽子 `Gugu`。他们能力各异，但是都很热心地帮助 `S/T`。
 
-在这次合作中，他们组成了一个指挥所，`S/T`作为指挥所`Center`的长官，将不时向三个朋友提出疑问或请求，并且采纳朋友们的建议来做出更好的决策。
+在这次合作中，他们组成了一个指挥所，`S/T` 作为指挥所 `Center` 的长官，将不时向三个朋友提出疑问或请求，并且采纳朋友们的建议来做出更好的决策。
 
 ### 类信息
 
-类`CommandPost`（指挥所）保存了所有已知信息，并且具有`Geographer`（地理学家）类对象`Alice`、`Pigeon`（鸽子）类对象`Gugu`和`Predictor`（预言家）类对象`Bob`。
+类 `CommandPost`（指挥所）保存了所有已知信息，并且具有 `Geographer`（地理学家）类对象 `Alice`、`Pigeon`（鸽子）类对象 `Gugu` 和 `Predictor`（预言家）类对象 `Bob`。
 
-简单操作对应的函数在类`CommandPost`下直接定义。涉及寻路等复杂地图操作的函数由`Geographer`实现。涉及通信的操作由`Pigeon`实现。涉及位置记忆和预测的操作由`Predictor`实现。
+简单操作对应的函数在类 `CommandPost` 下直接定义。涉及寻路等复杂地图操作的函数由 `Geographer` 实现。涉及通信的操作由 `Pigeon` 实现。涉及位置记忆和预测的操作由 `Predictor` 实现。
 
-由`CommandPost`基类派生了`CommandPostStudent`和`CommandPostTricker`，用于增加定义涉及角色控制的函数（如攻击）。
+由 `CommandPost` 基类派生了 `CommandPostStudent` 和 `CommandPostTricker`，用于增加定义涉及角色控制的函数（如攻击）。
 
 ### 关于坐标
 
-程序区别了三种坐标`Cell``Grid``Geop`。
+程序区别了三种坐标 `Cell` `Grid` `Geop`。
 
-`Cell`是格子，范围是`0~49`的整数；`Grid`是像素，范围是`0~49999`的整数；`Geop`是实坐标。
+`Cell` 是格子，范围是 `0~49` 的整数；`Grid` 是像素，范围是 `0~49999` 的整数；`Geop` 是实坐标。
 
-提供了三种坐标相互转换的方法，例如`Grid Cell::ToGrid();`。
+提供了三种坐标相互转换的方法，例如 `Grid Cell::ToGrid();`。
 
 ### 新寻路算法
 
-`#define USE_NEW_ASTAR 0`不启用新寻路算法，`#define USE_NEW_ASTAR 1`将启用新寻路算法。
+`#define USE_NEW_ASTAR 0` 不启用新寻路算法，`#define USE_NEW_ASTAR 1` 将启用新寻路算法。
 
 新的寻路算法基于原来寻路算法的路径，给出斜线直达的方案。目前新寻路算法尚未完善，因此启用将会导致编译不通过。
 
-## 1 CommandPost指挥所
+## 1 CommandPost 指挥所
+
+### 构造函数
 
 - [ ] `CommandPost(IFooAPI &api);`
 
@@ -40,12 +42,16 @@
 - [ ] `std::vector<THUAI6::PropType> GetInventory() { return Inventory; }`	// 查看背包
 - [ ] `void OrganizeInventory(std::vector<unsigned char>Priority);`			// 整理背包
 
+### 移动
+
 - [ ] `bool MoveToAccurate(Cell Dest, bool WithWindows = true);`
 - [ ] `bool MoveTo(Cell Dest, bool WithWindows);`		// 往目的地动一动
 - [ ] `bool MoveToNearestClassroom(bool WithWindows);`	// 往最近的作业的方向动一动
 - [ ] `bool MoveToNearestGate(bool WithWindows);`		// 往最近的关闭的校门旁边动一动
 - [ ] `bool MoveToNearestOpenGate(bool WithWindows);`	// 往最近的开启的校门旁边动一动
 - [ ] `bool MoveToNearestChest(bool WithWindows);`		// 往最近的箱子的方向动一动
+
+### 附近格子状态
 
 - [ ] `bool NearCell(Cell P, int level = 1);`         // level=0判断当前是否在该格子上，1判断是否在格子上或周围4格，2判断是否在格子上或周围8格
 - [ ] `bool NearClassroom(bool checkProgress);`							// 已经在作业旁边了吗？
@@ -55,6 +61,8 @@
 - [ ] `bool NearWindow();`								// 已经在窗户旁边了吗？
 - [ ] `bool InGrass();`									// 已经在草丛里了吗？
 
+### 有目的地移动
+
 - [ ] `void DirectLearning(bool WithWindows);`			// 前往最近的作业并学习
 - [ ] `void DirectOpeningChest(bool WithWindows);`		// 前往最近的箱子并开箱
 - [ ] `void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);`		// 前往最近的关闭的校门并开门
@@ -63,6 +71,8 @@
 - [ ] `void DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows);`				// 前往最适合的草丛并躲避
 - [ ] `void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);`		// 前往已知价值最高的道具并捡道具
 - [ ] `void DirectUseProp(std::vector<unsigned char>Priority);`
+
+### 实时计数及特定格子状态
 
 - [ ] `int CountFinishedClassroom() const;`
 - [ ] `int CountNonemptyChest() const;`
@@ -79,7 +89,7 @@
 - [ ] `int GetClassroomProgress(Cell cell) const;`
 - [ ] `int GetDoorProgress(Cell cell) const;`
 
-### CommandPostStudent
+### CommandPostStudent: 继承自 `CommandPost<IStudentAPI>`
 
 - [ ] `CommandPostStudent(IStudentAPI& api) : CommandPost(api) {}`
 - [ ] `void AutoUpdate();`
@@ -100,7 +110,7 @@
 - [ ] `double SunshineEncourageCD();`
 - [ ] `double SunshineInspireCD();`
 
-### CommandPostTricker
+### CommandPostTricker: 继承自 `CommandPost<ITrickerAPI>`
 
 - [ ] `CommandPostTricker(ITrickerAPI& api) : CommandPost(api) {}`
 - [ ] `void AutoUpdate();`
@@ -111,7 +121,7 @@
 - [ ] `void AssassinFlyingKnife(int stux, int stuy);`
 - [ ] `double AssassinFlyingKnifeCD();`
 
-## 2 Pigeon
+## 2 Pigeon 鸽子
 
 要发送信息，只需要调用对应的函数，传入目标角色ID和具体信息。
 
@@ -145,12 +155,14 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 - [ ] `std::pair<int, TrickerInfo_t> receiveTrickerInfo();`
 - [ ] `std::pair<int, int> receiveNeedHelp();`
 
-## 3 Geographer地理学家
+## 3 Geographer 地理学家
 
 `Geographer`主要处理寻路和复杂的地图信息。
 
 - [ ] `Geographer(IFooAPI& api, CommandPost<IFooAPI>& Center_);`
-`#if !USE_NEW_ASTAR`
+
+`#if !USE_NEW_ASTAR`（不启用新寻路算法）
+
 - [ ] `bool IsValidWithoutWindows(int x, int y);`
 - [ ] `bool IsValidWithWindows(int x, int y);`
 - [ ] `bool IsDestination(int x, int y, Node dest);`
@@ -159,16 +171,20 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 - [ ] `std::vector<Node> AStarWithoutWindows(Node src, Node dest);`
 - [ ] `std::vector<Node> AStarWithWindows(Node src, Node dest);`
 - [ ] `int EstimateTime(Cell Dest);`					// 去目的地的预估时间
-`#else`
+
+`#else`（启用新寻路算法）
+
 - [ ] `std::vector<Geop> FindPath(Geop From_, Geop Dest_);`
+
 `#endif`
+
 - [ ] `bool IsViewable(Cell Src, Cell Dest, int ViewRange);`			// 判断两个位置是否可视
 
 - [ ] `Cell GetNearestGate();`
 - [ ] `Cell GetNearestClassroom();` // 仅在没写完的作业中找
 - [ ] `Cell GetNearestOpenGate();`
 
-## 4 Predictor预言家
+## 4 Predictor 预言家
 
 Not implemented.
 
@@ -192,6 +208,9 @@ Not implemented.
 之后会加入使用道具这一步骤。
 
 ## 7 TODO List
+
+- 指挥所更新信息时需要告知三位小伙伴。需要本地广播的地图更新信息目前应该只有一种：玩家的实时位置被队友告知。其他地图更新信息由小伙伴自行调用api得知。这些应该对 `Center.AutoUpdate()` 等相关函数进行修改。
+- 制定预言家的基本策略，确定接口。
 
 ## 8 Issues
 
