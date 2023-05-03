@@ -358,13 +358,25 @@ protected:
 	std::vector<double> TrickDesireLog;
 	std::vector<double> ClassVolumeLog;
 
+	double MagicMap[5][50][50];
+	const int TotalValue;
+	int PlayerStatus[5], CantMoveStart[5], CantMoveDuration[5];
+		// 0表示不追踪该玩家，适用于本人或退学/毕业的情况；1表示可以移动并正常追踪；2表示最后一次看到时是不能运动的状态，但不是沉迷；3表示最后一次看到时是沉迷状态；2~3会用到上述两个CantMove数组。
+	void NormalizeMagicMap(); // 正则化
+	void DeduceMagicMap(); // 进行一次推算
+
 public:
-	Predictor(IFooAPI& api, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api, Center_) {}
+	Predictor(IFooAPI& api, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api, Center_), TotalValue(2500) {}
 
 	void FindEnemy();
 	void SaveDangerAlertLog(int maxNum);
 	void SaveTrickDesireLog(int maxNum);
 	void SaveClassVolumeLog(int maxNum);
+
+	void AutoUpdate();
+	std::pair<Cell, double> Recommend(int PlayerID);
+		// Always return position with highest probility, even though the player was addicted (In this circumstance, chasing it results in a repetition of finding it addicted.) To chase it or not should be decided in stragety.
+		// TODO: CommandPost should save info of addiction & quit etc., should it be the responsibility of Predictor? Probably yes. Ask Predictor for info of players' status. This only works for Tricker.
 };
 
 class CommandPostStudent : public CommandPost<IStudentAPI>
