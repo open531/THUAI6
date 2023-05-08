@@ -379,6 +379,85 @@ public:
 		// TODO: CommandPost should save info of addiction & quit etc., should it be the responsibility of Predictor? Probably yes. Ask Predictor for info of players' status. This only works for Tricker.
 };
 
+template <typename IFooAPI>
+void Predictor<IFooAPI>::NormalizeMagicMap()
+{
+	for (int id = 0; id < 5; id++)
+		if (PlayerStatus[id] != 0)
+		{
+			double sum = 0;
+			for (int i = 0; i < 50; i++)
+				for (int j = 0; j < 50; j++)
+					sum += MagicMap[id][i][j];
+			if (sum == 0)
+			{
+				for (int i = 0; i < 50; i++)
+					for (int j = 0; j < 50; j++)
+						if (this->Center.Access[i][j] == 1 || this->Center.Access[i][j] == 2) MagicMap[id][i][j] = 1, sum+=1;
+			}
+			for (int i = 0; i < 50; i++)
+				for (int j = 0; j < 50; j++)
+					MagicMap[id][i][j] *= TotalValue / sum;
+		}
+}
+
+template <typename IFooAPI>
+void Predictor<IFooAPI>::DeduceMagicMap()
+{
+	auto stuinfo = this->API.GetStudentInfo();
+	auto triinfo = this->API.GetTrickerInfo();
+	bool deal[5];
+	const double ratio1 = 0.15;
+	double NextStatus[50][50];
+	for (int i = 0; i < 5; i++) deal[i] = (PlayerStatus[i] != 0);
+	for (int id = 0; id < 5; id++)
+		if (deal[id])
+		{
+			memset(NextStatus, 0, sizeof(double) * 50 * 50);
+			for (int i = 0; i < 50; i++)
+				for (int j = 0; j < 50; j++)
+				{
+					if (this->Center.Access[i][j] == 1 || this->Center.Access[i][j] == 2)
+					{
+						int cnt = 0;
+						for (int ix = -1; ix <= 1; ix++)
+							for (int jx = -1; jx <= 1; jx++)
+								if (((ix == 0) ^(jx == 0)) &&
+									i + ix >= 0 && i + ix < 50 && j + jx >= 0 && j + jx < 50 &&
+									(this->Center.Access[i+ix][j+jx] == 1 || this->Center.Access[i+ix][j+jx] == 2)) cnt++;
+						NextStatus[i][j] += MagicMap[id][i][j] * (1 - ratio1);
+						if (cnt == 0) continue;
+						for (int ix = -1; ix <= 1; ix++)
+							for (int jx = -1; jx <= 1; jx++)
+								if (((ix == 0) ^(jx == 0)) &&
+									i + ix >= 0 && i + ix < 50 && j + jx >= 0 && j + jx < 50 &&
+									(this->Center.Access[i+ix][j+jx] == 1 || this->Center.Access[i+ix][j+jx] == 2))
+								{
+									NextStatus[i + ix][j + jx] += MagicMap[id][i][j] * ratio1 / cnt;
+								}
+					}
+				}
+			memcpy(MagicMap[id], NextStatus, sizeof(double) * 50 * 50);
+		}
+	NormalizeMagicMap();
+	for (auto s : stuinfo)
+		if (deal[s.PlayerID])
+		{
+			deal[s.PlayerID] = false;
+			Cell pos = Grid(s.x, s.y).ToCell();
+			memset(MagicMap[s.PlayerID], 0, sizeof(double) * 50 * 50);
+			MagicMap[pos.x][pos.y] = TotalValue;
+		}
+	for (auto s : triinfo)
+		if (deal[s.PlayerID])
+		{
+			deal[s.PlayerID] = false;
+			Cell pos = Grid(s.x, s.y).ToCell();
+			memset(MagicMap[s.PlayerID], 0, sizeof(double) * 50 * 50);
+			MagicMap[pos.x][pos.y] = TotalValue;
+		}
+}
+
 class CommandPostStudent : public CommandPost<IStudentAPI>
 {
 public:
