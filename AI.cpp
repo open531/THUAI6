@@ -266,7 +266,6 @@ protected:
 
 	bool IsAccessible(THUAI6::PlaceType pt);
 	bool DirectReachable(Geop A, Geop B, bool IsDest = false);
-	void BackwardExpand(Cell Source, int H[50][50]);
 	Geop Escape(Geop P);
 
 	void InitStableMap();
@@ -295,6 +294,7 @@ public:
 #else
 	std::vector<Geop> FindPath(Geop From_, Geop Dest_);
 #endif
+	void BackwardExpand(Cell Source, int H[50][50]);
 	bool IsViewable(Cell Src, Cell Dest, int ViewRange); // 判断两个位置是否可视
 	std::vector<Cell> GetViewableCells(Cell src);
 
@@ -432,7 +432,7 @@ void Predictor<IFooAPI>::NormalizeMagicMap()
 			{
 				for (int i = 0; i < 50; i++)
 					for (int j = 0; j < 50; j++)
-						if (this->Center.Access[i][j] == 1 || this->Center.Access[i][j] == 2) MagicMap[id][i][j] = 1, sum+=1;
+						if (this->Center.Access[i][j]) MagicMap[id][i][j] = 1, sum+=1;
 				std::cerr << "sum = " << sum;
 			}
 			for (int i = 0; i < 50; i++)
@@ -457,21 +457,21 @@ void Predictor<IFooAPI>::DeduceMagicMap()
 			for (int i = 0; i < 50; i++)
 				for (int j = 0; j < 50; j++)
 				{
-					if (this->Center.Access[i][j] == 1 || this->Center.Access[i][j] == 2)
+					if (this->Center.Access[i][j])
 					{
 						int cnt = 0;
 						for (int ix = -1; ix <= 1; ix++)
 							for (int jx = -1; jx <= 1; jx++)
 								if (((ix == 0) ^(jx == 0)) &&
 									i + ix >= 0 && i + ix < 50 && j + jx >= 0 && j + jx < 50 &&
-									(this->Center.Access[i+ix][j+jx] == 1 || this->Center.Access[i+ix][j+jx] == 2)) cnt++;
+									this->Center.Access[i+ix][j+jx]) cnt++;
 						NextStatus[i][j] += MagicMap[id][i][j] * (1 - ratio1);
 						if (cnt == 0) continue;
 						for (int ix = -1; ix <= 1; ix++)
 							for (int jx = -1; jx <= 1; jx++)
 								if (((ix == 0) ^(jx == 0)) &&
 									i + ix >= 0 && i + ix < 50 && j + jx >= 0 && j + jx < 50 &&
-									(this->Center.Access[i+ix][j+jx] == 1 || this->Center.Access[i+ix][j+jx] == 2))
+									this->Center.Access[i+ix][j+jx])
 								{
 									NextStatus[i + ix][j + jx] += MagicMap[id][i][j] * ratio1 / cnt;
 								}
@@ -519,14 +519,24 @@ void Predictor<IFooAPI>::_display(int PlayerID)
 template<typename IFooAPI>
 std::pair<Cell, double> Predictor<IFooAPI>::Recommend(int PlayerID)
 {
+	int dist[50][50];
+	Cell pos = Grid(this->API.GetSelfInfo()->x, this->API.GetSelfInfo()->y).ToCell();
+	this->Center.Alice.BackwardExpand(pos, dist);
 	Cell Maxc;
 	double prob = 0;
+//	for (int i = 0; i < 50; i++) {
+//		for (int j = 0; j < 50; j++)
+//			std::cerr << (dist[i][j] == 10000000 ? -1 : dist[i][j]) << ' ';
+//		std::cerr << std::endl;
+//	}
 	for (int i = 0; i < 50; i++)
 		for (int j = 0; j < 50; j++)
 			if (MagicMap[PlayerID][i][j] > prob)
 			{
 				Maxc = Cell(i, j);
-				prob = MagicMap[PlayerID][i][j];
+//				std::cerr << i << ' ' << j << std::endl;
+//				assert(dist[i][j] > 999 && MagicMap[PlayerID][i][j] == 0 || dist[i][j] <= 999);
+				prob = MagicMap[PlayerID][i][j] / pow(dist[i][j]+1, 0);
 			}
 	return std::make_pair(Maxc, prob);
 }
@@ -1998,6 +2008,7 @@ std::vector<Node> Geographer<IFooAPI>::MakePath(std::array<std::array<Node, 50>,
 template <typename IFooAPI>
 std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 {
+	std::cerr << "Start AStar (w)" << std::endl;
 	std::vector<Node> empty;
 	// if (IsValidWithoutWindows(dest.x, dest.y) == false)
 	//{
@@ -2005,6 +2016,7 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 	// }
 	if (IsDestination(src.x, src.y, dest))
 	{
+		std::cerr << "End AStar" << std::endl;
 		return empty;
 	}
 	bool ClosedList[50][50];
@@ -2070,6 +2082,7 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 						AStarMap[x + newX][y + newY].parentX = x;
 						AStarMap[x + newX][y + newY].parentY = y;
 						FoundDest = true;
+						std::cerr << "End AStar" << std::endl;
 						return MakePath(AStarMap, dest);
 					}
 					else if (ClosedList[x + newX][y + newY] == false)
@@ -2094,6 +2107,7 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 	}
 	if (FoundDest == false)
 	{
+		std::cerr << "End AStar" << std::endl;
 		return empty;
 	}
 }
@@ -2101,7 +2115,7 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
 template <typename IFooAPI>
 std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 {
-	std::cout << src.x << src.y;
+	std::cerr << "Start AStar" << std::endl;
 	std::vector<Node> empty;
 	// if (IsValidWithWindows(dest.x, dest.y) == false)
 	//{
@@ -2200,6 +2214,7 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 	{
 		return empty;
 	}
+	std::cerr << "End AStar" << std::endl;
 }
 
 #endif
@@ -2263,9 +2278,9 @@ void Geographer<IFooAPI>::BackwardExpand(Cell Source, int H[50][50])
 			for (int j = now.y - 1; j <= now.y + 1; j++)
 				if (abs(i - now.x) + abs(j - now.y) == 1 && i >= 0 && i < 50 && j >= 0 && j < 50 && IsAccessible(this->API.GetPlaceType(i, j)))
 				{
-					if (H[now.x][now.y] + 10000 < H[i][j])
+					if (H[now.x][now.y] + 1 < H[i][j])
 					{
-						H[i][j] = H[now.x][now.y] + 10000;
+						H[i][j] = H[now.x][now.y] + 1;
 						bfs.push(Cell(i, j));
 						//						std::cerr << "bfs next" << i << ' ' << j << std::endl;
 					}
@@ -3372,9 +3387,11 @@ void AI::play(ITrickerAPI& api)
 	//	Center.MoveTo(Cell(41, 9), true);
 	//	return;
 	Center.AutoUpdate();
-	static int ccnt = 0;
-	Cell find2 = Center.Bob.Recommend((ccnt/1000)%4).first;
+	int ccnt = api.GetFrameCount();
+	Cell find2 = Center.Bob.Recommend((ccnt/400)%4).first;
 	ccnt++;
+	Center.Bob._display((ccnt / 400) % 4);
+	std::cerr << "FINDING " << ((ccnt / 400) % 4);
 	Center.MoveTo(find2, true);
 	return;
 

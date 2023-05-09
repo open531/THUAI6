@@ -219,3 +219,6 @@ Not implemented.
 - [ ] 理论上已经判断了不能发给自己，但是没有成功，不过api也会判断所以不是大问题。
 - [ ] `AssassinDefaultAttackOver`判断的距离太小了，需要调整。
 - [ ] 救人可能存在偶发的解引用报错问题
+- [ ] MoveToNearest等函数中调用AStarWithWindows(AStarWithoutWindows)次数太多导致卡顿。考虑用Alice.BackwardExpand优化。可以选择在AutoUpdate中调用BackwardExpand得到预处理的EstimateTime。
+- [ ] AStarWithWindows(AStarWithoutWindows)出现单次运行卡顿的情况。
+- [ ] AStarWithWindows(AStarWithoutWindows)频繁报错。
