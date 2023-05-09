@@ -166,6 +166,8 @@ template <typename IFooAPI>
 class CommandPost
 {
 	// 这是你和伙伴们所在的指挥所
+protected:
+	Cell TEMP;
 public:
 	// 这里有你们共享的信息
 	unsigned char Map[50][50];
@@ -188,7 +190,6 @@ public:
 
 	// 指挥所应当能够直接解决一些基本的问题而不劳烦几位专职人员，比如当前是否在箱子旁边，以及最近的作业位置等等
 
-	Cell TEMP;
 	std::vector<THUAI6::PropType> Inventory;
 	static std::vector<unsigned char> PickPropPriority;
 	static std::vector<unsigned char> UsePropPriority;
@@ -203,7 +204,7 @@ public:
 	std::vector<THUAI6::PropType> GetInventory() { return Inventory; } // 查看背包
 	void OrganizeInventory(std::vector<unsigned char> Priority);	   // 整理背包
 
-	bool MoveToAccurate(Cell Dest, bool WithWindows = true);
+//	bool MoveToAccurate(Grid Dest, bool WithWindows = true);
 	bool MoveTo(Cell Dest, bool WithWindows);	   // 往目的地动一动
 	bool MoveToNearestClassroom(bool WithWindows); // 往最近的作业的方向动一动
 	bool MoveToNearestGate(bool WithWindows);	   // 往最近的关闭的校门旁边动一动
@@ -295,11 +296,41 @@ public:
 	std::vector<Geop> FindPath(Geop From_, Geop Dest_);
 #endif
 	bool IsViewable(Cell Src, Cell Dest, int ViewRange); // 判断两个位置是否可视
+	std::vector<Cell> GetViewableCells(Cell src);
 
 	Cell GetNearestGate();
 	Cell GetNearestClassroom(); // 仅在没写完的作业中找
 	Cell GetNearestOpenGate();
 };
+
+template<typename IFooAPI>
+std::vector<Cell> Geographer<IFooAPI>::GetViewableCells(Cell src)
+{
+	int vrange = this->API.GetSelfInfo()->viewRange / 2;
+	bool chk[50][50];
+	memset(chk, 0, sizeof(chk));
+	std::queue<Cell> Q;
+	Q.push(src);
+	chk[src.x][src.y] = true;
+	std::vector<Cell> ans;
+	while (!Q.empty())
+	{
+		Cell now = Q.front();
+		Q.pop();
+		ans.push_back(now);
+		for (int ix = -1; ix <= 1; ix++)
+			for (int iy = -1; iy <= 1; iy++)
+				if (std::abs(ix) + std::abs(iy) == 1 &&
+					now.x + ix >= 0 && now.x + ix < 50 && now.y + iy >= 0 && now.y + iy < 50 &&
+					!chk[now.x + ix][now.y + iy])
+				{
+					Cell nxt(now.x + ix, now.y + iy);
+					chk[now.x + ix][now.y + iy] = true;
+					if (IsViewable(src, nxt, vrange)) Q.push(nxt);
+				}
+	}
+	return ans;
+}
 
 class Encoder
 {
@@ -366,7 +397,7 @@ protected:
 	void DeduceMagicMap(); // 进行一次推算
 
 public:
-	Predictor(IFooAPI& api, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api, Center_), TotalValue(2500) {}
+	Predictor(IFooAPI& api, CommandPost<IFooAPI>& Center_);
 
 	void FindEnemy();
 	void SaveDangerAlertLog(int maxNum);
@@ -377,7 +408,15 @@ public:
 	std::pair<Cell, double> Recommend(int PlayerID);
 		// Always return position with highest probility, even though the player was addicted (In this circumstance, chasing it results in a repetition of finding it addicted.) To chase it or not should be decided in stragety.
 		// TODO: CommandPost should save info of addiction & quit etc., should it be the responsibility of Predictor? Probably yes. Ask Predictor for info of players' status. This only works for Tricker.
+	void _display(int PlayerID);
 };
+
+template<typename IFooAPI>
+Predictor<IFooAPI>::Predictor(IFooAPI& api, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api, Center_), TotalValue(2500)
+{
+	for (int i = 0; i < 5; i++) PlayerStatus[i] = 1;
+	PlayerStatus[api.GetSelfInfo()->playerID] = 0;
+}
 
 template <typename IFooAPI>
 void Predictor<IFooAPI>::NormalizeMagicMap()
@@ -394,6 +433,7 @@ void Predictor<IFooAPI>::NormalizeMagicMap()
 				for (int i = 0; i < 50; i++)
 					for (int j = 0; j < 50; j++)
 						if (this->Center.Access[i][j] == 1 || this->Center.Access[i][j] == 2) MagicMap[id][i][j] = 1, sum+=1;
+				std::cerr << "sum = " << sum;
 			}
 			for (int i = 0; i < 50; i++)
 				for (int j = 0; j < 50; j++)
@@ -404,12 +444,12 @@ void Predictor<IFooAPI>::NormalizeMagicMap()
 template <typename IFooAPI>
 void Predictor<IFooAPI>::DeduceMagicMap()
 {
-	auto stuinfo = this->API.GetStudentInfo();
-	auto triinfo = this->API.GetTrickerInfo();
+	auto selfinfo = this->API.GetSelfInfo();
 	bool deal[5];
 	const double ratio1 = 0.15;
 	double NextStatus[50][50];
 	for (int i = 0; i < 5; i++) deal[i] = (PlayerStatus[i] != 0);
+	auto vision = this->Center.Alice.GetViewableCells(Grid(selfinfo->x, selfinfo->y).ToCell());
 	for (int id = 0; id < 5; id++)
 		if (deal[id])
 		{
@@ -438,24 +478,57 @@ void Predictor<IFooAPI>::DeduceMagicMap()
 					}
 				}
 			memcpy(MagicMap[id], NextStatus, sizeof(double) * 50 * 50);
+			for (auto c : vision) MagicMap[id][c.x][c.y] = 0;
 		}
 	NormalizeMagicMap();
+}
+
+template <typename IFooAPI>
+void Predictor<IFooAPI>::AutoUpdate()
+{
+	DeduceMagicMap();
+	auto stuinfo = this->API.GetStudents();
+	auto triinfo = this->API.GetTrickers();
 	for (auto s : stuinfo)
-		if (deal[s.PlayerID])
+		if (PlayerStatus[s->playerID])
 		{
-			deal[s.PlayerID] = false;
-			Cell pos = Grid(s.x, s.y).ToCell();
-			memset(MagicMap[s.PlayerID], 0, sizeof(double) * 50 * 50);
-			MagicMap[pos.x][pos.y] = TotalValue;
+			Cell pos = Grid(s->x, s->y).ToCell();
+			memset(MagicMap[s->playerID], 0, sizeof(double) * 50 * 50);
+			MagicMap[s->playerID][pos.x][pos.y] = TotalValue;
 		}
 	for (auto s : triinfo)
-		if (deal[s.PlayerID])
+		if (PlayerStatus[s->playerID])
 		{
-			deal[s.PlayerID] = false;
-			Cell pos = Grid(s.x, s.y).ToCell();
-			memset(MagicMap[s.PlayerID], 0, sizeof(double) * 50 * 50);
-			MagicMap[pos.x][pos.y] = TotalValue;
+			Cell pos = Grid(s->x, s->y).ToCell();
+			memset(MagicMap[s->playerID], 0, sizeof(double) * 50 * 50);
+			MagicMap[s->playerID][pos.x][pos.y] = TotalValue;
 		}
+}
+
+template<typename IFooAPI>
+void Predictor<IFooAPI>::_display(int PlayerID)
+{
+	for (int i = 0; i < 50; i++) {
+		for (int j = 0; j < 50; j++)
+//			std::cerr << MagicMap[PlayerID][i][j];
+			std::cerr.put((MagicMap[PlayerID][i][j] > 1) ? '*' : '.');
+		std::cerr << std::endl;
+	}
+}
+
+template<typename IFooAPI>
+std::pair<Cell, double> Predictor<IFooAPI>::Recommend(int PlayerID)
+{
+	Cell Maxc;
+	double prob = 0;
+	for (int i = 0; i < 50; i++)
+		for (int j = 0; j < 50; j++)
+			if (MagicMap[PlayerID][i][j] > prob)
+			{
+				Maxc = Cell(i, j);
+				prob = MagicMap[PlayerID][i][j];
+			}
+	return std::make_pair(Maxc, prob);
 }
 
 class CommandPostStudent : public CommandPost<IStudentAPI>
@@ -880,6 +953,87 @@ void CommandPostStudent::AutoUpdate()
 			}
 		}
 	}
+
+	Bob.AutoUpdate();
+}
+
+void CommandPostTricker::AutoUpdate()
+{
+	int cntframe = API.GetFrameCount();
+	if (cntframe - LastAutoUpdateFrame < UpdateInterval)
+		return;
+	auto selfinfo = API.GetSelfInfo();
+	LastAutoUpdateFrame = cntframe;
+	for (auto it : Door)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			bool newDoor = false, checkopen = API.IsDoorOpen(it.x, it.y);
+			if (checkopen && Access[it.x][it.y] == 0U)
+			{
+				newDoor = true;
+				Access[it.x][it.y] = 2U;
+				it.DoorStatus = true;
+			}
+			else if (!checkopen && Access[it.x][it.y] == 2U)
+			{
+				newDoor = true;
+				Access[it.x][it.y] = 0U;
+				it.DoorStatus = false;
+			}
+			if (newDoor)
+			{
+				Gugu.sendMapUpdate(0, it.DoorType, it.x, it.y, checkopen ? 2U : 0U); // 这里没有区分Door3, Door5, Door6的区别，可能要改
+				Gugu.sendMapUpdate(1, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+				Gugu.sendMapUpdate(2, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+				Gugu.sendMapUpdate(3, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+			}
+		}
+	}
+	for (auto it : Classroom)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			{
+				ProgressMem[it.x][it.y] = 10000000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+			}
+		}
+	}
+	for (auto it : Chest)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetChestProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			{
+				ProgressMem[it.x][it.y] = 10000000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+			}
+		}
+	}
+	for (auto it : Gate)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetGateProgress(it.x, it.y) >= 18000 && ProgressMem[it.x][it.y] < 18000)
+			{
+				ProgressMem[it.x][it.y] = 18000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+			}
+		}
+	}
+
+	Bob.AutoUpdate();
 }
 
 #if !USE_NEW_ASTAR
@@ -2592,6 +2746,8 @@ void AI::play(IStudentAPI& api)
 	static int CurrentState = sDefault;
 
 	Center.AutoUpdate();
+	Center.Bob._display(4);
+
 	int MessageType;
 	while ((MessageType = Center.Gugu.receiveMessage()) != NoMessage)
 	{
@@ -3215,7 +3371,12 @@ void AI::play(ITrickerAPI& api)
 
 	//	Center.MoveTo(Cell(41, 9), true);
 	//	return;
-	// Center.AutoUpdate();
+	Center.AutoUpdate();
+	static int ccnt = 0;
+	Cell find2 = Center.Bob.Recommend((ccnt/1000)%4).first;
+	ccnt++;
+	Center.MoveTo(find2, true);
+	return;
 
 	auto stuinfo = api.GetStudents();
 
