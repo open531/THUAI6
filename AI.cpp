@@ -17,7 +17,9 @@
 #define USE_NEW_ASTAR 0
 const double PI = acos(-1);
 
-// Distinguish `Cell` `Grid` & `Geop`
+//*****************************************************
+// #Basic geometry
+//*****************************************************
 
 class Cell; // 格子 0~49
 class Grid; // 像素 0~49999
@@ -112,7 +114,9 @@ bool Intersect(Geos A, Geos B)
 	return false;
 }
 
-// Information
+//*****************************************************
+// #Information
+//*****************************************************
 
 struct MapUpdateInfo
 {
@@ -150,6 +154,10 @@ public:
 	float hCost;
 };
 #endif
+
+//*****************************************************
+// #Definition & Interface
+//*****************************************************
 
 template <typename IFooAPI>
 class Friends;
@@ -259,12 +267,14 @@ class Geographer : public Friends<IFooAPI>
 {
 	// 这是一位Geographer，负责告诉要怎么走
 protected:
+	bool IsAccessible(THUAI6::PlaceType pt);
+
+#if USE_NEW_ASTAR
 	std::vector<Geos> StableMap;
 	std::vector<Geop> StableCheckPoint;
 	std::vector<Geos> VariableMap;
 	std::vector<Geop> VariableCheckPoint;
 
-	bool IsAccessible(THUAI6::PlaceType pt);
 	bool DirectReachable(Geop A, Geop B, bool IsDest = false);
 	Geop Escape(Geop P);
 
@@ -279,6 +289,7 @@ protected:
 	void AddPlayer();
 	void AddWindow();
 	void AddLockedDoor();
+#endif
 
 public:
 	Geographer(IFooAPI& api, CommandPost<IFooAPI>& Center_);
@@ -411,6 +422,51 @@ public:
 	void _display(int PlayerID);
 };
 
+class CommandPostStudent : public CommandPost<IStudentAPI>
+{
+public:
+	CommandPostStudent(IStudentAPI& api) : CommandPost(api) {}
+	void AutoUpdate();
+
+	void TeacherPunish();
+	double TeacherPunishCD();
+
+	void StraightAStudentWriteAnswers();
+	double StraightAStudentWriteAnswersCD();
+
+	void AtheleteCanBeginToCharge();
+	double AtheleteCanBeginToChargeCD();
+
+	void SunshineRouse();
+	void SunshineEncourage();
+	void SunshineInspire();
+	double SunshineRouseCD();
+	double SunshineEncourageCD();
+	double SunshineInspireCD();
+};
+
+class CommandPostTricker : public CommandPost<ITrickerAPI>
+{
+public:
+	CommandPostTricker(ITrickerAPI& api) : CommandPost(api) {}
+	void AutoUpdate();
+
+	void AssassinDefaultAttack(int stux, int stuy); // 刺客普通攻击，传入学生坐标(stux,stuy)
+	bool AssassinDefaultAttackOver(int rank);		// 判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
+	void AssassinBecomeInvisible();
+	double AssassinBecomeInvisibleCD();
+	void AssassinFlyingKnife(int stux, int stuy);
+	double AssassinFlyingKnifeCD();
+};
+
+//*****************************************************
+// #Implementation
+//*****************************************************
+
+//--------------------
+// #Predictor
+//--------------------
+
 template<typename IFooAPI>
 Predictor<IFooAPI>::Predictor(IFooAPI& api, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api, Center_), TotalValue(2500)
 {
@@ -541,45 +597,51 @@ std::pair<Cell, double> Predictor<IFooAPI>::Recommend(int PlayerID)
 	return std::make_pair(Maxc, prob);
 }
 
-class CommandPostStudent : public CommandPost<IStudentAPI>
+template <typename IFooAPI>
+void Predictor<IFooAPI>::SaveDangerAlertLog(int maxNum)
 {
-public:
-	CommandPostStudent(IStudentAPI& api) : CommandPost(api) {}
-	void AutoUpdate();
+	if (DangerAlertLog.size() < maxNum)
+	{
+		DangerAlertLog.push_back(this->API.GetSelfInfo()->dangerAlert);
+	}
+	else
+	{
+		DangerAlertLog.erase(DangerAlertLog.begin());
+		DangerAlertLog.push_back(this->API.GetSelfInfo()->dangerAlert);
+	}
+}
 
-	void TeacherPunish();
-	double TeacherPunishCD();
-
-	void StraightAStudentWriteAnswers();
-	double StraightAStudentWriteAnswersCD();
-
-	void AtheleteCanBeginToCharge();
-	double AtheleteCanBeginToChargeCD();
-
-	void SunshineRouse();
-	void SunshineEncourage();
-	void SunshineInspire();
-	double SunshineRouseCD();
-	double SunshineEncourageCD();
-	double SunshineInspireCD();
-};
-
-class CommandPostTricker : public CommandPost<ITrickerAPI>
+template <typename IFooAPI>
+void Predictor<IFooAPI>::SaveTrickDesireLog(int maxNum)
 {
-public:
-	CommandPostTricker(ITrickerAPI& api) : CommandPost(api) {}
-	void AutoUpdate();
+	if (TrickDesireLog.size() < maxNum)
+	{
+		TrickDesireLog.push_back(this->API.GetSelfInfo()->trickDesire);
+	}
+	else
+	{
+		TrickDesireLog.erase(TrickDesireLog.begin());
+		TrickDesireLog.push_back(this->API.GetSelfInfo()->trickDesire);
+	}
+}
 
-	void AssassinDefaultAttack(int stux, int stuy); // 刺客普通攻击，传入学生坐标(stux,stuy)
-	bool AssassinDefaultAttackOver(int rank);		// 判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
-	void AssassinBecomeInvisible();
-	double AssassinBecomeInvisibleCD();
-	void AssassinFlyingKnife(int stux, int stuy);
-	double AssassinFlyingKnifeCD();
-};
+template <typename IFooAPI>
+void Predictor<IFooAPI>::SaveClassVolumeLog(int maxNum)
+{
+	if (ClassVolumeLog.size() < maxNum)
+	{
+		ClassVolumeLog.push_back(this->API.GetSelfInfo()->classVolume);
+	}
+	else
+	{
+		ClassVolumeLog.erase(ClassVolumeLog.begin());
+		ClassVolumeLog.push_back(this->API.GetSelfInfo()->classVolume);
+	}
+}
 
-#ifndef _PIGEON_H
-#define _PIGEON_H
+//--------------------
+// #Pigeon
+//--------------------
 
 /* ��ϢЭ��
 ��Ϣͷ��info[0]��
@@ -829,7 +891,10 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receive_Prop(IStudentAPI& api2)
 }
 // 接受道具信息的函数
 
-#endif
+//--------------------
+// #CommandPost
+//--------------------
+
 template <typename IFooAPI>
 void CommandPost<IFooAPI>::InitMap(IFooAPI& api)
 {
@@ -886,164 +951,6 @@ CommandPost<IFooAPI>::CommandPost(IFooAPI& api) : API(api), LastAutoUpdateFrame(
 {
 	srand(time(NULL));
 	InitMap(api);
-}
-
-void CommandPostStudent::AutoUpdate()
-{
-	int cntframe = API.GetFrameCount();
-	if (cntframe - LastAutoUpdateFrame < UpdateInterval)
-		return;
-	std::shared_ptr<const THUAI6::Student> selfinfo = API.GetSelfInfo();
-	LastAutoUpdateFrame = cntframe;
-	for (auto it : Door)
-	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
-		{
-			bool newDoor = false, checkopen = API.IsDoorOpen(it.x, it.y);
-			if (checkopen && Access[it.x][it.y] == 0U)
-			{
-				newDoor = true;
-				Access[it.x][it.y] = 2U;
-				it.DoorStatus = true;
-			}
-			else if (!checkopen && Access[it.x][it.y] == 2U)
-			{
-				newDoor = true;
-				Access[it.x][it.y] = 0U;
-				it.DoorStatus = false;
-			}
-			if (newDoor)
-			{
-				Gugu.sendMapUpdate(0, it.DoorType, it.x, it.y, checkopen ? 2U : 0U); // 这里没有区分Door3, Door5, Door6的区别，可能要改
-				Gugu.sendMapUpdate(1, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
-				Gugu.sendMapUpdate(2, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
-				Gugu.sendMapUpdate(3, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
-			}
-		}
-	}
-	for (auto it : Classroom)
-	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
-		{
-			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
-			{
-				ProgressMem[it.x][it.y] = 10000000;
-				Gugu.sendMapUpdate(0, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(1, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(2, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(3, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
-			}
-		}
-	}
-	for (auto it : Chest)
-	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
-		{
-			if (API.GetChestProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
-			{
-				ProgressMem[it.x][it.y] = 10000000;
-				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
-			}
-		}
-	}
-	for (auto it : Gate)
-	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
-		{
-			if (API.GetGateProgress(it.x, it.y) >= 18000 && ProgressMem[it.x][it.y] < 18000)
-			{
-				ProgressMem[it.x][it.y] = 18000;
-				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
-				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
-				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
-				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
-			}
-		}
-	}
-
-	Bob.AutoUpdate();
-}
-
-void CommandPostTricker::AutoUpdate()
-{
-	int cntframe = API.GetFrameCount();
-	if (cntframe - LastAutoUpdateFrame < UpdateInterval)
-		return;
-	auto selfinfo = API.GetSelfInfo();
-	LastAutoUpdateFrame = cntframe;
-	for (auto it : Door)
-	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
-		{
-			bool newDoor = false, checkopen = API.IsDoorOpen(it.x, it.y);
-			if (checkopen && Access[it.x][it.y] == 0U)
-			{
-				newDoor = true;
-				Access[it.x][it.y] = 2U;
-				it.DoorStatus = true;
-			}
-			else if (!checkopen && Access[it.x][it.y] == 2U)
-			{
-				newDoor = true;
-				Access[it.x][it.y] = 0U;
-				it.DoorStatus = false;
-			}
-			if (newDoor)
-			{
-				Gugu.sendMapUpdate(0, it.DoorType, it.x, it.y, checkopen ? 2U : 0U); // 这里没有区分Door3, Door5, Door6的区别，可能要改
-				Gugu.sendMapUpdate(1, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
-				Gugu.sendMapUpdate(2, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
-				Gugu.sendMapUpdate(3, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
-			}
-		}
-	}
-	for (auto it : Classroom)
-	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
-		{
-			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
-			{
-				ProgressMem[it.x][it.y] = 10000000;
-				Gugu.sendMapUpdate(0, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(1, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(2, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(3, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
-			}
-		}
-	}
-	for (auto it : Chest)
-	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
-		{
-			if (API.GetChestProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
-			{
-				ProgressMem[it.x][it.y] = 10000000;
-				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
-				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
-			}
-		}
-	}
-	for (auto it : Gate)
-	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
-		{
-			if (API.GetGateProgress(it.x, it.y) >= 18000 && ProgressMem[it.x][it.y] < 18000)
-			{
-				ProgressMem[it.x][it.y] = 18000;
-				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
-				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
-				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
-				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
-			}
-		}
-	}
-
-	Bob.AutoUpdate();
 }
 
 #if !USE_NEW_ASTAR
@@ -1420,20 +1327,6 @@ bool CommandPost<IFooAPI>::InGrass()
 		return false;
 }
 
-#if !USE_NEW_ASTAR
-
-template <typename IFooAPI>
-int Geographer<IFooAPI>::EstimateTime(Cell Dest)
-{
-	Cell Self(this->API.GetSelfInfo()->x / 1000, this->API.GetSelfInfo()->y / 1000);
-	int Distance = AStarWithWindows(Self, Dest).size();
-	int Speed = this->API.GetSelfInfo()->speed;
-	int Time = Distance * 1000 / Speed;
-	return Time;
-}
-
-#endif
-
 template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectLearning(bool WithWindows)
 {
@@ -1715,47 +1608,6 @@ void CommandPost<IFooAPI>::DirectUseProp(std::vector<unsigned char> Priority)
 }
 
 template <typename IFooAPI>
-bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
-{
-	int deltaX = (Dest.x - Src.x) * 1000;
-	int deltaY = (Dest.y - Src.y) * 1000;
-	int Distance = deltaX * deltaX + deltaY * deltaY;
-	unsigned char SrcType = this->Center.Map[Src.x][Src.y];
-	unsigned char DestType = this->Center.Map[Dest.x][Dest.y];
-	if (DestType == 3U && SrcType != 3U) // 草丛外必不可能看到草丛内
-		return false;
-	if (Distance < ViewRange * ViewRange)
-	{
-		double divide = std::max(std::abs(deltaX), std::abs(deltaY)) / 100.;
-		if (divide == 0)
-			return true;
-		double dx = deltaX / divide;
-		double dy = deltaY / divide;
-		double myX = double(Src.x * 1000);
-		double myY = double(Src.y * 1000);
-		if (DestType == 3U && SrcType == 3U) // 都在草丛内，要另作判断
-			for (int i = 0; i < divide; i++)
-			{
-				myX += dx;
-				myY += dy;
-				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] != 3U)
-					return false;
-			}
-		else // 不在草丛内，只需要没有墙即可
-			for (int i = 0; i < divide; i++)
-			{
-				myX += dx;
-				myY += dy;
-				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] == 2U)
-					return false;
-			}
-		return true;
-	}
-	else
-		return false;
-}
-
-template <typename IFooAPI>
 int CommandPost<IFooAPI>::GetChestProgress(int cellx, int celly)
 {
 	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange))
@@ -1831,6 +1683,89 @@ void CommandPost<IFooAPI>::Update(MapUpdateInfo upinfo, int t_)
 	}
 }
 
+//--------------------
+// #CommandPostStudent
+//--------------------
+
+void CommandPostStudent::AutoUpdate()
+{
+	int cntframe = API.GetFrameCount();
+	if (cntframe - LastAutoUpdateFrame < UpdateInterval)
+		return;
+	std::shared_ptr<const THUAI6::Student> selfinfo = API.GetSelfInfo();
+	LastAutoUpdateFrame = cntframe;
+	for (auto it : Door)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			bool newDoor = false, checkopen = API.IsDoorOpen(it.x, it.y);
+			if (checkopen && Access[it.x][it.y] == 0U)
+			{
+				newDoor = true;
+				Access[it.x][it.y] = 2U;
+				it.DoorStatus = true;
+			}
+			else if (!checkopen && Access[it.x][it.y] == 2U)
+			{
+				newDoor = true;
+				Access[it.x][it.y] = 0U;
+				it.DoorStatus = false;
+			}
+			if (newDoor)
+			{
+				Gugu.sendMapUpdate(0, it.DoorType, it.x, it.y, checkopen ? 2U : 0U); // 这里没有区分Door3, Door5, Door6的区别，可能要改
+				Gugu.sendMapUpdate(1, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+				Gugu.sendMapUpdate(2, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+				Gugu.sendMapUpdate(3, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+			}
+		}
+	}
+	for (auto it : Classroom)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			{
+				ProgressMem[it.x][it.y] = 10000000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+			}
+		}
+	}
+	for (auto it : Chest)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetChestProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			{
+				ProgressMem[it.x][it.y] = 10000000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+			}
+		}
+	}
+	for (auto it : Gate)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetGateProgress(it.x, it.y) >= 18000 && ProgressMem[it.x][it.y] < 18000)
+			{
+				ProgressMem[it.x][it.y] = 18000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+			}
+		}
+	}
+
+	Bob.AutoUpdate();
+}
+
 void CommandPostStudent::AtheleteCanBeginToCharge()
 {
 	API.UseSkill(0);
@@ -1891,6 +1826,89 @@ double CommandPostStudent::SunshineInspireCD()
 	return API.GetSelfInfo()->timeUntilSkillAvailable[2];
 }
 
+//--------------------
+// #CommandPostTricker
+//--------------------
+
+void CommandPostTricker::AutoUpdate()
+{
+	int cntframe = API.GetFrameCount();
+	if (cntframe - LastAutoUpdateFrame < UpdateInterval)
+		return;
+	auto selfinfo = API.GetSelfInfo();
+	LastAutoUpdateFrame = cntframe;
+	for (auto it : Door)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			bool newDoor = false, checkopen = API.IsDoorOpen(it.x, it.y);
+			if (checkopen && Access[it.x][it.y] == 0U)
+			{
+				newDoor = true;
+				Access[it.x][it.y] = 2U;
+				it.DoorStatus = true;
+			}
+			else if (!checkopen && Access[it.x][it.y] == 2U)
+			{
+				newDoor = true;
+				Access[it.x][it.y] = 0U;
+				it.DoorStatus = false;
+			}
+			if (newDoor)
+			{
+				Gugu.sendMapUpdate(0, it.DoorType, it.x, it.y, checkopen ? 2U : 0U); // 这里没有区分Door3, Door5, Door6的区别，可能要改
+				Gugu.sendMapUpdate(1, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+				Gugu.sendMapUpdate(2, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+				Gugu.sendMapUpdate(3, it.DoorType, it.x, it.y, checkopen ? 2U : 0U);
+			}
+		}
+	}
+	for (auto it : Classroom)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			{
+				ProgressMem[it.x][it.y] = 10000000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
+			}
+		}
+	}
+	for (auto it : Chest)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetChestProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			{
+				ProgressMem[it.x][it.y] = 10000000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
+			}
+		}
+	}
+	for (auto it : Gate)
+	{
+		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		{
+			if (API.GetGateProgress(it.x, it.y) >= 18000 && ProgressMem[it.x][it.y] < 18000)
+			{
+				ProgressMem[it.x][it.y] = 18000;
+				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+				Gugu.sendMapUpdate(3, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
+			}
+		}
+	}
+
+	Bob.AutoUpdate();
+}
+
 void CommandPostTricker::AssassinDefaultAttack(int stux, int stuy) // 传入学生坐标
 {
 	int sx = API.GetSelfInfo()->x;
@@ -1944,6 +1962,65 @@ void CommandPostTricker::AssassinFlyingKnife(int stux, int stuy)
 double CommandPostTricker::AssassinFlyingKnifeCD()
 {
 	return API.GetSelfInfo()->timeUntilSkillAvailable[1];
+}
+
+//--------------------
+// #Geographer
+//--------------------
+
+#if !USE_NEW_ASTAR
+
+template <typename IFooAPI>
+int Geographer<IFooAPI>::EstimateTime(Cell Dest)
+{
+	Cell Self(this->API.GetSelfInfo()->x / 1000, this->API.GetSelfInfo()->y / 1000);
+	int Distance = AStarWithWindows(Self, Dest).size();
+	int Speed = this->API.GetSelfInfo()->speed;
+	int Time = Distance * 1000 / Speed;
+	return Time;
+}
+
+#endif
+
+template <typename IFooAPI>
+bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
+{
+	int deltaX = (Dest.x - Src.x) * 1000;
+	int deltaY = (Dest.y - Src.y) * 1000;
+	int Distance = deltaX * deltaX + deltaY * deltaY;
+	unsigned char SrcType = this->Center.Map[Src.x][Src.y];
+	unsigned char DestType = this->Center.Map[Dest.x][Dest.y];
+	if (DestType == 3U && SrcType != 3U) // 草丛外必不可能看到草丛内
+		return false;
+	if (Distance < ViewRange * ViewRange)
+	{
+		double divide = std::max(std::abs(deltaX), std::abs(deltaY)) / 100.;
+		if (divide == 0)
+			return true;
+		double dx = deltaX / divide;
+		double dy = deltaY / divide;
+		double myX = double(Src.x * 1000);
+		double myY = double(Src.y * 1000);
+		if (DestType == 3U && SrcType == 3U) // 都在草丛内，要另作判断
+			for (int i = 0; i < divide; i++)
+			{
+				myX += dx;
+				myY += dy;
+				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] != 3U)
+					return false;
+			}
+		else // 不在草丛内，只需要没有墙即可
+			for (int i = 0; i < divide; i++)
+			{
+				myX += dx;
+				myY += dy;
+				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] == 2U)
+					return false;
+			}
+		return true;
+	}
+	else
+		return false;
 }
 
 #if !USE_NEW_ASTAR
@@ -2217,8 +2294,9 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 	std::cerr << "End AStar" << std::endl;
 }
 
-#endif
-
+template <typename IFooAPI>
+Geographer<IFooAPI>::Geographer(IFooAPI& api_, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api_, Center_) { }
+#else
 template <typename IFooAPI>
 Geographer<IFooAPI>::Geographer(IFooAPI& api_, CommandPost<IFooAPI>& Center_) : Friends<IFooAPI>(api_, Center_), SegmentRadius(405), CheckPointRadius(410)
 {
@@ -2253,6 +2331,8 @@ Geop Geographer<IFooAPI>::Escape(Geop P)
 	}
 	return Q;
 }
+
+#endif
 
 template <typename IFooAPI>
 bool Geographer<IFooAPI>::IsAccessible(THUAI6::PlaceType pt)
@@ -2296,6 +2376,7 @@ void Geographer<IFooAPI>::BackwardExpand(Cell Source, int H[50][50])
 
 // static int statistic;
 
+#if USE_NEW_ASTAR
 template <typename IFooAPI>
 bool Geographer<IFooAPI>::DirectReachable(Geop A, Geop B, bool IsDest) // if IsDest, allow 1 through
 {
@@ -2562,8 +2643,6 @@ public:
 	bool operator<(const GeographerNode& n) const { return value() > n.value(); }
 };
 
-#if USE_NEW_ASTAR
-
 template <typename IFooAPI>
 std::vector<Geop> Geographer<IFooAPI>::FindPath(Geop From_, Geop Dest_)
 {
@@ -2662,48 +2741,6 @@ std::vector<Geop> Geographer<IFooAPI>::FindPath(Geop From_, Geop Dest_)
 	return Path;
 }
 #endif
-
-template <typename IFooAPI>
-void Predictor<IFooAPI>::SaveDangerAlertLog(int maxNum)
-{
-	if (DangerAlertLog.size() < maxNum)
-	{
-		DangerAlertLog.push_back(this->API.GetSelfInfo()->dangerAlert);
-	}
-	else
-	{
-		DangerAlertLog.erase(DangerAlertLog.begin());
-		DangerAlertLog.push_back(this->API.GetSelfInfo()->dangerAlert);
-	}
-}
-
-template <typename IFooAPI>
-void Predictor<IFooAPI>::SaveTrickDesireLog(int maxNum)
-{
-	if (TrickDesireLog.size() < maxNum)
-	{
-		TrickDesireLog.push_back(this->API.GetSelfInfo()->trickDesire);
-	}
-	else
-	{
-		TrickDesireLog.erase(TrickDesireLog.begin());
-		TrickDesireLog.push_back(this->API.GetSelfInfo()->trickDesire);
-	}
-}
-
-template <typename IFooAPI>
-void Predictor<IFooAPI>::SaveClassVolumeLog(int maxNum)
-{
-	if (ClassVolumeLog.size() < maxNum)
-	{
-		ClassVolumeLog.push_back(this->API.GetSelfInfo()->classVolume);
-	}
-	else
-	{
-		ClassVolumeLog.erase(ClassVolumeLog.begin());
-		ClassVolumeLog.push_back(this->API.GetSelfInfo()->classVolume);
-	}
-}
 
 // 为假则play()期间确保游戏状态不更新，为真则只保证游戏状态在调用相关方法时不更新
 extern const bool asynchronous = false;
