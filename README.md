@@ -91,6 +91,10 @@
 - [ ] `std::vector<THUAI6::PropType> GetInventory() { return Inventory; }`	// 查看背包
 - [ ] `void OrganizeInventory(std::vector<unsigned char>Priority);`			// 整理背包
 
+- [x] `bool IsAccessible(int x, int y, bool WithWindows);`
+
+> 返回该格子是否为可进入的格子。如果 `WithWindows` 则视窗户为可进入的格子。
+
 ### 移动
 
 - [x] `bool MoveTo(Cell Dest, bool WithWindows);`
@@ -99,57 +103,110 @@
 
 - [x] `bool MoveToNearestClassroom(bool WithWindows);`
 
-> 往最近的作业移动一次。`WithWindows` 决定路线是否经过窗。如果有没写完的作业就返回 `true`，否则返回 `false`。（issue: 需要利用MoveTo的返回值以防不能到达的情况，如果都不能到达也应当返回 `false`）
+> 往最近的作业移动一次。`WithWindows` 决定路线是否经过窗。如果有没写完的作业就返回 `true`，否则返回 `false`。
 
 - [x] `bool MoveToNearestGate(bool WithWindows);`
 
-> 往最近的关闭的校门移动一次。`WithWindows` 决定路线是否经过窗。如果有没开启的校门就返回 `true`，否则返回 `false`。（issue: 需要利用MoveTo的返回值以防不能到达的情况，如果都不能到达也应当返回 `false`）
+> 往最近的关闭的校门移动一次。`WithWindows` 决定路线是否经过窗。如果有没开启的校门就返回 `true`，否则返回 `false`。
 
 - [x] `bool MoveToNearestOpenGate(bool WithWindows);`
 
-> 往最近的开启的校门移动一次。`WithWindows` 决定路线是否经过窗。如果有开启的校门就返回 `true`，否则返回 `false`。（issue: 需要利用MoveTo的返回值以防不能到达的情况，如果都不能到达也应当返回 `false`）
+> 往最近的开启的校门移动一次。`WithWindows` 决定路线是否经过窗。如果有开启的校门就返回 `true`，否则返回 `false`。
 
 - [x] `bool MoveToNearestChest(bool WithWindows);`
 
-> 往最近的箱子移动一次。`WithWindows` 决定路线是否经过窗。如果有未开启的箱子就返回 `true`，否则返回 `false`。（issue: 需要利用MoveTo的返回值以防不能到达的情况，如果都不能到达也应当返回 `false`）
+> 往最近的箱子移动一次。`WithWindows` 决定路线是否经过窗。如果有未开启的箱子就返回 `true`，否则返回 `false`。
 
 ### 附近格子状态
 
-- [ ] `bool NearCell(Cell P, int level = 1);`         // level=0判断当前是否在该格子上，1判断是否在格子上或周围4格，2判断是否在格子上或周围8格
-- [x] `bool NearClassroom(bool checkProgress);`							// 已经在作业旁边了吗？
-- [x] `bool NearGate();`								// 已经在关闭的校门旁边了吗？
-- [x] `bool NearOpenGate();`							// 已经在开启的校门旁边了吗？
-- [x] `bool NearChest();`								// 已经在箱子旁边了吗？
-- [x] `bool NearWindow();`								// 已经在窗户旁边了吗？
-- [x] `bool InGrass();`									// 已经在草丛里了吗？
+- [x] `bool NearCell(Cell P, int level = 1);`
+
+> 判断是否在格子P周围。level的不同取值决定范围大小。
+>
+> `level = 0` 判断当前是否在该格子上；
+> `level = 1` 判断是否在格子上或周围4格；
+> `level = 2` 判断是否在格子上或周围8格；
+> `level = 3` 判断直线距离是否不超过3格；
+> `level = 4` 判断直线距离是否不超过4格。
+
+- [x] `bool NearClassroom(bool checkProgress);`
+
+> 判断是否在作业旁边。如果 `checkProgress = true` 则判断是否在没写完的作业旁边。
+
+- [x] `bool NearGate();`
+
+> 已经在关闭的校门旁边了吗？
+
+- [x] `bool NearOpenGate();`
+
+> 已经在开启的校门旁边了吗？
+
+- [x] `bool NearChest();`
+
+> 已经在没开过的箱子旁边了吗？
+
+- [x] `bool NearWindow();`
+
+> 已经在窗户旁边了吗？
+
+- [x] `bool InGrass();`
+
+> 已经在草丛里了吗？
 
 ### 有目的地移动
 
-- [ ] `void DirectLearning(bool WithWindows);`			// 前往最近的作业并学习
-- [ ] `void DirectOpeningChest(bool WithWindows);`		// 前往最近的箱子并开箱
-- [ ] `void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);`		// 前往最近的关闭的校门并开门
-- [ ] `void DirectGraduate(bool WithWindows);`			// 前往最近的开启的校门并毕业
-- [ ] `void DirectGrass(bool WithWindows);`				// 前往最近的草丛并躲避
-- [ ] `void DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows);`				// 前往最适合的草丛并躲避
-- [ ] `void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);`		// 前往已知价值最高的道具并捡道具
+- [x] `void DirectLearning(bool WithWindows);`
+
+> 前往最近的作业并学习。如果 `WithWindows = true` 则允许路线经过窗户。
+
+- [x] `void DirectOpeningChest(bool WithWindows);`
+
+> 前往最近的没开过的箱子并开箱。如果 `WithWindows = true` 则允许路线经过窗户。
+
+- [x] `void DirectOpeningGate(bool WithWindows, bool CanDirectGraduate);`
+
+> 前往最近的关闭的校门并开门。如果 `WithWindows = true` 则允许路线经过窗户。
+
+- [x] `void DirectGraduate(bool WithWindows);`
+
+> 前往最近的开启的校门并毕业。如果 `WithWindows = true` 则允许路线经过窗户。
+
+- [x] `void DirectGrass(bool WithWindows);`
+
+> 前往最近的草丛并躲避。如果 `WithWindows = true` 则允许路线经过窗户。
+
+- [x] `void DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows);`
+
+> 前往最适合的草丛并躲避。
+
+- [ ] `void DirectProp(std::vector<unsigned char>Priority, int DistanceInfluence, int PropInfluence, bool WithWindows);`
+
+> 前往已知价值最高的道具并捡道具。
+
 - [ ] `void DirectUseProp(std::vector<unsigned char>Priority);`
+
+> 使用道具。
 
 ### 实时计数及特定格子状态
 
 - [x] `int CountFinishedClassroom() const;`
 - [x] `int CountNonemptyChest() const;`
 - [ ] `int CountHiddenGate() const;`
-- [ ] `int CountClosedGate() const;`
-- [ ] `int CountOpenGate() const;`
+- [x] `int CountClosedGate() const;`
+- [x] `int CountOpenGate() const;`
 
-- [ ] `int GetChestProgress(int cellx, int celly);`
-- [ ] `int GetGateProgress(int cellx, int celly);`
-- [ ] `int GetClassroomProgress(int cellx, int celly);`
-- [ ] `int GetDoorProgress(int cellx, int celly);`
-- [ ] `int GetChestProgress(Cell cell) const;`
-- [ ] `int GetGateProgress(Cell cell) const;`
-- [ ] `int GetClassroomProgress(Cell cell) const;`
-- [ ] `int GetDoorProgress(Cell cell) const;`
+> 对相应状态的格子计数。
+
+- [x] `int GetChestProgress(int cellx, int celly);`
+- [x] `int GetGateProgress(int cellx, int celly);`
+- [x] `int GetClassroomProgress(int cellx, int celly);`
+- [x] `int GetDoorProgress(int cellx, int celly);`
+- [x] `int GetChestProgress(Cell cell) const;`
+- [x] `int GetGateProgress(Cell cell) const;`
+- [x] `int GetClassroomProgress(Cell cell) const;`
+- [x] `int GetDoorProgress(Cell cell) const;`
+
+> 返回相应格子的值。
 
 ### CommandPostStudent: 继承自 `CommandPost<IStudentAPI>`
 
@@ -228,8 +285,7 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 - [ ] `bool IsDestination(int x, int y, Node dest);`
 - [ ] `double CalculateH(int x, int y, Node dest);`
 - [ ] `std::vector<Node> MakePath(std::array<std::array<Node, 50>, 50> map, Node dest);`
-- [ ] `std::vector<Node> AStarWithoutWindows(Node src, Node dest);`
-- [ ] `std::vector<Node> AStarWithWindows(Node src, Node dest);`
+- [ ] `std::vector<Node> AStar(Node src, Node dest, bool WithWindows);`
 - [ ] `int EstimateTime(Cell Dest);`					// 去目的地的预估时间
 
 - [ ] `bool IsViewable(Cell Src, Cell Dest, int ViewRange);`			// 判断两个位置是否可视
@@ -239,8 +295,6 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 - [ ] `Cell GetNearestOpenGate();`
 
 ## 4 Predictor 预言家
-
-Not implemented.
 
 ## 5 建议使用的策略编写方法
 

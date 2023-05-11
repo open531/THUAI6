@@ -8,6 +8,7 @@
 #include <thread>
 #include <vector>
 #include <cstdarg>
+#include <exception>
 #include <algorithm>
 #include <functional>
 #include "AI.h"
@@ -128,6 +129,8 @@ bool Intersect(Geos A, Geos B)
 //*****************************************************
 // #Information
 //*****************************************************
+
+class noway_exception : public std::exception {};
 
 struct MapUpdateInfo
 {
@@ -260,6 +263,8 @@ public:
 	int GetGateProgress(Cell cell) const;
 	int GetClassroomProgress(Cell cell) const;
 	int GetDoorProgress(Cell cell) const;
+
+	bool IsAccessible(int x, int y, bool WithWindows);
 };
 
 template <typename IFooAPI>
@@ -277,7 +282,7 @@ class Geographer : public Friends<IFooAPI>
 {
 	// 这是一位Geographer，负责告诉要怎么走
 protected:
-	bool IsAccessible(THUAI6::PlaceType pt);
+//	bool IsAccessible(THUAI6::PlaceType pt);
 
 #if USE_NEW_ASTAR
 	std::vector<Geos> StableMap;
@@ -304,13 +309,10 @@ protected:
 public:
 	Geographer(IFooAPI& api, CommandPost<IFooAPI>& Center_);
 #if !USE_NEW_ASTAR
-	bool IsValidWithoutWindows(int x, int y);
-	bool IsValidWithWindows(int x, int y);
 	bool IsDestination(int x, int y, Node dest);
 	double CalculateH(int x, int y, Node dest);
-	std::vector<Node> MakePath(std::array<std::array<Node, 50>, 50> map, Node dest);
-	std::vector<Node> AStarWithoutWindows(Node src, Node dest);
-	std::vector<Node> AStarWithWindows(Node src, Node dest);
+	std::vector<Node> MakePath(const std::array<std::array<Node, 50>, 50>& map, Node dest);
+	std::vector<Node> AStar(Node src, Node dest, bool WithWindows);
 	int EstimateTime(Cell Dest); // 去目的地的预估时间
 #else
 	std::vector<Geop> FindPath(Geop From_, Geop Dest_);
@@ -983,7 +985,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = 0U;
 		}
 	}
-	for (int i = 0; i < API.GetTrickers().size(); i++)
+	for (int i = 0; i < TempT.size(); i++)
 	{
 		if ((TempT[i]->x / 1000 != sx / 1000) && (TempT[i]->y / 1000 != sy / 1000))
 		{
@@ -992,10 +994,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		}
 	}
 	std::vector<Node> UsablePath;
-	if (WithWindows)
-		UsablePath = Alice.AStarWithWindows(Node(sx / 1000, sy / 1000), Dest);
-	else
-		UsablePath = Alice.AStarWithoutWindows(Node(sx / 1000, sy / 1000), Dest);
+	UsablePath = Alice.AStar(Node(sx / 1000, sy / 1000), Dest, WithWindows);
 	for (auto i : UsablePath)
 	{
 		std::cerr << '(' << i.x << ',' << i.y << ')' << ';';
@@ -1014,7 +1013,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		{
 			if ((TempT[i]->x / 1000 != sx / 1000) && (TempT[i]->y / 1000 != sy / 1000))
 			{
-				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[i];
+				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
 				j++;
 			}
 		}
@@ -1023,49 +1022,52 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	else
 	{
 		int tx, ty;
-		if (UsablePath.size() >= 3 && Alice.IsValidWithoutWindows(sx / 1000, sy / 1000) && Alice.IsValidWithoutWindows(UsablePath[1].x, UsablePath[1].y) && Alice.IsValidWithoutWindows(UsablePath[2].x, UsablePath[2].y) && Alice.IsValidWithoutWindows(sx / 1000, UsablePath[2].y) && Alice.IsValidWithoutWindows(UsablePath[2].x, sy / 1000))
-		{
-			tx = UsablePath[2].x * 1000 + 500;
-			ty = UsablePath[2].y * 1000 + 500;
-		}
-		else
-		{
-			tx = UsablePath[1].x * 1000 + 500;
-			ty = UsablePath[1].y * 1000 + 500;
-		}
-		int dx = tx - sx;
-		int dy = ty - sy;
-		if (Map[tx / 1000][ty / 1000] != THUAI6::PlaceType::Window)
-		{
-			if (!IsStuck)
-			{
-				API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
-			}
-			else
-			{
-				API.Move(200 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
-			}
-		}
-		else
+		if (Map[UsablePath[1].x][UsablePath[1].y] == THUAI6::PlaceType::Window)
 		{
 			API.SkipWindow();
 		}
-		TEMP.x = sx;
-		TEMP.y = sy;
-		for (int i = 0, j = 0; i < API.GetStudents().size(); i++)
+		else
 		{
-			if ((API.GetStudents()[i]->x / 1000 != sx / 1000) && (API.GetStudents()[i]->y / 1000 != sy / 1000))
+			if (UsablePath.size() >= 3 && IsAccessible(sx / 1000, sy / 1000, WithWindows) && IsAccessible(UsablePath[1].x, UsablePath[1].y, WithWindows) && IsAccessible(UsablePath[2].x, UsablePath[2].y, WithWindows) && IsAccessible(sx / 1000, UsablePath[2].y, WithWindows) && IsAccessible(UsablePath[2].x, sy / 1000, WithWindows))
 			{
-				Access[(API.GetStudents()[i]->x) / 1000][(API.GetStudents()[i]->y) / 1000] = AccessTempS[j];
-				j++;
+				tx = UsablePath[2].x * 1000 + 500;
+				ty = UsablePath[2].y * 1000 + 500;
 			}
-		}
-		for (int i = 0, j = 0; i < API.GetTrickers().size(); i++)
-		{
-			if ((API.GetTrickers()[i]->x / 1000 != sx / 1000) && (API.GetTrickers()[i]->y / 1000 != sy / 1000))
+			else
 			{
-				Access[(API.GetTrickers()[i]->x) / 1000][(API.GetTrickers()[i]->y) / 1000] = AccessTempT[i];
-				j++;
+				tx = UsablePath[1].x * 1000 + 500;
+				ty = UsablePath[1].y * 1000 + 500;
+			}
+			int dx = tx - sx;
+			int dy = ty - sy;
+			if (Map[tx / 1000][ty / 1000] != THUAI6::PlaceType::Window)
+			{
+				if (!IsStuck)
+				{
+					API.Move(1000 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx));
+				}
+				else
+				{
+					API.Move(200 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
+				}
+			}
+			TEMP.x = sx;
+			TEMP.y = sy;
+			for (int i = 0, j = 0; i < TempS.size(); i++)
+			{
+				if ((TempS[i]->x / 1000 != sx / 1000) && (TempS[i]->y / 1000 != sy / 1000))
+				{
+					Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
+					j++;
+				}
+			}
+			for (int i = 0, j = 0; i < TempT.size(); i++)
+			{
+				if ((TempT[i]->x / 1000 != sx / 1000) && (TempT[i]->y / 1000 != sy / 1000))
+				{
+					Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
+					j++;
+				}
 			}
 		}
 		return true;
@@ -1143,7 +1145,7 @@ bool CommandPost<IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 			//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
 			if (GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
 			{
-				Distance = WithWindows ? Alice.AStarWithWindows(Self, Classroom[i]).size() : Alice.AStarWithoutWindows(Self, Classroom[i]).size();
+				Distance = Alice.AStar(Self, Classroom[i], WithWindows).size();
 				if (Distance < minDistance && Distance != 0)
 				{
 					minDistance = Distance;
@@ -1192,7 +1194,7 @@ bool CommandPost<IFooAPI>::MoveToNearestGate(bool WithWindows)
 			//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
 			if (GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
 			{
-				Distance = WithWindows ? Alice.AStarWithWindows(Self, Gate[i]).size() : Alice.AStarWithoutWindows(Self, Gate[i]).size();
+				Distance = Alice.AStar(Self, Gate[i], WithWindows).size();
 				if (Distance < minDistance && Distance != 0)
 				{
 					minDistance = Distance;
@@ -1226,7 +1228,7 @@ bool CommandPost<IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 			//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			if (GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			{
-				Distance = WithWindows ? Alice.AStarWithWindows(Self, Gate[i]).size() : Alice.AStarWithoutWindows(Self, Gate[i]).size();
+				Distance = Alice.AStar(Self, Gate[i], WithWindows).size();
 				if (Distance < minDistance && Distance != 0)
 				{
 					minDistance = Distance;
@@ -1413,7 +1415,7 @@ void CommandPost<IFooAPI>::DirectGrass(bool WithWindows)
 		{
 			for (int i = 0; i < Grass.size(); i++)
 			{
-				Distance = WithWindows ? Alice.AStarWithWindows(Self, Grass[i]).size() : Alice.AStarWithoutWindows(Self, Grass[i]).size();
+				Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
 				if (Distance < minDistance && Distance != 0)
 				{
 					minDistance = Distance;
@@ -1443,7 +1445,7 @@ void CommandPost<IFooAPI>::DirectHide(Cell TrickerLocation, int TrickerViewRange
 			{
 				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25 && !Alice.IsViewable(TrickerLocation, Cell(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange))
 				{
-					Distance = WithWindows ? Alice.AStarWithWindows(Self, Grass[i]).size() : Alice.AStarWithoutWindows(Self, Grass[i]).size();
+					Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
 					if (Distance < minDistance && Distance != 0)
 					{
 						minDistance = Distance;
@@ -1687,6 +1689,12 @@ void CommandPost<IFooAPI>::Update(MapUpdateInfo upinfo, int t_)
 	{
 		Access[upinfo.x][upinfo.y] = upinfo.val;
 	}
+}
+
+template <typename IFooAPI>
+bool CommandPost<IFooAPI>::IsAccessible(int x, int y, bool WithWindows)
+{
+	return WithWindows?(Access[x][y] >= 1):(Access[x][y] >= 2);
 }
 
 //--------------------
@@ -1980,7 +1988,7 @@ template <typename IFooAPI>
 int Geographer<IFooAPI>::EstimateTime(Cell Dest)
 {
 	Cell Self(this->API.GetSelfInfo()->x / 1000, this->API.GetSelfInfo()->y / 1000);
-	int Distance = AStarWithWindows(Self, Dest).size();
+	int Distance = AStar(Self, Dest, true).size();
 	int Speed = this->API.GetSelfInfo()->speed;
 	int Time = Distance * 1000 / Speed;
 	return Time;
@@ -2032,15 +2040,6 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 #if !USE_NEW_ASTAR
 
 template <typename IFooAPI>
-bool Geographer<IFooAPI>::IsValidWithoutWindows(int x, int y)
-{
-	return (bool)(this->Center.Access[x][y] / 2);
-}
-
-template <typename IFooAPI>
-bool Geographer<IFooAPI>::IsValidWithWindows(int x, int y) { return (bool)this->Center.Access[x][y]; }
-
-template <typename IFooAPI>
 bool Geographer<IFooAPI>::IsDestination(int x, int y, Node dest)
 {
 	if (x == dest.x && y == dest.y)
@@ -2057,146 +2056,26 @@ double Geographer<IFooAPI>::CalculateH(int x, int y, Node dest)
 }
 
 template <typename IFooAPI>
-std::vector<Node> Geographer<IFooAPI>::MakePath(std::array<std::array<Node, 50>, 50> map, Node dest)
+std::vector<Node> Geographer<IFooAPI>::MakePath(const std::array<std::array<Node, 50>, 50>& map, Node dest)
 {
-	try
+	int x = dest.x;
+	int y = dest.y;
+	std::vector<Node> UsablePath;
+	while (!(x == -1 || y == -1))
 	{
-		int x = dest.x;
-		int y = dest.y;
-		std::stack<Node> Path;
-		std::vector<Node> UsablePath;
-		while (!(map[x][y].parentX == x && map[x][y].parentY == y) && map[x][y].x != -1 && map[x][y].y != -1)
-		{
-			Path.push(map[x][y]);
-			int tempX = map[x][y].parentX;
-			int tempY = map[x][y].parentY;
-			x = tempX;
-			y = tempY;
-		}
-		Path.push(map[x][y]);
-		while (!Path.empty())
-		{
-			Node top = Path.top();
-			Path.pop();
-			UsablePath.emplace_back(top);
-		}
-		return UsablePath;
+		std::cerr << x << ' ' << y << std::endl;
+		UsablePath.push_back(map[x][y]);
+		int tempX = x;
+		int tempY = y;
+		x = map[tempX][tempY].parentX;
+		y = map[tempX][tempY].parentY;
 	}
-	catch (const std::exception& e)
-	{
-		//		std::cout << e.what() << std::endl;
-	}
+	std::reverse(UsablePath.begin(), UsablePath.end());
+	return UsablePath;
 }
 
 template <typename IFooAPI>
-std::vector<Node> Geographer<IFooAPI>::AStarWithoutWindows(Node src, Node dest)
-{
-	std::cerr << "Start AStar (w)" << std::endl;
-	std::vector<Node> empty;
-	// if (IsValidWithoutWindows(dest.x, dest.y) == false)
-	//{
-	//	return empty;
-	// }
-	if (IsDestination(src.x, src.y, dest))
-	{
-		std::cerr << "End AStar" << std::endl;
-		return empty;
-	}
-	bool ClosedList[50][50];
-	std::array<std::array<Node, 50>, 50> AStarMap;
-	for (int x = 0; x < 50; x++)
-	{
-		for (int y = 0; y < 50; y++)
-		{
-			AStarMap[x][y].fCost = FLT_MAX;
-			AStarMap[x][y].gCost = FLT_MAX;
-			AStarMap[x][y].hCost = FLT_MAX;
-			AStarMap[x][y].parentX = -1;
-			AStarMap[x][y].parentY = -1;
-			AStarMap[x][y].x = x;
-			AStarMap[x][y].y = y;
-			ClosedList[x][y] = false;
-		}
-	}
-	int x = src.x;
-	int y = src.y;
-	AStarMap[x][y].fCost = 0.0;
-	AStarMap[x][y].gCost = 0.0;
-	AStarMap[x][y].hCost = 0.0;
-	AStarMap[x][y].parentX = x;
-	AStarMap[x][y].parentY = y;
-	std::vector<Node> OpenList;
-	OpenList.emplace_back(AStarMap[x][y]);
-	bool FoundDest = false;
-	while (!OpenList.empty() && OpenList.size() < 50 * 50)
-	{
-		Node node;
-		do
-		{
-			float temp = FLT_MAX;
-			std::vector<Node>::iterator itNode;
-			for (std::vector<Node>::iterator it = OpenList.begin(); it != OpenList.end(); it = next(it))
-			{
-				Node n = *it;
-				if (n.fCost < temp)
-				{
-					temp = n.fCost;
-					itNode = it;
-				}
-			}
-			node = *itNode;
-			OpenList.erase(itNode);
-		} while (IsValidWithoutWindows(node.x, node.y) == false);
-		x = node.x;
-		y = node.y;
-		ClosedList[x][y] = true;
-		for (int newX = -1; newX <= 1; newX++)
-		{
-			for (int newY = -1; newY <= 1; newY++)
-			{
-				if (newX != 0 && newY != 0)
-					continue;
-				double gNew, hNew, fNew;
-				if (IsValidWithoutWindows(x + newX, y + newY) ||
-					IsDestination(x + newX, y + newY, dest))
-				{
-					if (IsDestination(x + newX, y + newY, dest))
-					{
-						AStarMap[x + newX][y + newY].parentX = x;
-						AStarMap[x + newX][y + newY].parentY = y;
-						FoundDest = true;
-						std::cerr << "End AStar" << std::endl;
-						return MakePath(AStarMap, dest);
-					}
-					else if (ClosedList[x + newX][y + newY] == false)
-					{
-						gNew = node.gCost + 1.0;
-						hNew = CalculateH(x + newX, y + newY, dest);
-						fNew = gNew + hNew;
-						if (AStarMap[x + newX][y + newY].fCost == FLT_MAX ||
-							AStarMap[x + newX][y + newY].fCost > fNew)
-						{
-							AStarMap[x + newX][y + newY].fCost = fNew;
-							AStarMap[x + newX][y + newY].gCost = gNew;
-							AStarMap[x + newX][y + newY].hCost = hNew;
-							AStarMap[x + newX][y + newY].parentX = x;
-							AStarMap[x + newX][y + newY].parentY = y;
-							OpenList.emplace_back(AStarMap[x + newX][y + newY]);
-						}
-					}
-				}
-			}
-		}
-	}
-	if (FoundDest == false)
-	{
-		std::cerr << "End AStar" << std::endl;
-		return empty;
-	}
-}
-
-template <typename IFooAPI>
-std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
+std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindows)
 {
 	std::cerr << "Start AStar" << std::endl;
 	std::vector<Node> empty;
@@ -2229,15 +2108,14 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 	AStarMap[x][y].fCost = 0.0;
 	AStarMap[x][y].gCost = 0.0;
 	AStarMap[x][y].hCost = 0.0;
-	AStarMap[x][y].parentX = x;
-	AStarMap[x][y].parentY = y;
+	AStarMap[x][y].parentX = -1;
+	AStarMap[x][y].parentY = -1;
 	std::vector<Node> OpenList;
 	OpenList.emplace_back(AStarMap[x][y]);
 	bool FoundDest = false;
 	while (!OpenList.empty() && OpenList.size() < 50 * 50)
 	{
 		Node node;
-		do
 		{
 			float temp = FLT_MAX;
 			std::vector<Node>::iterator itNode;
@@ -2253,7 +2131,8 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 			}
 			node = *itNode;
 			OpenList.erase(itNode);
-		} while (IsValidWithWindows(node.x, node.y) == false);
+		}
+		if (this->Center.IsAccessible(node.x, node.y, WithWindows) == false) continue;
 		x = node.x;
 		y = node.y;
 		ClosedList[x][y] = true;
@@ -2261,43 +2140,39 @@ std::vector<Node> Geographer<IFooAPI>::AStarWithWindows(Node src, Node dest)
 		{
 			for (int newY = -1; newY <= 1; newY++)
 			{
-				if (newX != 0 && newY != 0)
-					continue;
-				double gNew, hNew, fNew;
-				if (IsValidWithWindows(x + newX, y + newY) || IsDestination(x + newX, y + newY, dest))
+				if (newX != 0 && newY != 0) continue;
+				if (newX == 0 && newY == 0) continue;
+				if (IsDestination(x + newX, y + newY, dest))
 				{
-					if (IsDestination(x + newX, y + newY, dest))
+					AStarMap[x + newX][y + newY].parentX = x;
+					AStarMap[x + newX][y + newY].parentY = y;
+					FoundDest = true;
+					return MakePath(AStarMap, dest);
+				}
+				if (!(this->Center.IsAccessible(x + newX, y + newY, WithWindows))) continue;
+				double gNew, hNew, fNew;
+				if (ClosedList[x + newX][y + newY] == false)
+				{
+					gNew = node.gCost + 1.0;
+					hNew = CalculateH(x + newX, y + newY, dest);
+					fNew = gNew + hNew;
+					if (AStarMap[x + newX][y + newY].fCost == FLT_MAX ||
+						AStarMap[x + newX][y + newY].fCost > fNew)
 					{
+						AStarMap[x + newX][y + newY].fCost = fNew;
+						AStarMap[x + newX][y + newY].gCost = gNew;
+						AStarMap[x + newX][y + newY].hCost = hNew;
 						AStarMap[x + newX][y + newY].parentX = x;
 						AStarMap[x + newX][y + newY].parentY = y;
-						FoundDest = true;
-						return MakePath(AStarMap, dest);
-					}
-					else if (ClosedList[x + newX][y + newY] == false)
-					{
-						gNew = node.gCost + 1.0;
-						hNew = CalculateH(x + newX, y + newY, dest);
-						fNew = gNew + hNew;
-						if (AStarMap[x + newX][y + newY].fCost == FLT_MAX ||
-							AStarMap[x + newX][y + newY].fCost > fNew)
-						{
-							AStarMap[x + newX][y + newY].fCost = fNew;
-							AStarMap[x + newX][y + newY].gCost = gNew;
-							AStarMap[x + newX][y + newY].hCost = hNew;
-							AStarMap[x + newX][y + newY].parentX = x;
-							AStarMap[x + newX][y + newY].parentY = y;
-							OpenList.emplace_back(AStarMap[x + newX][y + newY]);
-						}
+						OpenList.emplace_back(AStarMap[x + newX][y + newY]);
 					}
 				}
 			}
 		}
 	}
-	if (FoundDest == false)
-	{
-		return empty;
-	}
 	std::cerr << "End AStar" << std::endl;
+	if (FoundDest == false)
+		throw noway_exception();
 }
 
 template <typename IFooAPI>
@@ -2340,11 +2215,11 @@ Geop Geographer<IFooAPI>::Escape(Geop P)
 
 #endif
 
-template <typename IFooAPI>
-bool Geographer<IFooAPI>::IsAccessible(THUAI6::PlaceType pt)
-{
-	return pt == THUAI6::PlaceType::Land || pt == THUAI6::PlaceType::Door3 || pt == THUAI6::PlaceType::Door5 || pt == THUAI6::PlaceType::Door6 || pt == THUAI6::PlaceType::Grass || pt == THUAI6::PlaceType::Window;
-}
+//template <typename IFooAPI>
+//bool Geographer<IFooAPI>::IsAccessible(THUAI6::PlaceType pt)
+//{
+//	return pt == THUAI6::PlaceType::Land || pt == THUAI6::PlaceType::Door3 || pt == THUAI6::PlaceType::Door5 || pt == THUAI6::PlaceType::Door6 || pt == THUAI6::PlaceType::Grass || pt == THUAI6::PlaceType::Window;
+//}
 
 template <typename IFooAPI>
 void Geographer<IFooAPI>::BackwardExpand(Cell Source, int H[50][50])
@@ -2362,7 +2237,7 @@ void Geographer<IFooAPI>::BackwardExpand(Cell Source, int H[50][50])
 		//		std::cerr << "bfs " << now.x << ' ' << now.y << std::endl;
 		for (int i = now.x - 1; i <= now.x + 1; i++)
 			for (int j = now.y - 1; j <= now.y + 1; j++)
-				if (abs(i - now.x) + abs(j - now.y) == 1 && i >= 0 && i < 50 && j >= 0 && j < 50 && IsAccessible(this->API.GetPlaceType(i, j)))
+				if (abs(i - now.x) + abs(j - now.y) == 1 && i >= 0 && i < 50 && j >= 0 && j < 50 && this->Center.IsAccessible(i, j, true))
 				{
 					if (H[now.x][now.y] + 1 < H[i][j])
 					{
@@ -2804,7 +2679,7 @@ void AI::play(IStudentAPI& api)
 	static int CurrentState = sDefault;
 
 	Center.AutoUpdate();
-	Center.Bob._display(4);
+	//	Center.Bob._display(4);
 
 	int MessageType;
 	while ((MessageType = Center.Gugu.receiveMessage()) != NoMessage)
