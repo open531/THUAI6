@@ -187,22 +187,25 @@ class CommandPost
 	// 这是你和伙伴们所在的指挥所
 protected:
 	Cell TEMP;
+	int LastAutoUpdateFrame;
+	IFooAPI& API;
+	void InitMap(IFooAPI& api);
+	const int UpdateInterval = 1;
+
 public:
 	// 这里有你们共享的信息
 	std::vector < std::vector <THUAI6::PlaceType> > Map;
 	unsigned char Access[50][50];
-	unsigned char Enemy[50][50];
+//	unsigned char Enemy[50][50];
 	std::vector<Cell> Classroom;
 	std::vector<Cell> Gate;
 	std::vector<Cell> HiddenGate;
 	std::vector<Cell> Chest;
 	std::vector<Cell> Grass;
 	std::vector<Doors> Door;
-	int ProgressMem[50][50];
+	int InfoMem[50][50];
 	int LastUpdateFrame[50][50];
-	int LastAutoUpdateFrame;
 
-	IFooAPI& API;
 	Geographer<IFooAPI> Alice;
 	Predictor<IFooAPI> Bob;
 	Pigeon<IFooAPI> Gugu;
@@ -212,11 +215,7 @@ public:
 	std::vector<THUAI6::PropType> Inventory;
 	static std::vector<unsigned char> PickPropPriority;
 	static std::vector<unsigned char> UsePropPriority;
-	const int UpdateInterval = 1;
 
-	void InitMap(IFooAPI& api);
-
-public:
 	CommandPost(IFooAPI& api);
 
 	void Update(MapUpdateInfo upinfo, int t_);						   // 更新地图信息，比如门和隐藏校门，需要约定info的格式
@@ -248,7 +247,7 @@ public:
 	void DirectUseProp(std::vector<unsigned char> Priority);
 
 	int CountFinishedClassroom() const;
-	int CountNonemptyChest() const; // TODO: 暂未实现
+	int CountNonemptyChest() const;
 	int CountHiddenGate() const;
 	int CountClosedGate() const;
 	int CountOpenGate() const;
@@ -1278,19 +1277,15 @@ bool CommandPost<IFooAPI>::MoveToNearestChest(bool WithWindows)
 	int minNum = -1;
 	int Distance = INT_MAX;
 	Cell Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
-	if (!Chest.empty())
+	for (int i = 0; i < Chest.size(); i++)
 	{
-		for (int i = 0; i < Chest.size(); i++)
+		if (GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
 		{
-			//			if (API.GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
-			if (GetChestProgress(Chest[i].x, Chest[i].y) < 10000000)
+			Distance = WithWindows ? Alice.AStarWithWindows(Self, Chest[i]).size() : Alice.AStarWithoutWindows(Self, Chest[i]).size();
+			if (Distance < minDistance && Distance != 0)
 			{
-				Distance = WithWindows ? Alice.AStarWithWindows(Self, Chest[i]).size() : Alice.AStarWithoutWindows(Self, Chest[i]).size();
-				if (Distance < minDistance && Distance != 0)
-				{
-					minDistance = Distance;
-					minNum = i;
-				}
+				minDistance = Distance;
+				minNum = i;
 			}
 		}
 	}
@@ -1471,7 +1466,7 @@ int CommandPost<IFooAPI>::CountFinishedClassroom() const
 	int cnt = 0;
 	for (auto i : Classroom)
 	{
-		if (ProgressMem[i.x][i.y] >= 10000000)
+		if (InfoMem[i.x][i.y] >= 10000000)
 			cnt++;
 	}
 	return cnt;
@@ -1483,7 +1478,7 @@ int CommandPost<IFooAPI>::CountNonemptyChest() const
 	int cnt = 0;
 	for (auto i : Chest)
 	{
-		if (ProgressMem[i.x][i.y] < 10000000)
+		if (InfoMem[i.x][i.y] < 10000000)
 			cnt++;
 	}
 	return cnt;
@@ -1624,7 +1619,7 @@ int CommandPost<IFooAPI>::GetChestProgress(int cellx, int celly)
 	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange))
 		return API.GetChestProgress(cellx, celly);
 	else
-		return ProgressMem[cellx][celly];
+		return InfoMem[cellx][celly];
 }
 
 template <typename IFooAPI>
@@ -1633,7 +1628,7 @@ int CommandPost<IFooAPI>::GetGateProgress(int cellx, int celly)
 	if (Alice.IsViewable((Grid(API.GetSelfInfo()->x, API.GetSelfInfo()->y)).ToCell(), Cell(cellx, celly), API.GetSelfInfo()->viewRange))
 		return API.GetGateProgress(cellx, celly);
 	else
-		return ProgressMem[cellx][celly];
+		return InfoMem[cellx][celly];
 }
 
 template <typename IFooAPI>
@@ -1642,7 +1637,7 @@ int CommandPost<IFooAPI>::GetClassroomProgress(int cellx, int celly)
 	if (Alice.IsViewable((Grid(API.GetSelfInfo()->x, API.GetSelfInfo()->y)).ToCell(), Cell(cellx, celly), API.GetSelfInfo()->viewRange))
 		return API.GetClassroomProgress(cellx, celly);
 	else
-		return ProgressMem[cellx][celly];
+		return InfoMem[cellx][celly];
 }
 
 template <typename IFooAPI>
@@ -1651,7 +1646,7 @@ int CommandPost<IFooAPI>::GetDoorProgress(int cellx, int celly)
 	if (IsViewable(cellx, celly, API.GetSelfInfo()->viewRange))
 		return API.GetDoorProgress(cellx, celly);
 	else
-		return ProgressMem[cellx][celly];
+		return InfoMem[cellx][celly];
 }
 
 template <typename IFooAPI>
@@ -1686,7 +1681,7 @@ void CommandPost<IFooAPI>::Update(MapUpdateInfo upinfo, int t_)
 	LastUpdateFrame[upinfo.x][upinfo.y] = t_;
 	if (upinfo.type == THUAI6::PlaceType::Chest || upinfo.type == THUAI6::PlaceType::ClassRoom || upinfo.type == THUAI6::PlaceType::Gate || upinfo.type == THUAI6::PlaceType::HiddenGate)
 	{
-		ProgressMem[upinfo.x][upinfo.y] = upinfo.val;
+		InfoMem[upinfo.x][upinfo.y] = upinfo.val;
 	}
 	else if (upinfo.type == THUAI6::PlaceType::Door3 || upinfo.type == THUAI6::PlaceType::Door5 || upinfo.type == THUAI6::PlaceType::Door6)
 	{
@@ -1735,9 +1730,9 @@ void CommandPostStudent::AutoUpdate()
 	{
 		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
 		{
-			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && InfoMem[it.x][it.y] < 10000000)
 			{
-				ProgressMem[it.x][it.y] = 10000000;
+				InfoMem[it.x][it.y] = 10000000;
 				Gugu.sendMapUpdate(0, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
 				Gugu.sendMapUpdate(1, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
 				Gugu.sendMapUpdate(2, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
@@ -1749,9 +1744,9 @@ void CommandPostStudent::AutoUpdate()
 	{
 		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
 		{
-			if (API.GetChestProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			if (API.GetChestProgress(it.x, it.y) >= 10000000 && InfoMem[it.x][it.y] < 10000000)
 			{
-				ProgressMem[it.x][it.y] = 10000000;
+				InfoMem[it.x][it.y] = 10000000;
 				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
 				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
 				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
@@ -1763,9 +1758,9 @@ void CommandPostStudent::AutoUpdate()
 	{
 		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
 		{
-			if (API.GetGateProgress(it.x, it.y) >= 18000 && ProgressMem[it.x][it.y] < 18000)
+			if (API.GetGateProgress(it.x, it.y) >= 18000 && InfoMem[it.x][it.y] < 18000)
 			{
-				ProgressMem[it.x][it.y] = 18000;
+				InfoMem[it.x][it.y] = 18000;
 				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
 				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
 				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
@@ -1850,7 +1845,7 @@ void CommandPostTricker::AutoUpdate()
 	LastAutoUpdateFrame = cntframe;
 	for (auto it : Door)
 	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		if (Alice.IsViewable(Grid(selfinfo->x, selfinfo->y).ToCell(), it, selfinfo->viewRange))
 		{
 			bool newDoor = false, checkopen = API.IsDoorOpen(it.x, it.y);
 			if (checkopen && Access[it.x][it.y] == 0U)
@@ -1876,11 +1871,11 @@ void CommandPostTricker::AutoUpdate()
 	}
 	for (auto it : Classroom)
 	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		if (Alice.IsViewable(Grid(selfinfo->x, selfinfo->y).ToCell(), it, selfinfo->viewRange))
 		{
-			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			if (API.GetClassroomProgress(it.x, it.y) >= 10000000 && InfoMem[it.x][it.y] < 10000000)
 			{
-				ProgressMem[it.x][it.y] = 10000000;
+				InfoMem[it.x][it.y] = 10000000;
 				Gugu.sendMapUpdate(0, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
 				Gugu.sendMapUpdate(1, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
 				Gugu.sendMapUpdate(2, THUAI6::PlaceType::ClassRoom, it.x, it.y, 10000000);
@@ -1890,11 +1885,11 @@ void CommandPostTricker::AutoUpdate()
 	}
 	for (auto it : Chest)
 	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		if (Alice.IsViewable(Grid(selfinfo->x, selfinfo->y).ToCell(), it, selfinfo->viewRange))
 		{
-			if (API.GetChestProgress(it.x, it.y) >= 10000000 && ProgressMem[it.x][it.y] < 10000000)
+			if (API.GetChestProgress(it.x, it.y) >= 10000000 && InfoMem[it.x][it.y] < 10000000)
 			{
-				ProgressMem[it.x][it.y] = 10000000;
+				InfoMem[it.x][it.y] = 10000000;
 				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
 				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
 				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Chest, it.x, it.y, 10000000);
@@ -1906,9 +1901,9 @@ void CommandPostTricker::AutoUpdate()
 	{
 		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
 		{
-			if (API.GetGateProgress(it.x, it.y) >= 18000 && ProgressMem[it.x][it.y] < 18000)
+			if (API.GetGateProgress(it.x, it.y) >= 18000 && InfoMem[it.x][it.y] < 18000)
 			{
-				ProgressMem[it.x][it.y] = 18000;
+				InfoMem[it.x][it.y] = 18000;
 				Gugu.sendMapUpdate(0, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
 				Gugu.sendMapUpdate(1, THUAI6::PlaceType::Gate, it.x, it.y, 18000);
 				Gugu.sendMapUpdate(2, THUAI6::PlaceType::Gate, it.x, it.y, 18000);

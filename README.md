@@ -54,9 +54,38 @@
 > - 门的开和锁；
 > - 隐藏校门出现。（未实现）
 
+- `std::vector<Cell> Classroom;`
+- `std::vector<Cell> Gate;`
+- `std::vector<Cell> HiddenGate;`
+- `std::vector<Cell> Chest;`
+- `std::vector<Cell> Grass;`
+- `std::vector<Doors> Door;`
+
+> 在CommandPost构造时确定，不会变更。储存了所有对应类型格子所在的坐标。（issue: 事实上Door的DoorStatus原意应当更新，但未实现，且可以被上面的Access替代。）
+
+- `int InfoMem[50][50];`
+
+> 随时更新。储存格子的值。可能储存了以下值：
+>
+> - 对于`Classroom`，储存了学习进度，取值`0~10000000`；
+> - 对于`Chest`，储存了开箱进度，取值`0~10000000`；
+> - 对于`Gate`，储存了开门进度，取值`0~18000`；
+> - 对于`HiddenGate`，应当储存开门进度，但未实现；
+> - 对于其他类型的地块，未定义。
+
+- `int LastUpdateFrame[50][50];`
+
+> 表示 `InfoMem` 中记录的信息的最近更新时间。在进行队内信息传输的更新时需要比较这个数组的值以确保 `InfoMem` 仅在得到最新的信息时才发生变化。如果是自己在当前帧可以直接获取的信息（可以直接看到），那么值应当为当前帧数。
+
+- `Geographer Alice;`
+- `Predictor Bob;`
+- `Pigeon Gugu;`
+
+> 三位专职。
+
 ### 构造函数
 
-- [ ] `CommandPost(IFooAPI &api);`
+- [x] `CommandPost(IFooAPI &api);`
 
 - [ ] `void Update(MapUpdateInfo upinfo, int t_);`			//更新地图信息，比如门和隐藏校门，需要约定info的格式
 - [ ] `std::vector<THUAI6::PropType> GetInventory() { return Inventory; }`	// 查看背包
@@ -64,22 +93,35 @@
 
 ### 移动
 
-- [ ] `bool MoveToAccurate(Cell Dest, bool WithWindows = true);`
-- [ ] `bool MoveTo(Cell Dest, bool WithWindows);`		// 往目的地动一动
-- [ ] `bool MoveToNearestClassroom(bool WithWindows);`	// 往最近的作业的方向动一动
-- [ ] `bool MoveToNearestGate(bool WithWindows);`		// 往最近的关闭的校门旁边动一动
-- [ ] `bool MoveToNearestOpenGate(bool WithWindows);`	// 往最近的开启的校门旁边动一动
-- [ ] `bool MoveToNearestChest(bool WithWindows);`		// 往最近的箱子的方向动一动
+- [x] `bool MoveTo(Cell Dest, bool WithWindows);`
+
+> 往目的地移动一次。`WithWindows` 决定路线是否经过窗。如果已经在目的地旁边就返回`false`，否则返回`true`。
+
+- [x] `bool MoveToNearestClassroom(bool WithWindows);`
+
+> 往最近的作业移动一次。`WithWindows` 决定路线是否经过窗。如果有没写完的作业就返回 `true`，否则返回 `false`。（issue: 需要利用MoveTo的返回值以防不能到达的情况，如果都不能到达也应当返回 `false`）
+
+- [x] `bool MoveToNearestGate(bool WithWindows);`
+
+> 往最近的关闭的校门移动一次。`WithWindows` 决定路线是否经过窗。如果有没开启的校门就返回 `true`，否则返回 `false`。（issue: 需要利用MoveTo的返回值以防不能到达的情况，如果都不能到达也应当返回 `false`）
+
+- [x] `bool MoveToNearestOpenGate(bool WithWindows);`
+
+> 往最近的开启的校门移动一次。`WithWindows` 决定路线是否经过窗。如果有开启的校门就返回 `true`，否则返回 `false`。（issue: 需要利用MoveTo的返回值以防不能到达的情况，如果都不能到达也应当返回 `false`）
+
+- [x] `bool MoveToNearestChest(bool WithWindows);`
+
+> 往最近的箱子移动一次。`WithWindows` 决定路线是否经过窗。如果有未开启的箱子就返回 `true`，否则返回 `false`。（issue: 需要利用MoveTo的返回值以防不能到达的情况，如果都不能到达也应当返回 `false`）
 
 ### 附近格子状态
 
 - [ ] `bool NearCell(Cell P, int level = 1);`         // level=0判断当前是否在该格子上，1判断是否在格子上或周围4格，2判断是否在格子上或周围8格
-- [ ] `bool NearClassroom(bool checkProgress);`							// 已经在作业旁边了吗？
-- [ ] `bool NearGate();`								// 已经在关闭的校门旁边了吗？
-- [ ] `bool NearOpenGate();`							// 已经在开启的校门旁边了吗？
-- [ ] `bool NearChest();`								// 已经在箱子旁边了吗？
-- [ ] `bool NearWindow();`								// 已经在窗户旁边了吗？
-- [ ] `bool InGrass();`									// 已经在草丛里了吗？
+- [x] `bool NearClassroom(bool checkProgress);`							// 已经在作业旁边了吗？
+- [x] `bool NearGate();`								// 已经在关闭的校门旁边了吗？
+- [x] `bool NearOpenGate();`							// 已经在开启的校门旁边了吗？
+- [x] `bool NearChest();`								// 已经在箱子旁边了吗？
+- [x] `bool NearWindow();`								// 已经在窗户旁边了吗？
+- [x] `bool InGrass();`									// 已经在草丛里了吗？
 
 ### 有目的地移动
 
@@ -94,8 +136,8 @@
 
 ### 实时计数及特定格子状态
 
-- [ ] `int CountFinishedClassroom() const;`
-- [ ] `int CountNonemptyChest() const;`
+- [x] `int CountFinishedClassroom() const;`
+- [x] `int CountNonemptyChest() const;`
 - [ ] `int CountHiddenGate() const;`
 - [ ] `int CountClosedGate() const;`
 - [ ] `int CountOpenGate() const;`
@@ -179,9 +221,7 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 `Geographer`主要处理寻路和复杂的地图信息。
 
-- [ ] `Geographer(IFooAPI& api, CommandPost<IFooAPI>& Center_);`
-
-`#if !USE_NEW_ASTAR`（不启用新寻路算法）
+- [x] `Geographer(IFooAPI& api, CommandPost<IFooAPI>& Center_);`
 
 - [ ] `bool IsValidWithoutWindows(int x, int y);`
 - [ ] `bool IsValidWithWindows(int x, int y);`
@@ -191,12 +231,6 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 - [ ] `std::vector<Node> AStarWithoutWindows(Node src, Node dest);`
 - [ ] `std::vector<Node> AStarWithWindows(Node src, Node dest);`
 - [ ] `int EstimateTime(Cell Dest);`					// 去目的地的预估时间
-
-`#else`（启用新寻路算法）
-
-- [ ] `std::vector<Geop> FindPath(Geop From_, Geop Dest_);`
-
-`#endif`
 
 - [ ] `bool IsViewable(Cell Src, Cell Dest, int ViewRange);`			// 判断两个位置是否可视
 
@@ -242,3 +276,7 @@ Not implemented.
 - [ ] MoveToNearest等函数中调用AStarWithWindows(AStarWithoutWindows)次数太多导致卡顿。考虑用Alice.BackwardExpand优化。可以选择在AutoUpdate中调用BackwardExpand得到预处理的EstimateTime。
 - [ ] AStarWithWindows(AStarWithoutWindows)出现单次运行卡顿的情况。
 - [ ] AStarWithWindows(AStarWithoutWindows)频繁报错。
+- [ ] AStarWithWindows(AStarWithoutWindows)可能没有处理找不到路的情况。建议用异常处理，在找不到通路时throw一个异常。
+- [ ] MoveTo系列的函数在调用MoveTo时没有利用其返回值。
+- [ ] CommandPost::Door的DoorStatus本应更新但未实现，且可以被Access替代。
+- [ ] MoveTo系列在判断是否需要走的时候依然使用了诸如`!Classroom.empty()`的方式，然而在目前的实现下，`Classroom`等数组不会变更内容。
