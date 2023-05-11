@@ -23,7 +23,9 @@ const double PI = acos(-1);
 
 class Cell; // 格子 0~49
 class Grid; // 像素 0~49999
+#if USE_NEW_ASTAR
 class Geop; // 实坐标 R
+#endif
 class Cell
 {
 public:
@@ -31,7 +33,9 @@ public:
 	Cell();
 	Cell(int x_, int y_);
 	Grid ToGrid();
+#if USE_NEW_ASTAR
 	Geop ToGeop();
+#endif
 };
 class Grid
 {
@@ -40,8 +44,11 @@ public:
 	Grid();
 	Grid(int x_, int y_);
 	Cell ToCell();
+#if USE_NEW_ASTAR
 	Geop ToGeop();
+#endif
 };
+#if USE_NEW_ASTAR
 class Geop
 {
 public:
@@ -51,16 +58,19 @@ public:
 	Cell ToCell();
 	Grid ToGrid();
 };
+#endif
 Cell::Cell() : x(0), y(0) {}
 Cell::Cell(int x_, int y_) : x(x_), y(y_) {}
 Grid Cell::ToGrid() { return Grid(x * 1000 + 500, y * 1000 + 500); }
-Geop Cell::ToGeop() { return Geop(x * 1000 + 500, y * 1000 + 500); }
 Grid::Grid() : x(0), y(0) {}
 Grid::Grid(int x_, int y_) : x(x_), y(y_) {}
 Cell Grid::ToCell() { return Cell(x / 1000, y / 1000); }
+
+#if USE_NEW_ASTAR
 Geop::Geop() : x(0), y(0) {}
-Geop Grid::ToGeop() { return Geop(x, y); }
 Geop::Geop(double x_, double y_) : x(x_), y(y_) {}
+Geop Cell::ToGeop() { return Geop(x * 1000 + 500, y * 1000 + 500); }
+Geop Grid::ToGeop() { return Geop(x, y); }
 Cell Geop::ToCell() { return Cell((int)x / 1000, (int)y / 1000); }
 Grid Geop::ToGrid() { return Grid((int)x, (int)y); }
 double Distance(Geop A, Geop B)
@@ -113,6 +123,7 @@ bool Intersect(Geos A, Geos B)
 		return true;
 	return false;
 }
+#endif
 
 //*****************************************************
 // #Information
@@ -178,7 +189,7 @@ protected:
 	Cell TEMP;
 public:
 	// 这里有你们共享的信息
-	unsigned char Map[50][50];
+	std::vector < std::vector <THUAI6::PlaceType> > Map;
 	unsigned char Access[50][50];
 	unsigned char Enemy[50][50];
 	std::vector<Cell> Classroom;
@@ -903,38 +914,38 @@ void CommandPost<IFooAPI>::InitMap(IFooAPI& api)
 	{
 		for (j = 0; j < 50; j++)
 		{
-			Map[i][j] = (unsigned char)api.GetPlaceType(i, j);
+			Map = api.GetFullMap();
 			switch (Map[i][j])
 			{
-			case 2U: // Wall
+			case THUAI6::PlaceType::Wall: // Wall
 				Access[i][j] = 0U;
 				break;
-			case 3U: // Grass
+			case THUAI6::PlaceType::Grass: // Grass
 				Access[i][j] = 3U;
 				Grass.emplace_back(Cell(i, j));
 				break;
-			case 7U: // Window
+			case THUAI6::PlaceType::Window: // Window
 				Access[i][j] = 1U;
 				break;
-			case 8U:  // Door3
-			case 9U:  // Door5
-			case 10U: // Door6
+			case THUAI6::PlaceType::Door3:  // Door3
+			case THUAI6::PlaceType::Door5:  // Door5
+			case THUAI6::PlaceType::Door6: // Door6
 				Access[i][j] = 2U;
 				Door.emplace_back(Cell(i, j), true, api.GetPlaceType(i, j));
 				break;
-			case 4U: // Classroom
+			case THUAI6::PlaceType::ClassRoom: // Classroom
 				Access[i][j] = 0U;
 				Classroom.emplace_back(Cell(i, j));
 				break;
-			case 5U: // Gate
+			case THUAI6::PlaceType::Gate: // Gate
 				Access[i][j] = 0U;
 				Gate.emplace_back(Cell(i, j));
 				break;
-			case 6U: // HiddenGate
+			case THUAI6::PlaceType::HiddenGate: // HiddenGate
 				Access[i][j] = 0U;
 				HiddenGate.emplace_back(Cell(i, j));
 				break;
-			case 11U: // Chest
+			case THUAI6::PlaceType::Chest: // Chest
 				Access[i][j] = 0U;
 				Chest.emplace_back(Cell(i, j));
 				break;
@@ -1025,7 +1036,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		}
 		int dx = tx - sx;
 		int dy = ty - sy;
-		if (Map[tx / 1000][ty / 1000] != 7U)
+		if (Map[tx / 1000][ty / 1000] != THUAI6::PlaceType::Window)
 		{
 			if (!IsStuck)
 			{
@@ -1319,7 +1330,7 @@ bool CommandPost<IFooAPI>::NearWindow()
 template <typename IFooAPI>
 bool CommandPost<IFooAPI>::InGrass()
 {
-	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->x / 1000] == 3U)
+	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->x / 1000] == THUAI6::PlaceType::Grass)
 	{
 		return true;
 	}
@@ -1988,9 +1999,9 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 	int deltaX = (Dest.x - Src.x) * 1000;
 	int deltaY = (Dest.y - Src.y) * 1000;
 	int Distance = deltaX * deltaX + deltaY * deltaY;
-	unsigned char SrcType = this->Center.Map[Src.x][Src.y];
-	unsigned char DestType = this->Center.Map[Dest.x][Dest.y];
-	if (DestType == 3U && SrcType != 3U) // 草丛外必不可能看到草丛内
+	auto SrcType = this->Center.Map[Src.x][Src.y];
+	auto DestType = this->Center.Map[Dest.x][Dest.y];
+	if (DestType == THUAI6::PlaceType::Grass && SrcType != THUAI6::PlaceType::Grass) // 草丛外必不可能看到草丛内
 		return false;
 	if (Distance < ViewRange * ViewRange)
 	{
@@ -2001,12 +2012,12 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 		double dy = deltaY / divide;
 		double myX = double(Src.x * 1000);
 		double myY = double(Src.y * 1000);
-		if (DestType == 3U && SrcType == 3U) // 都在草丛内，要另作判断
+		if (DestType == THUAI6::PlaceType::Grass && SrcType == THUAI6::PlaceType::Grass) // 都在草丛内，要另作判断
 			for (int i = 0; i < divide; i++)
 			{
 				myX += dx;
 				myY += dy;
-				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] != 3U)
+				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] != THUAI6::PlaceType::Grass)
 					return false;
 			}
 		else // 不在草丛内，只需要没有墙即可
@@ -2014,7 +2025,7 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 			{
 				myX += dx;
 				myY += dy;
-				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] == 2U)
+				if (this->Center.Map[(int)myX / 1000][(int)myY / 1000] == THUAI6::PlaceType::Wall)
 					return false;
 			}
 		return true;

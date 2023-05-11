@@ -34,6 +34,23 @@
 
 ## 1 CommandPost 指挥所
 
+### 可访问的类对象
+
+- `vector<vector<THUAI6::PlaceType>> Map;`
+
+> 50x50的数组，在CommandPost构造时确定，储存内容与api.GetFullMap()完全一致。
+
+- `unsigned char Access[50][50];`
+
+> 随时更新。储存了所有格子的可访问性。有四个取值：
+> - `0U` 表示不可进入的格子；
+> - `1U` 表示窗；
+> - `2U` 表示可进入的格子（非草地）；
+> - `3U` 表示草地。 
+> 可能导致变化产生的更新内容包括：
+> - 门的开和锁；
+> - 隐藏校门出现。（未实现）
+
 ### 构造函数
 
 - [ ] `CommandPost(IFooAPI &api);`
