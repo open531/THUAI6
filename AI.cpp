@@ -979,7 +979,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	std::vector<unsigned char> AccessTempT;
 	for (int i = 0; i < TempS.size(); i++)
 	{
-		if ((TempS[i]->x / 1000 != sx / 1000) && (TempS[i]->y / 1000 != sy / 1000))
+		if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
 		{
 			AccessTempS.emplace_back(Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000]);
 			Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = 0U;
@@ -987,7 +987,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	}
 	for (int i = 0; i < TempT.size(); i++)
 	{
-		if ((TempT[i]->x / 1000 != sx / 1000) && (TempT[i]->y / 1000 != sy / 1000))
+		if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
 		{
 			AccessTempT.emplace_back(Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000]);
 			Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = 0U;
@@ -1003,7 +1003,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	{
 		for (int i = 0, j = 0; i < TempS.size(); i++)
 		{
-			if ((TempS[i]->x / 1000 != sx / 1000) && (TempS[i]->y / 1000 != sy / 1000))
+			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
 			{
 				Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
 				j++;
@@ -1011,7 +1011,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		}
 		for (int i = 0, j = 0; i < TempT.size(); i++)
 		{
-			if ((TempT[i]->x / 1000 != sx / 1000) && (TempT[i]->y / 1000 != sy / 1000))
+			if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
 			{
 				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
 				j++;
@@ -1028,7 +1028,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		}
 		else
 		{
-			if (UsablePath.size() >= 3 && IsAccessible(sx / 1000, sy / 1000, WithWindows) && IsAccessible(UsablePath[1].x, UsablePath[1].y, WithWindows) && IsAccessible(UsablePath[2].x, UsablePath[2].y, WithWindows) && IsAccessible(sx / 1000, UsablePath[2].y, WithWindows) && IsAccessible(UsablePath[2].x, sy / 1000, WithWindows))
+			if (UsablePath.size() >= 3 && IsAccessible(sx / 1000, sy / 1000, WithWindows) && IsAccessible(UsablePath[1].x, UsablePath[1].y, WithWindows) && IsAccessible(UsablePath[2].x, UsablePath[2].y, false) && IsAccessible(sx / 1000, UsablePath[2].y, WithWindows) && IsAccessible(UsablePath[2].x, sy / 1000, WithWindows))
 			{
 				tx = UsablePath[2].x * 1000 + 500;
 				ty = UsablePath[2].y * 1000 + 500;
@@ -1055,7 +1055,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			TEMP.y = sy;
 			for (int i = 0, j = 0; i < TempS.size(); i++)
 			{
-				if ((TempS[i]->x / 1000 != sx / 1000) && (TempS[i]->y / 1000 != sy / 1000))
+				if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
 				{
 					Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
 					j++;
@@ -1063,7 +1063,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			}
 			for (int i = 0, j = 0; i < TempT.size(); i++)
 			{
-				if ((TempT[i]->x / 1000 != sx / 1000) && (TempT[i]->y / 1000 != sy / 1000))
+				if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
 				{
 					Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
 					j++;
@@ -1433,17 +1433,18 @@ void CommandPost<IFooAPI>::DirectGrass(bool WithWindows)
 template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows)
 {
-	if (!(InGrass() && Alice.IsViewable(TrickerLocation, Cell(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange)))
+	Cell Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
+	bool t = Alice.IsViewable(TrickerLocation, Self, TrickerViewRange);
+	if (!InGrass() && Alice.IsViewable(TrickerLocation, Self, TrickerViewRange))
 	{
 		int minDistance = INT_MAX;
 		int minNum = -1;
 		int Distance = INT_MAX;
-		Cell Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 		if (!Grass.empty())
 		{
 			for (int i = 0; i < Grass.size(); i++)
 			{
-				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25 && !Alice.IsViewable(TrickerLocation, Cell(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000), TrickerViewRange))
+				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25 && !Alice.IsViewable(TrickerLocation, Self, TrickerViewRange))
 				{
 					Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
 					if (Distance < minDistance && Distance != 0)
@@ -1592,7 +1593,7 @@ void CommandPost<IFooAPI>::DirectProp(std::vector<unsigned char> Priority, int D
 		{
 			if (!NearCell(Cell(ViewableProps[MaxNum]->x / 1000, ViewableProps[MaxNum]->y / 1000), 0))
 			{
-				MoveTo(Cell(ViewableProps[MaxNum]->x / 1000, ViewableProps[MaxNum]->y / 1000), WithWindows);
+				MoveTo(Grid(ViewableProps[MaxNum]->x, ViewableProps[MaxNum]->y).ToCell(), WithWindows);
 			}
 			else
 			{
@@ -1710,9 +1711,10 @@ void CommandPostStudent::AutoUpdate()
 	LastAutoUpdateFrame = cntframe;
 	for (auto it : Door)
 	{
-		if (Alice.IsViewable(Cell(selfinfo->x / 1000, selfinfo->y / 1000), it, selfinfo->viewRange))
+		if (Alice.IsViewable(Grid(selfinfo->x, selfinfo->y).ToCell(), it, selfinfo->viewRange))
 		{
 			bool newDoor = false, checkopen = API.IsDoorOpen(it.x, it.y);
+//			assert(checkopen);
 			if (checkopen && Access[it.x][it.y] == 0U)
 			{
 				newDoor = true;
@@ -1846,6 +1848,7 @@ double CommandPostStudent::SunshineInspireCD()
 
 void CommandPostTricker::AutoUpdate()
 {
+	std::cerr << "AutoUpdateBegin" << std::endl;
 	int cntframe = API.GetFrameCount();
 	if (cntframe - LastAutoUpdateFrame < UpdateInterval)
 		return;
@@ -1921,6 +1924,7 @@ void CommandPostTricker::AutoUpdate()
 	}
 
 	Bob.AutoUpdate();
+	std::cerr << "AutoUpdateEnd" << std::endl;
 }
 
 void CommandPostTricker::AssassinDefaultAttack(int stux, int stuy) // 传入学生坐标
@@ -1999,6 +2003,7 @@ int Geographer<IFooAPI>::EstimateTime(Cell Dest)
 template <typename IFooAPI>
 bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 {
+//	std::cerr << "asking " << Src.x << ' ' << Src.y << ' ' << Dest.x << ' ' << Dest.y << std::endl;
 	int deltaX = (Dest.x - Src.x) * 1000;
 	int deltaY = (Dest.y - Src.y) * 1000;
 	int Distance = deltaX * deltaX + deltaY * deltaY;
@@ -2013,8 +2018,8 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 			return true;
 		double dx = deltaX / divide;
 		double dy = deltaY / divide;
-		double myX = double(Src.x * 1000);
-		double myY = double(Src.y * 1000);
+		double myX = double(Src.x * 1000+500);
+		double myY = double(Src.y * 1000+500);
 		if (DestType == THUAI6::PlaceType::Grass && SrcType == THUAI6::PlaceType::Grass) // 都在草丛内，要另作判断
 			for (int i = 0; i < divide; i++)
 			{
@@ -2036,6 +2041,17 @@ bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 	else
 		return false;
 }
+
+/*
+#include "utils.hpp"
+
+template <typename IFooAPI>
+bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
+{
+	auto x = this->API.GetFullMap();
+	return AssistFunction::HaveView(ViewRange, Src.ToGrid().x, Src.ToGrid().y, Dest.ToGrid().x, Dest.ToGrid().y, x);
+}
+*/
 
 #if !USE_NEW_ASTAR
 
@@ -2063,7 +2079,7 @@ std::vector<Node> Geographer<IFooAPI>::MakePath(const std::array<std::array<Node
 	std::vector<Node> UsablePath;
 	while (!(x == -1 || y == -1))
 	{
-		std::cerr << x << ' ' << y << std::endl;
+//		std::cerr << x << ' ' << y << std::endl;
 		UsablePath.push_back(map[x][y]);
 		int tempX = x;
 		int tempY = y;
@@ -2077,7 +2093,7 @@ std::vector<Node> Geographer<IFooAPI>::MakePath(const std::array<std::array<Node
 template <typename IFooAPI>
 std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindows)
 {
-	std::cerr << "Start AStar" << std::endl;
+//	std::cerr << "Start AStar " << src.x << ' ' << src.y << ' ' << dest.x << ' ' << dest.y << std::endl;
 	std::vector<Node> empty;
 	// if (IsValidWithWindows(dest.x, dest.y) == false)
 	//{
@@ -2113,7 +2129,7 @@ std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindo
 	std::vector<Node> OpenList;
 	OpenList.emplace_back(AStarMap[x][y]);
 	bool FoundDest = false;
-	while (!OpenList.empty() && OpenList.size() < 50 * 50)
+	while (!OpenList.empty())// && OpenList.size() < 50 * 50)
 	{
 		Node node;
 		{
@@ -2135,6 +2151,7 @@ std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindo
 		if (this->Center.IsAccessible(node.x, node.y, WithWindows) == false) continue;
 		x = node.x;
 		y = node.y;
+//		std::cerr << x << ' ' << y << std::endl;
 		ClosedList[x][y] = true;
 		for (int newX = -1; newX <= 1; newX++)
 		{
@@ -2149,6 +2166,7 @@ std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindo
 					FoundDest = true;
 					return MakePath(AStarMap, dest);
 				}
+//				if (x + newX == 19 && y + newY == 27) std::cerr << "ALARM" << this->Center.IsAccessible(x+newX,y+newY,WithWindows) << std::endl;
 				if (!(this->Center.IsAccessible(x + newX, y + newY, WithWindows))) continue;
 				double gNew, hNew, fNew;
 				if (ClosedList[x + newX][y + newY] == false)
@@ -2170,9 +2188,17 @@ std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindo
 			}
 		}
 	}
-	std::cerr << "End AStar" << std::endl;
+//	std::cerr << "End AStar" << std::endl;
 	if (FoundDest == false)
+	{
+		for (int i = 0; i < 50; i++) {
+			for (int j = 0; j < 50; j++)
+				std::cerr << ClosedList[i][j] ? 'X' : '.';
+			std::cerr << std::endl;
+		}
+//		Sleep(1000000);
 		throw noway_exception();
+	}
 }
 
 template <typename IFooAPI>
@@ -2684,21 +2710,30 @@ void AI::play(IStudentAPI& api)
 	int MessageType;
 	while ((MessageType = Center.Gugu.receiveMessage()) != NoMessage)
 	{
-		std::cerr << "MessageType = " << MessageType << std::endl;
+//		std::cerr << "MessageType = " << MessageType << std::endl;
 		if (MessageType == MapUpdate)
 		{
 			auto ms = Center.Gugu.receiveMapUpdate();
-			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
-			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
+//			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
+//			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
 			Center.Update(ms.second, ms.first);
 		}
 	}
-	std::cerr << "[FinishedClassroom]" << Center.CountFinishedClassroom() << std::endl;
-	std::cerr << "[OpenGate]" << Center.CountOpenGate() << std::endl;
-	for (int i = 0; i < Center.Gate.size(); i++)
+//	std::cerr << "[FinishedClassroom]" << Center.CountFinishedClassroom() << std::endl;
+//	std::cerr << "[OpenGate]" << Center.CountOpenGate() << std::endl;
+//	for (int i = 0; i < Center.Gate.size(); i++)
+//	{
+//		std::cerr << "[Gate" << i << "]" << api.GetGateProgress(Center.Gate[i].x, Center.Gate[i].y) << std::endl;
+//	}
+	/*
+	for (int i = 0; i < 50; i++)
 	{
-		std::cerr << "[Gate" << i << "]" << api.GetGateProgress(Center.Gate[i].x, Center.Gate[i].y) << std::endl;
+		for (int j = 0; j < 50; j++)
+			std::cerr << (int)Center.Access[i][j];
+		std::cerr << std::endl;
 	}
+	*/
+//	for (auto d : Center.Door) std::cerr << "ALARM " << d.x << ' ' << d.y << ' ' << api.IsDoorOpen(d.x, d.y) << ' ' << Center.Alice.IsViewable(Grid(api.GetSelfInfo()->x, api.GetSelfInfo()->y).ToCell(), d, api.GetSelfInfo()->viewRange) << std::endl;
 
 	// 公共操作
 	if (this->playerID == 0)
@@ -2750,7 +2785,7 @@ void AI::play(IStudentAPI& api)
 		case sFleeing:
 			if (!triinfo.empty())
 			{
-				Center.DirectHide(Cell(triinfo[0]->x, triinfo[0]->y), triinfo[0]->viewRange, Center.NearCell(Cell(triinfo[0]->x, triinfo[0]->y), 4) ? 1 : 0);
+				Center.DirectHide(Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), triinfo[0]->viewRange, Center.NearCell(Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), 4) ? 1 : 0);
 			}
 			else
 			{
@@ -2806,12 +2841,15 @@ void AI::play(IStudentAPI& api)
 			}
 			break;
 		case sFleeing:
+//			std::cerr << "IMHERE";
 			if (!triinfo.empty())
 			{
-				Center.DirectHide(Cell(triinfo[0]->x, triinfo[0]->y), triinfo[0]->viewRange, Center.NearCell(Cell(triinfo[0]->x, triinfo[0]->y), 4) ? 1 : 0);
+//				std::cerr << "IMHERE1";
+				Center.DirectHide(Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), triinfo[0]->viewRange, Center.NearCell(Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), 4) ? 1 : 0);
 			}
 			else
 			{
+//				std::cerr << "IMHERE2";
 				Center.DirectGrass(1);
 			}
 			break;
@@ -3305,13 +3343,13 @@ void AI::play(ITrickerAPI& api)
 	//	Center.MoveTo(Cell(41, 9), true);
 	//	return;
 	Center.AutoUpdate();
-	int ccnt = api.GetFrameCount();
-	Cell find2 = Center.Bob.Recommend((ccnt/400)%4).first;
-	ccnt++;
-	Center.Bob._display((ccnt / 400) % 4);
-	std::cerr << "FINDING " << ((ccnt / 400) % 4);
-	Center.MoveTo(find2, true);
-	return;
+//	int ccnt = api.GetFrameCount();
+//	Cell find2 = Center.Bob.Recommend((ccnt/400)%4).first;
+//	ccnt++;
+//	Center.Bob._display((ccnt / 400) % 4);
+//	std::cerr << "FINDING " << ((ccnt / 400) % 4);
+//	Center.MoveTo(find2, true);
+//	return;
 
 	auto stuinfo = api.GetStudents();
 
@@ -3329,10 +3367,12 @@ void AI::play(ITrickerAPI& api)
 		}
 	}
 	static bool ChaseIt = false;
-	static Grid ChaseDest;
+	static int ChaseID = -1;
 
+	std::cerr << "UseSkillBegin" << std::endl;
 	if (!Center.AssassinBecomeInvisibleCD()) Center.AssassinBecomeInvisible();
 	if (!Center.AssassinFlyingKnifeCD()) api.UseSkill(1);
+	std::cerr << "UseSkillEnd" << std::endl;
 
 	switch (CurrentState)
 	{
@@ -3355,10 +3395,19 @@ void AI::play(ITrickerAPI& api)
 	case sChasePlayer:
 		if (haveNonAddictedStudent)
 			CurrentState = sAttackPlayer;
-		else if (Center.NearCell(ChaseDest.ToCell(), 2))
+//		else if (Center.NearCell(ChaseDest.ToCell(), 2))
+		else
 		{
-			ChaseIt = false;
-			CurrentState = sDefault;
+			for (auto stu : api.GetStudents())
+			{
+				if (stu->playerID == ChaseID && stu->playerState == THUAI6::PlayerState::Addicted)
+				{
+					ChaseIt = false;
+					ChaseID = -1;
+					CurrentState = sDefault;
+					break;
+				}
+			}
 		}
 		break;
 	}
@@ -3408,7 +3457,8 @@ void AI::play(ITrickerAPI& api)
 		std::cerr << "See student " << stuinfo.size() << std::endl;
 		std::cerr << "Decide to attack " << stuinfo[nonAddictedId]->playerID << std::endl;
 		ChaseIt = true;
-		ChaseDest = Grid(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
+//		ChaseDest = Grid(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
+		ChaseID = stuinfo[nonAddictedId]->playerID;
 		if (abs(api.GetSelfInfo()->x - stuinfo[nonAddictedId]->x) + abs(api.GetSelfInfo()->y - stuinfo[nonAddictedId]->y) < 2000)
 		{
 			Center.AssassinDefaultAttack(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
@@ -3422,7 +3472,8 @@ void AI::play(ITrickerAPI& api)
 		break;
 	case sChasePlayer:
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
-		Center.MoveTo(ChaseDest.ToCell(), true);
+//		Center.MoveTo(ChaseDest.ToCell(), true);
+		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, true);
 		break;
 	}
 }
