@@ -661,8 +661,8 @@ void Predictor<IFooAPI>::SaveClassVolumeLog(int maxNum)
 template <typename IFooAPI>
 Cell Predictor<IFooAPI>::SmartRecommend()
 {
-	int x = this->API.GetSelfInfo()->x/1000;
-	int y = this->API.GetSelfInfo()->y/1000;
+	int x = this->API.GetSelfInfo()->x / 1000;
+	int y = this->API.GetSelfInfo()->y / 1000;
 	int dist[50][50];
 	Cell pos;
 	double value = -1;
@@ -3237,6 +3237,15 @@ void AI::play(IStudentAPI& api)
 		//		CurrentState = sDefault;
 		//	}
 		//	break;
+			//case sChasePlayer:
+			//	if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
+			//		CurrentState = sAttackPlayer;
+			//	else
+			//	{
+			//		/*ChaseIt = false;*/
+			//		CurrentState = sDefault;
+			//	}
+			//	break;
 		}
 
 		switch (CurrentState)
@@ -3246,6 +3255,7 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sFindPlayer:
 			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5)&&!Center.NearCell(Bef_stu,1))
+			/*if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5) && !Center.NearCell(Bef_stu, 3))*/
 				Center.MoveTo(Bef, true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			for (int i = 0; i < 10; i++)
@@ -3305,7 +3315,7 @@ void AI::play(IStudentAPI& api)
 					/*Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);*/
 					if (Center.NearCell(ChaseDest.ToCell(), 5))
 						Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);
-						/*Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);*/
+					/*Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);*/
 					else
 						Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 				}
@@ -3356,6 +3366,15 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sDefault;
 			}
 			break;*/
+			/*case sChasePlayer:
+				std::cerr << "CurrentState: sChasePlayer" << std::endl;
+				Center.MoveTo(ChaseDest.ToCell(), true);
+				if (Center.NearCell(ChaseDest.ToCell(), 3))
+				{
+					ChaseIt = false;
+					CurrentState = sDefault;
+				}
+				break;*/
 		}
 		// 玩家2执行操作
 	}
@@ -3534,7 +3553,7 @@ void AI::play(IStudentAPI& api)
 		case sDoClassroom:
 			std::cerr << "CurrentState: sDoClassroom" << std::endl;//常规状态下，sunshine随学霸（playerID=1）运动
 			Center.Gugu.sendRescue(2, false);
-			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y)>=25000000)
+			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) >= 25000000)
 			{
 				Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
 			}
@@ -3598,6 +3617,7 @@ void AI::play(ITrickerAPI& api)
 	static bool visitClassroom[10];
 	static bool visitClassroomUpdated[10];
 	static int countVisitedClassroom = 0;
+	static int countAttackGrass = 0;
 	std::cerr << "[visitClassroom]";
 	for (int i = 0; i < 10; i++)std::cerr << visitClassroom[i];
 	std::cerr << std::endl;
@@ -3690,64 +3710,64 @@ void AI::play(ITrickerAPI& api)
 		break;
 	case sFindPlayer:
 		std::cerr << "CurrentState: sFindPlayer" << std::endl;
-/*
-		for (int i = 0; i < 10; i++)
-			if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
-			{
-				visitClassroom[i] = true;
-				// countVisitedClassroom++;
-			}
-		for (int i = 0; i < 10; i++)
-		{
-			if (visitClassroom[i] && !visitClassroomUpdated[i])
-			{
-				countVisitedClassroom++;
-				visitClassroomUpdated[i] = true;
-			}
-		}
-		if (countVisitedClassroom == 10)
-		{
-			for (int i = 0; i < 10; i++)
-			{
-				visitClassroom[i] = false;
-				visitClassroomUpdated[i] = false;
-			}
-			countVisitedClassroom = 0;
-		}
-		{
-			int minDistance = INT_MAX;
-			int minNum = -1;
-			int Distance = INT_MAX;
-			Cell Self(self->x / 1000, self->y / 1000);
-			if (!Center.Classroom.empty())
-			{
-				for (int i = 0; i < Center.Classroom.size(); i++)
-				{
-					//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
-					if (Center.GetClassroomProgress(Center.Classroom[i].x, Center.Classroom[i].y) < 10000000)
+		/*
+				for (int i = 0; i < 10; i++)
+					if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
 					{
-						try
-						{
-							Distance = Center.Alice.AStar(Self, Center.Classroom[i], 1).size();
-							if (Distance < minDistance && Distance != 0 && !visitClassroom[i])
-							{
-								minDistance = Distance;
-								minNum = i;
-							}
-						}
-						catch (const noway_exception& e)
-						{
-							std::cerr << "[noway_exception]Noway." << std::endl;
-						}
+						visitClassroom[i] = true;
+						// countVisitedClassroom++;
+					}
+				for (int i = 0; i < 10; i++)
+				{
+					if (visitClassroom[i] && !visitClassroomUpdated[i])
+					{
+						countVisitedClassroom++;
+						visitClassroomUpdated[i] = true;
 					}
 				}
-			}
-			if (minNum >= 0)
-			{
-				Center.MoveTo(Center.Classroom[minNum], 1);
-				break;
-			}
-		}*/
+				if (countVisitedClassroom == 10)
+				{
+					for (int i = 0; i < 10; i++)
+					{
+						visitClassroom[i] = false;
+						visitClassroomUpdated[i] = false;
+					}
+					countVisitedClassroom = 0;
+				}
+				{
+					int minDistance = INT_MAX;
+					int minNum = -1;
+					int Distance = INT_MAX;
+					Cell Self(self->x / 1000, self->y / 1000);
+					if (!Center.Classroom.empty())
+					{
+						for (int i = 0; i < Center.Classroom.size(); i++)
+						{
+							//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
+							if (Center.GetClassroomProgress(Center.Classroom[i].x, Center.Classroom[i].y) < 10000000)
+							{
+								try
+								{
+									Distance = Center.Alice.AStar(Self, Center.Classroom[i], 1).size();
+									if (Distance < minDistance && Distance != 0 && !visitClassroom[i])
+									{
+										minDistance = Distance;
+										minNum = i;
+									}
+								}
+								catch (const noway_exception& e)
+								{
+									std::cerr << "[noway_exception]Noway." << std::endl;
+								}
+							}
+						}
+					}
+					if (minNum >= 0)
+					{
+						Center.MoveTo(Center.Classroom[minNum], 1);
+						break;
+					}
+				}*/
 		Center.MoveTo(Center.Bob.SmartRecommend(), 1);
 		break;
 	case sAttackPlayer:
@@ -3773,7 +3793,23 @@ void AI::play(ITrickerAPI& api)
 	case sChasePlayer:
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
-		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, 0);
+
+		if (self->trickDesire >= 8 && Center.Map[Center.Bob.Recommend(ChaseID).first.x][Center.Bob.Recommend(ChaseID).first.y] == THUAI6::PlaceType::Grass && Center.NearCell(Center.Bob.Recommend(ChaseID).first))
+		{
+			if (countAttackGrass <= 3)
+			{
+				Center.KleeDefaultAttack(Center.Bob.Recommend(ChaseID).first.x * 1000 + 500, Center.Bob.Recommend(ChaseID).first.y * 1000 + 500);
+				countAttackGrass++;
+			}
+			else
+			{
+				CurrentState = sFindPlayer;
+			}
+		}
+		else
+		{
+			Center.MoveTo(Center.Bob.Recommend(ChaseID).first, 0);
+		}
 		break;
 	}
 }
