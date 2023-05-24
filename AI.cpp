@@ -396,7 +396,7 @@ public:
 	void sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val);
 	void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);
 	void sendNeedHelp(int64_t dest, NeedHelpInfo self);
-	void sendRescue(int64_t dest,bool rescue);
+	void sendRescue(int64_t dest, bool rescue);
 
 	int receiveMessage(); // ���ؽ��յ�����Ϣ����
 	std::pair<int, MapUpdateInfo> receiveMapUpdate();
@@ -819,7 +819,7 @@ std::pair<int, int> Pigeon<IFooAPI>::receiveNeedHelp()
 }
 
 template <typename IFooAPI>
-void Pigeon<IFooAPI>::sendRescue(int64_t dest,bool rescue)
+void Pigeon<IFooAPI>::sendRescue(int64_t dest, bool rescue)
 {
 	Encoder enc;
 	enc.SetHeader(Rescue);
@@ -831,7 +831,7 @@ template <typename IFooAPI>
 bool Pigeon<IFooAPI>::receiveRescue()
 {
 	Decoder dec(buf);
-	char header= dec.ReadInfo<char>();
+	char header = dec.ReadInfo<char>();
 	assert(header == Rescue);
 	return dec.ReadInfo<bool>();
 }
@@ -987,6 +987,8 @@ CommandPost<IFooAPI>::CommandPost(IFooAPI& api) : API(api), LastAutoUpdateFrame(
 	InitMap(api);
 }
 
+#define ACCESS_TEMP 1
+
 #if !USE_NEW_ASTAR
 template <typename IFooAPI>
 bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
@@ -999,6 +1001,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	std::vector<std::shared_ptr<const THUAI6::Tricker>> TempT = API.GetTrickers();
 	std::vector<unsigned char> AccessTempS;
 	std::vector<unsigned char> AccessTempT;
+#if ACCESS_TEMP
 	for (int i = 0; i < TempS.size(); i++)
 	{
 		if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
@@ -1015,6 +1018,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = 0U;
 		}
 	}
+#endif
 	std::vector<Node> UsablePath;
 	try
 	{
@@ -1023,6 +1027,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	catch (const noway_exception& e)
 	{
 		std::cerr << "[noway_exception](MoveTo)Noway." << std::endl;
+#if ACCESS_TEMP
 		for (int i = 0, j = 0; i < TempS.size(); i++)
 		{
 			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
@@ -1039,6 +1044,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 				j++;
 			}
 		}
+#endif
 		return false;
 	}
 	for (auto i : UsablePath)
@@ -1047,6 +1053,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	}
 	if (UsablePath.size() < 2)
 	{
+#if ACCESS_TEMP
 		for (int i = 0, j = 0; i < TempS.size(); i++)
 		{
 			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
@@ -1063,6 +1070,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 				j++;
 			}
 		}
+#endif
 		return false;
 	}
 	else
@@ -1099,6 +1107,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			}
 			TEMP.x = sx;
 			TEMP.y = sy;
+#if ACCESS_TEMP
 			for (int i = 0, j = 0; i < TempS.size(); i++)
 			{
 				if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
@@ -1115,6 +1124,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 					j++;
 				}
 			}
+#endif
 		}
 		return true;
 	}
@@ -2089,7 +2099,7 @@ int Geographer<IFooAPI>::EstimateTime(Cell Dest)
 template <typename IFooAPI>
 bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 {
-//	std::cerr << "asking " << Src.x << ' ' << Src.y << ' ' << Dest.x << ' ' << Dest.y << std::endl;
+	//	std::cerr << "asking " << Src.x << ' ' << Src.y << ' ' << Dest.x << ' ' << Dest.y << std::endl;
 	int deltaX = (Dest.x - Src.x) * 1000;
 	int deltaY = (Dest.y - Src.y) * 1000;
 	int Distance = deltaX * deltaX + deltaY * deltaY;
@@ -2279,7 +2289,7 @@ std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindo
 	{
 		for (int i = 0; i < 50; i++) {
 			for (int j = 0; j < 50; j++)
-				std::cerr << ClosedList[i][j] ? 'X' : '.';
+				std::cerr << (ClosedList[i][j] ? 'X' : '.');
 			std::cerr << std::endl;
 		}
 		//		Sleep(1000000);
@@ -3153,7 +3163,7 @@ void AI::play(IStudentAPI& api)
 				ChaseIt = false;
 				CurrentState = sDefault;
 			}
-			if (!haveTricker )
+			if (!haveTricker)
 				CurrentState = sFindPlayer;
 			break;
 		case sChasePlayer:
@@ -3173,8 +3183,8 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
-			if (CurrentState_Bef == sAttackPlayer&&!haveTricker)
-				Center.MoveTo(Bef,true);
+			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 4))
+				Center.MoveTo(Bef, true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			for (int i = 0; i < 10; i++)
 				if (Center.NearCell(Center.Classroom[i], 3))
@@ -3220,8 +3230,8 @@ void AI::play(IStudentAPI& api)
 								Center.MoveTo(Center.Classroom[i], 1);
 								break;
 							}*/
-						if (Center.NearCell(ChaseDest.ToCell(), 3))
-							Center.MoveTo(Cell(2*api.GetSelfInfo()->x / 1000-triinfo[0]->x / 1000, 2*api.GetSelfInfo()->y/1000-triinfo[0]->y / 1000),true);
+						if (Center.NearCell(ChaseDest.ToCell(), 4))
+							Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);
 						else
 							Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 					}
@@ -3328,9 +3338,9 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;//常规状态下，sunshine随学霸（playerID=1）运动
 			Center.Gugu.sendRescue(2, false);
 			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
-				{
-					Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
-				}
+			{
+				Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
+			}
 			break;
 		case sRousing:
 			std::cerr << "CurrentState: sRousing" << std::endl;
@@ -3446,8 +3456,8 @@ void AI::play(IStudentAPI& api)
 			}
 			break;
 			// 玩家3执行操作
-		
-			
+
+
 		}
 	}
 	// 当然可以写成if (this->playerID == 2||this->playerID == 3)之类的操作
@@ -3486,6 +3496,13 @@ void AI::play(ITrickerAPI& api)
 	static bool visitClassroom[10];
 	static bool visitClassroomUpdated[10];
 	static int countVisitedClassroom = 0;
+	std::cerr << "[visitClassroom]";
+	for (int i = 0; i < 10; i++)std::cerr << visitClassroom[i];
+	std::cerr << std::endl;
+	std::cerr << "[visitClassroomUpdated]";
+	for (int i = 0; i < 10; i++)std::cerr << visitClassroom[i];
+	std::cerr << std::endl;
+	std::cerr << "[countVisitedClassroom]" << countVisitedClassroom << std::endl;
 	bool haveNonAddictedStudent = false;
 	int nonAddictedId = -1;
 	for (int i = 0; i < stuinfo.size(); i++)
@@ -3498,6 +3515,30 @@ void AI::play(ITrickerAPI& api)
 	}
 	static bool ChaseIt = false;
 	static int ChaseID = -1;
+
+	for (int i = 0; i < 10; i++)
+		if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
+		{
+			visitClassroom[i] = true;
+			// countVisitedClassroom++;
+		}
+	for (int i = 0; i < 10; i++)
+	{
+		if (visitClassroom[i] && !visitClassroomUpdated[i])
+		{
+			countVisitedClassroom++;
+			visitClassroomUpdated[i] = true;
+		}
+	}
+	if (countVisitedClassroom == 10)
+	{
+		for (int i = 0; i < 10; i++)
+		{
+			visitClassroom[i] = false;
+			visitClassroomUpdated[i] = false;
+		}
+		countVisitedClassroom = 0;
+	}
 
 	std::cerr << "UseSkillBegin" << std::endl;
 	std::cerr << "UseSkillEnd" << std::endl;
@@ -3547,32 +3588,6 @@ void AI::play(ITrickerAPI& api)
 		break;
 	case sFindPlayer:
 		std::cerr << "CurrentState: sFindPlayer" << std::endl;
-		if (Center.NearClassroom(false))
-		{
-			for (int i = 0; i < 10; i++)
-				if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
-				{
-					visitClassroom[i] = true;
-					// countVisitedClassroom++;
-				}
-		}
-		for (int i = 0; i < 10; i++)
-		{
-			if (visitClassroom[i] && !visitClassroomUpdated[i])
-			{
-				countVisitedClassroom++;
-				visitClassroomUpdated[i] = true;
-			}
-		}
-		if (countVisitedClassroom == 10)
-		{
-			for (int i = 0; i < 10; i++)
-			{
-				visitClassroom[i] = false;
-				visitClassroomUpdated[i] = false;
-			}
-			countVisitedClassroom = 0;
-		}
 		{
 			int minDistance = INT_MAX;
 			int minNum = -1;
@@ -3625,13 +3640,13 @@ void AI::play(ITrickerAPI& api)
 		else
 		{
 			// api.EndAllAction();
-			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), true);
+			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 0);
 		}
 		break;
 	case sChasePlayer:
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
-		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, true);
+		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, 0);
 		break;
 	}
 }
