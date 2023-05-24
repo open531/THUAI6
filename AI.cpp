@@ -3368,8 +3368,6 @@ void AI::play(ITrickerAPI& api)
 	static int ChaseID = -1;
 
 	std::cerr << "UseSkillBegin" << std::endl;
-	if (!Center.KleeJumpyBombCD()) Center.KleeJumpyBomb();
-	if (!Center.KleeSparksNSplashCD()) api.UseSkill(1);
 	std::cerr << "UseSkillEnd" << std::endl;
 
 	switch (CurrentState)
@@ -3420,7 +3418,7 @@ void AI::play(ITrickerAPI& api)
 		if (Center.NearClassroom(false))
 		{
 			for (int i = 0; i < 10; i++)
-				if (Center.NearCell(Center.Classroom[i], 3))
+				if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
 				{
 					visitClassroom[i] = true;
 					// countVisitedClassroom++;
@@ -3443,22 +3441,45 @@ void AI::play(ITrickerAPI& api)
 			}
 			countVisitedClassroom = 0;
 		}
-		for (int i = 0; i < 10; i++)
-			if (!visitClassroom[i])
+		{
+			int minDistance = INT_MAX;
+			int minNum = -1;
+			int Distance = INT_MAX;
+			Cell Self(self->x / 1000, self->y / 1000);
+			if (!Center.Classroom.empty())
 			{
-				Center.MoveTo(Center.Classroom[i], 1);
+				for (int i = 0; i < Center.Classroom.size(); i++)
+				{
+					//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
+					if (Center.GetClassroomProgress(Center.Classroom[i].x, Center.Classroom[i].y) < 10000000)
+					{
+						Distance = Center.Alice.AStar(Self, Center.Classroom[i], 1).size();
+						if (Distance < minDistance && Distance != 0 && !visitClassroom[i])
+						{
+							minDistance = Distance;
+							minNum = i;
+						}
+					}
+				}
+			}
+			if (minNum >= 0)
+			{
+				Center.MoveTo(Center.Classroom[minNum], 1);
 				break;
 			}
+		}
 		break;
 	case sAttackPlayer:
 		std::cerr << "CurrentState: sAttackPlayer" << std::endl;
 		std::cerr << "See student " << stuinfo.size() << std::endl;
 		std::cerr << "Decide to attack " << stuinfo[nonAddictedId]->playerID << std::endl;
+		if (!Center.KleeSparksNSplashCD()) Center.KleeSparksNSplash(stuinfo[nonAddictedId]->playerID);
 		ChaseIt = true;
 		//		ChaseDest = Grid(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
 		ChaseID = stuinfo[nonAddictedId]->playerID;
 		if (abs(api.GetSelfInfo()->x - stuinfo[nonAddictedId]->x) + abs(api.GetSelfInfo()->y - stuinfo[nonAddictedId]->y) < 2000)
 		{
+			if (!Center.KleeJumpyBombCD()) Center.KleeJumpyBomb();
 			Center.KleeDefaultAttack(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
 			//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
 		}
