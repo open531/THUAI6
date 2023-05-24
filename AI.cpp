@@ -994,7 +994,31 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		}
 	}
 	std::vector<Node> UsablePath;
-	UsablePath = Alice.AStar(Node(sx / 1000, sy / 1000), Dest, WithWindows);
+	try
+	{
+		UsablePath = Alice.AStar(Node(sx / 1000, sy / 1000), Dest, WithWindows);
+	}
+	catch (const noway_exception& e)
+	{
+		std::cerr << "[noway_exception](MoveTo)Noway." << std::endl;
+		for (int i = 0, j = 0; i < TempS.size(); i++)
+		{
+			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
+			{
+				Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
+				j++;
+			}
+		}
+		for (int i = 0, j = 0; i < TempT.size(); i++)
+		{
+			if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
+			{
+				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
+				j++;
+			}
+		}
+		return false;
+	}
 	for (auto i : UsablePath)
 	{
 		std::cerr << '(' << i.x << ',' << i.y << ')' << ';';
@@ -1145,11 +1169,18 @@ bool CommandPost<IFooAPI>::MoveToNearestClassroom(bool WithWindows)
 			//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
 			if (GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
 			{
-				Distance = Alice.AStar(Self, Classroom[i], WithWindows).size();
-				if (Distance < minDistance && Distance != 0)
+				try
 				{
-					minDistance = Distance;
-					minNum = i;
+					Distance = Alice.AStar(Self, Classroom[i], WithWindows).size();
+					if (Distance < minDistance && Distance != 0)
+					{
+						minDistance = Distance;
+						minNum = i;
+					}
+				}
+				catch (const noway_exception& e)
+				{
+					std::cerr << "[noway_exception](MoveToNearestClassroom)Noway." << std::endl;
 				}
 			}
 		}
@@ -1194,11 +1225,18 @@ bool CommandPost<IFooAPI>::MoveToNearestGate(bool WithWindows)
 			//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
 			if (GetGateProgress(Gate[i].x, Gate[i].y) < 18000)
 			{
-				Distance = Alice.AStar(Self, Gate[i], WithWindows).size();
-				if (Distance < minDistance && Distance != 0)
+				try
 				{
-					minDistance = Distance;
-					minNum = i;
+					Distance = Alice.AStar(Self, Gate[i], WithWindows).size();
+					if (Distance < minDistance && Distance != 0)
+					{
+						minDistance = Distance;
+						minNum = i;
+					}
+				}
+				catch (const noway_exception& e)
+				{
+					std::cerr << "[noway_exception](MoveToNearestGate)Noway." << std::endl;
 				}
 			}
 		}
@@ -1228,11 +1266,18 @@ bool CommandPost<IFooAPI>::MoveToNearestOpenGate(bool WithWindows)
 			//			if (API.GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			if (GetGateProgress(Gate[i].x, Gate[i].y) >= 18000)
 			{
-				Distance = Alice.AStar(Self, Gate[i], WithWindows).size();
-				if (Distance < minDistance && Distance != 0)
+				try
 				{
-					minDistance = Distance;
-					minNum = i;
+					Distance = Alice.AStar(Self, Gate[i], WithWindows).size();
+					if (Distance < minDistance && Distance != 0)
+					{
+						minDistance = Distance;
+						minNum = i;
+					}
+				}
+				catch (const noway_exception& e)
+				{
+					std::cerr << "[noway_exception](MoveToNearestOpenGate)Noway." << std::endl;
 				}
 			}
 		}
@@ -1415,11 +1460,18 @@ void CommandPost<IFooAPI>::DirectGrass(bool WithWindows)
 		{
 			for (int i = 0; i < Grass.size(); i++)
 			{
-				Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
-				if (Distance < minDistance && Distance != 0)
+				try
 				{
-					minDistance = Distance;
-					minNum = i;
+					Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
+					if (Distance < minDistance && Distance != 0)
+					{
+						minDistance = Distance;
+						minNum = i;
+					}
+				}
+				catch (const noway_exception& e)
+				{
+					std::cerr << "[noway_exception](DirectGrass)Noway." << std::endl;
 				}
 			}
 		}
@@ -1446,11 +1498,18 @@ void CommandPost<IFooAPI>::DirectHide(Cell TrickerLocation, int TrickerViewRange
 			{
 				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25 && !Alice.IsViewable(TrickerLocation, Self, TrickerViewRange))
 				{
-					Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
-					if (Distance < minDistance && Distance != 0)
+					try
 					{
-						minDistance = Distance;
-						minNum = i;
+						Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
+						if (Distance < minDistance && Distance != 0)
+						{
+							minDistance = Distance;
+							minNum = i;
+						}
+					}
+					catch (const noway_exception& e)
+					{
+						std::cerr << "[noway_exception](DirectHide)Noway." << std::endl;
 					}
 				}
 			}
@@ -1990,10 +2049,18 @@ template <typename IFooAPI>
 int Geographer<IFooAPI>::EstimateTime(Cell Dest)
 {
 	Cell Self(this->API.GetSelfInfo()->x / 1000, this->API.GetSelfInfo()->y / 1000);
-	int Distance = AStar(Self, Dest, true).size();
-	int Speed = this->API.GetSelfInfo()->speed;
-	int Time = Distance * 1000 / Speed;
-	return Time;
+	try
+	{
+		int Distance = AStar(Self, Dest, true).size();
+		int Speed = this->API.GetSelfInfo()->speed;
+		int Time = Distance * 1000 / Speed;
+		return Time;
+	}
+	catch (const noway_exception& e)
+	{
+		std::cerr << "[noway_exception](EstimateTime)Noway." << std::endl;
+		return 10000000;
+	}
 }
 
 #endif
@@ -3453,11 +3520,19 @@ void AI::play(ITrickerAPI& api)
 					//			if (API.GetClassroomProgress(Classroom[i].x, Classroom[i].y) < 10000000)
 					if (Center.GetClassroomProgress(Center.Classroom[i].x, Center.Classroom[i].y) < 10000000)
 					{
-						Distance = Center.Alice.AStar(Self, Center.Classroom[i], 1).size();
-						if (Distance < minDistance && Distance != 0 && !visitClassroom[i])
+						try
 						{
-							minDistance = Distance;
-							minNum = i;
+							Distance = Center.Alice.AStar(Self, Center.Classroom[i], 1).size();
+							if (Distance < minDistance && Distance != 0 && !visitClassroom[i])
+							{
+								minDistance = Distance;
+								minNum = i;
+							}
+						}
+						catch (const noway_exception& e)
+						{
+							std::cerr << "[noway_exception]Noway." << std::endl;
+							terminate();
 						}
 					}
 				}
