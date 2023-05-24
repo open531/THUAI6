@@ -987,6 +987,8 @@ CommandPost<IFooAPI>::CommandPost(IFooAPI& api) : API(api), LastAutoUpdateFrame(
 	InitMap(api);
 }
 
+#define ACCESS_TEMP 1
+
 #if !USE_NEW_ASTAR
 template <typename IFooAPI>
 bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
@@ -999,6 +1001,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	std::vector<std::shared_ptr<const THUAI6::Tricker>> TempT = API.GetTrickers();
 	std::vector<unsigned char> AccessTempS;
 	std::vector<unsigned char> AccessTempT;
+#if ACCESS_TEMP
 	for (int i = 0; i < TempS.size(); i++)
 	{
 		if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
@@ -1015,6 +1018,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = 0U;
 		}
 	}
+#endif
 	std::vector<Node> UsablePath;
 	try
 	{
@@ -1023,6 +1027,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	catch (const noway_exception& e)
 	{
 		std::cerr << "[noway_exception](MoveTo)Noway." << std::endl;
+#if ACCESS_TEMP
 		for (int i = 0, j = 0; i < TempS.size(); i++)
 		{
 			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
@@ -1039,6 +1044,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 				j++;
 			}
 		}
+#endif
 		return false;
 	}
 	for (auto i : UsablePath)
@@ -1047,6 +1053,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	}
 	if (UsablePath.size() < 2)
 	{
+#if ACCESS_TEMP
 		for (int i = 0, j = 0; i < TempS.size(); i++)
 		{
 			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
@@ -1063,6 +1070,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 				j++;
 			}
 		}
+#endif
 		return false;
 	}
 	else
@@ -1099,6 +1107,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			}
 			TEMP.x = sx;
 			TEMP.y = sy;
+#if ACCESS_TEMP
 			for (int i = 0, j = 0; i < TempS.size(); i++)
 			{
 				if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
@@ -1115,6 +1124,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 					j++;
 				}
 			}
+#endif
 		}
 		return true;
 	}
@@ -2279,7 +2289,7 @@ std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindo
 	{
 		for (int i = 0; i < 50; i++) {
 			for (int j = 0; j < 50; j++)
-				std::cerr << ClosedList[i][j] ? 'X' : '.';
+				std::cerr << (ClosedList[i][j] ? 'X' : '.');
 			std::cerr << std::endl;
 		}
 		//		Sleep(1000000);
