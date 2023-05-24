@@ -833,7 +833,7 @@ bool Pigeon<IFooAPI>::receiveRescue()
 	Decoder dec(buf);
 	char header= dec.ReadInfo<char>();
 	assert(header == Rescue);
-	return bool(dec.ReadInfo());
+	return dec.ReadInfo<bool>();
 }
 std::string sendPropsMessage(std::vector<std::shared_ptr<const THUAI6::Prop>> prop)
 {
@@ -1159,19 +1159,16 @@ bool CommandPost<IFooAPI>::NearCell(Cell P, int level)
 	{
 	case 0:
 		return (P.x == Self.x && P.y == Self.y) ? true : false;
-		break;
 	case 1:
 		return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 1) ? true : false;
-		break;
 	case 2:
 		return (abs(P.x - Self.x) <= 1 && abs(P.y - Self.y) <= 1) ? true : false;
-		break;
 	case 3: // Hide Tricker
 		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 9) ? true : false;
-		break;
 	case 4: // Hide Tricker
 		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 25) ? true : false;
-		break;
+	case 5:
+		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 36) ? true : false;
 	}
 }
 
@@ -2782,6 +2779,7 @@ sPicking 去捡道具
 #define sFindPlayer 0x20
 #define sAttackPlayer 0x21
 #define sChasePlayer 0x22
+#define sRescuePlayer 0x23
 
 
 void AI::play(IStudentAPI& api)
@@ -2796,6 +2794,7 @@ void AI::play(IStudentAPI& api)
 	//	Center.Bob._display(4);
 
 	int MessageType;
+	bool IsRescue = false;
 	while ((MessageType = Center.Gugu.receiveMessage()) != NoMessage)
 	{
 		//		std::cerr << "MessageType = " << MessageType << std::endl;
@@ -2805,6 +2804,10 @@ void AI::play(IStudentAPI& api)
 			//			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
 			//			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
 			Center.Update(ms.second, ms.first);
+		}
+		else if (MessageType == Rescue)
+		{
+			IsRescue = Center.Gugu.receiveRescue();
 		}
 	}
 	//	std::cerr << "[FinishedClassroom]" << Center.CountFinishedClassroom() << std::endl;
@@ -3127,42 +3130,51 @@ void AI::play(IStudentAPI& api)
 		static Grid ChaseDest;
 		static int CurrentState_Bef = sDefault;
 		static Cell Bef;
-
+		static Cell Bef_stu;
+		
 		switch (CurrentState)
 		{
 		case sDefault:
-			if (haveTricker && Center.TeacherPunishCD() < 2)
+			if (haveTricker)
 				CurrentState = sAttackPlayer;
-			else if (ChaseIt)
-				CurrentState = sChasePlayer;
+			/*else if (ChaseIt)
+				CurrentState = sChasePlayer;*/
+			else if (!haveTricker && IsRescue)
+				CurrentState = sRescuePlayer;
 			else
 				CurrentState = sFindPlayer;
 			break;
 		case sFindPlayer:
-			if (haveTricker && Center.TeacherPunishCD() < 2)
+			if (haveTricker)
 				CurrentState = sAttackPlayer;
 			break;
 		case sAttackPlayer:
-			ChaseIt = true;
+			if (haveTricker && Bef_stu.x == api.GetSelfInfo()->x / 1000 && Bef_stu.y == api.GetSelfInfo()->y / 1000)
+				CurrentState = sFindPlayer;
+			/*ChaseIt = true;*/
 			if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
 				ChaseDest = Grid(triinfo[0]->x, triinfo[0]->y);
 			if (haveTricker && Center.NearCell(ChaseDest.ToCell(), 4))
 			{
-				ChaseIt = false;
+				/*ChaseIt = false;*/
 				CurrentState = sDefault;
 			}
 			if (!haveTricker )
 				CurrentState = sFindPlayer;
 			break;
-		case sChasePlayer:
-			if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
+		case sRescuePlayer:
+			if (haveTricker)
 				CurrentState = sAttackPlayer;
-			else
-			{
-				ChaseIt = false;
-				CurrentState = sDefault;
-			}
 			break;
+		//case sChasePlayer:
+		//	if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
+		//		CurrentState = sAttackPlayer;
+		//	else
+		//	{
+		//		/*ChaseIt = false;*/
+		//		CurrentState = sDefault;
+		//	}
+		//	break;
 		}
 
 		switch (CurrentState)
@@ -3205,7 +3217,7 @@ void AI::play(IStudentAPI& api)
 				}
 			break;
 		case sAttackPlayer:
-			if (!triinfo.empty())
+			if (haveTricker)
 				if (Center.Alice.IsViewable(Grid(api.GetSelfInfo()->x, api.GetSelfInfo()->y).ToCell(), Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), api.GetSelfInfo()->viewRange) && (triinfo[0]->playerState == THUAI6::PlayerState::Climbing || triinfo[0]->playerState == THUAI6::PlayerState::Locking || triinfo[0]->playerState == THUAI6::PlayerState::Attacking || triinfo[0]->playerState == THUAI6::PlayerState::Swinging))
 				{
 					if (!Center.TeacherPunishCD())
@@ -3218,8 +3230,8 @@ void AI::play(IStudentAPI& api)
 								Center.MoveTo(Center.Classroom[i], 1);
 								break;
 							}*/
-						if (Center.NearCell(ChaseDest.ToCell(), 4))
-							Center.MoveTo(Cell(2*api.GetSelfInfo()->x / 1000-triinfo[0]->x / 1000, 2*api.GetSelfInfo()->y/1000-triinfo[0]->y / 1000),true);
+						if (Center.NearCell(ChaseDest.ToCell(), 5))
+							Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);
 						else
 							Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 					}
@@ -3229,15 +3241,20 @@ void AI::play(IStudentAPI& api)
 				{
 					// api.EndAllAction();
 					/*Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);*/
-					if (Center.NearCell(ChaseDest.ToCell(), 3))
+					if (Center.NearCell(ChaseDest.ToCell(), 5))
 						Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);
+						/*Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);*/
 					else
 						Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 				}
 			CurrentState_Bef = CurrentState;
 			Bef = Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000);
+			Bef_stu = Cell(api.GetSelfInfo()->x/1000,api.GetSelfInfo()->y/1000);
 			break;
-		case sChasePlayer:
+		case sRescuePlayer:
+			Center.MoveTo(Cell(stuinfo[3]->x / 1000, stuinfo[3]->y / 1000), true);
+			break;
+		/*case sChasePlayer:
 			std::cerr << "CurrentState: sChasePlayer" << std::endl;
 			Center.MoveTo(ChaseDest.ToCell(), true);
 			if (Center.NearCell(ChaseDest.ToCell(), 3))
@@ -3245,7 +3262,7 @@ void AI::play(IStudentAPI& api)
 				ChaseIt = false;
 				CurrentState = sDefault;
 			}
-			break;
+			break;*/
 		}
 		// 玩家2执行操作
 	}
