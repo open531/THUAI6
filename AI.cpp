@@ -933,11 +933,11 @@ template <typename IFooAPI>
 void CommandPost<IFooAPI>::InitMap(IFooAPI& api)
 {
 	int i, j;
+	Map = api.GetFullMap();
 	for (i = 0; i < 50; i++)
 	{
 		for (j = 0; j < 50; j++)
 		{
-			Map = api.GetFullMap();
 			switch (Map[i][j])
 			{
 			case THUAI6::PlaceType::Wall: // Wall
@@ -1394,7 +1394,7 @@ bool CommandPost<IFooAPI>::NearWindow()
 template <typename IFooAPI>
 bool CommandPost<IFooAPI>::InGrass()
 {
-	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->x / 1000] == THUAI6::PlaceType::Grass)
+	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->y / 1000] == THUAI6::PlaceType::Grass)
 	{
 		return true;
 	}
@@ -1507,31 +1507,30 @@ void CommandPost<IFooAPI>::DirectGrass(bool WithWindows)
 template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows)
 {
+	std::cerr << "DirectHide\n";
 	Cell Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 	bool t = Alice.IsViewable(TrickerLocation, Self, TrickerViewRange);
+	std::cerr << "ask " << TrickerLocation.x << ' ' << TrickerLocation.y << ' ' << Self.x << ' ' << Self.y << ' ' << TrickerViewRange << ' ' << Alice.IsViewable(TrickerLocation, Self, TrickerViewRange) << std::endl;
+	std::cerr << "ingrass " << InGrass() << std::endl;
 	if (!InGrass() && Alice.IsViewable(TrickerLocation, Self, TrickerViewRange))
 	{
+		std::cerr << "OK to hide." << std::endl;
 		int minDistance = INT_MAX;
 		int minNum = -1;
 		int Distance = INT_MAX;
+		int dist[50][50];
+		Alice.BackwardExpand(Self, dist);
 		if (!Grass.empty())
 		{
 			for (int i = 0; i < Grass.size(); i++)
 			{
-				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25 && !Alice.IsViewable(TrickerLocation, Self, TrickerViewRange))
+				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25)// && !Alice.IsViewable(TrickerLocation, Grass[i], TrickerViewRange))
 				{
-					try
+					Distance = dist[Grass[i].x][Grass[i].y];
+					if (Distance < minDistance && Distance != 0)
 					{
-						Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
-						if (Distance < minDistance && Distance != 0)
-						{
-							minDistance = Distance;
-							minNum = i;
-						}
-					}
-					catch (const noway_exception& e)
-					{
-						std::cerr << "[noway_exception](DirectHide)Noway." << std::endl;
+						minDistance = Distance;
+						minNum = i;
 					}
 				}
 			}
@@ -2090,7 +2089,7 @@ int Geographer<IFooAPI>::EstimateTime(Cell Dest)
 template <typename IFooAPI>
 bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 {
-	//	std::cerr << "asking " << Src.x << ' ' << Src.y << ' ' << Dest.x << ' ' << Dest.y << std::endl;
+//	std::cerr << "asking " << Src.x << ' ' << Src.y << ' ' << Dest.x << ' ' << Dest.y << std::endl;
 	int deltaX = (Dest.x - Src.x) * 1000;
 	int deltaY = (Dest.y - Src.y) * 1000;
 	int Distance = deltaX * deltaX + deltaY * deltaY;
@@ -2792,6 +2791,7 @@ void AI::play(IStudentAPI& api)
 	static CommandPostStudent Center(api);
 	static int CurrentState = sDefault;
 
+
 	Center.AutoUpdate();
 	//	Center.Bob._display(4);
 
@@ -2843,6 +2843,8 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sDefault;
 			break;
 		}
+
+		std::cerr << "CurrentState: " << ((CurrentState == sFleeing) ? ("sFleeing\n") : ("sDefault\n"));
 
 		switch (CurrentState)
 		{
@@ -3123,6 +3125,8 @@ void AI::play(IStudentAPI& api)
 			haveTricker = true;
 		static bool ChaseIt = false;
 		static Grid ChaseDest;
+		static int CurrentState_Bef = sDefault;
+		static Cell Bef;
 
 		switch (CurrentState)
 		{
@@ -3147,7 +3151,7 @@ void AI::play(IStudentAPI& api)
 				ChaseIt = false;
 				CurrentState = sDefault;
 			}
-			if (!haveTricker)
+			if (!haveTricker )
 				CurrentState = sFindPlayer;
 			break;
 		case sChasePlayer:
@@ -3167,6 +3171,8 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
+			if (CurrentState_Bef == sAttackPlayer&&!haveTricker)
+				Center.MoveTo(Bef,true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			for (int i = 0; i < 10; i++)
 				if (Center.NearCell(Center.Classroom[i], 3))
@@ -3200,26 +3206,36 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sAttackPlayer:
 			if (!triinfo.empty())
-				if (Center.Alice.IsViewable(Grid(api.GetSelfInfo()->x, api.GetSelfInfo()->y).ToCell(), Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), api.GetSelfInfo()->viewRange) && triinfo[0]->playerState == THUAI6::PlayerState::Climbing || triinfo[0]->playerState == THUAI6::PlayerState::Locking || triinfo[0]->playerState == THUAI6::PlayerState::Attacking || triinfo[0]->playerState == THUAI6::PlayerState::Swinging)
+				if (Center.Alice.IsViewable(Grid(api.GetSelfInfo()->x, api.GetSelfInfo()->y).ToCell(), Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), api.GetSelfInfo()->viewRange) && (triinfo[0]->playerState == THUAI6::PlayerState::Climbing || triinfo[0]->playerState == THUAI6::PlayerState::Locking || triinfo[0]->playerState == THUAI6::PlayerState::Attacking || triinfo[0]->playerState == THUAI6::PlayerState::Swinging))
 				{
 					if (!Center.TeacherPunishCD())
 						Center.TeacherPunish();
 					else
 					{
-						for (int i = 0; i < 10; i++)
+						/*for (int i = 0; i < 10; i++)
 							if (!visitClassroom[i])
 							{
 								Center.MoveTo(Center.Classroom[i], 1);
 								break;
-							}
+							}*/
+						if (Center.NearCell(ChaseDest.ToCell(), 3))
+							Center.MoveTo(Cell(2*api.GetSelfInfo()->x / 1000-triinfo[0]->x / 1000, 2*api.GetSelfInfo()->y/1000-triinfo[0]->y / 1000),true);
+						else
+							Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 					}
 					//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
 				}
 				else
 				{
 					// api.EndAllAction();
-					Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+					/*Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);*/
+					if (Center.NearCell(ChaseDest.ToCell(), 3))
+						Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);
+					else
+						Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 				}
+			CurrentState_Bef = CurrentState;
+			Bef = Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000);
 			break;
 		case sChasePlayer:
 			std::cerr << "CurrentState: sChasePlayer" << std::endl;
@@ -3579,7 +3595,6 @@ void AI::play(ITrickerAPI& api)
 						catch (const noway_exception& e)
 						{
 							std::cerr << "[noway_exception]Noway." << std::endl;
-							terminate();
 						}
 					}
 				}
