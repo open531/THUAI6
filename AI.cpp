@@ -911,11 +911,11 @@ template <typename IFooAPI>
 void CommandPost<IFooAPI>::InitMap(IFooAPI& api)
 {
 	int i, j;
+	Map = api.GetFullMap();
 	for (i = 0; i < 50; i++)
 	{
 		for (j = 0; j < 50; j++)
 		{
-			Map = api.GetFullMap();
 			switch (Map[i][j])
 			{
 			case THUAI6::PlaceType::Wall: // Wall
@@ -1372,7 +1372,7 @@ bool CommandPost<IFooAPI>::NearWindow()
 template <typename IFooAPI>
 bool CommandPost<IFooAPI>::InGrass()
 {
-	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->x / 1000] == THUAI6::PlaceType::Grass)
+	if (Map[API.GetSelfInfo()->x / 1000][API.GetSelfInfo()->y / 1000] == THUAI6::PlaceType::Grass)
 	{
 		return true;
 	}
@@ -1485,31 +1485,30 @@ void CommandPost<IFooAPI>::DirectGrass(bool WithWindows)
 template <typename IFooAPI>
 void CommandPost<IFooAPI>::DirectHide(Cell TrickerLocation, int TrickerViewRange, bool WithWindows)
 {
+	std::cerr << "DirectHide\n";
 	Cell Self(API.GetSelfInfo()->x / 1000, API.GetSelfInfo()->y / 1000);
 	bool t = Alice.IsViewable(TrickerLocation, Self, TrickerViewRange);
+	std::cerr << "ask " << TrickerLocation.x << ' ' << TrickerLocation.y << ' ' << Self.x << ' ' << Self.y << ' ' << TrickerViewRange << ' ' << Alice.IsViewable(TrickerLocation, Self, TrickerViewRange) << std::endl;
+	std::cerr << "ingrass " << InGrass() << std::endl;
 	if (!InGrass() && Alice.IsViewable(TrickerLocation, Self, TrickerViewRange))
 	{
+		std::cerr << "OK to hide." << std::endl;
 		int minDistance = INT_MAX;
 		int minNum = -1;
 		int Distance = INT_MAX;
+		int dist[50][50];
+		Alice.BackwardExpand(Self, dist);
 		if (!Grass.empty())
 		{
 			for (int i = 0; i < Grass.size(); i++)
 			{
-				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25 && !Alice.IsViewable(TrickerLocation, Self, TrickerViewRange))
+				if ((TrickerLocation.x - Grass[i].x) * (TrickerLocation.x - Grass[i].x) + (TrickerLocation.y - Grass[i].y) * (TrickerLocation.y - Grass[i].y) > 25)// && !Alice.IsViewable(TrickerLocation, Grass[i], TrickerViewRange))
 				{
-					try
+					Distance = dist[Grass[i].x][Grass[i].y];
+					if (Distance < minDistance && Distance != 0)
 					{
-						Distance = Alice.AStar(Self, Grass[i], WithWindows).size();
-						if (Distance < minDistance && Distance != 0)
-						{
-							minDistance = Distance;
-							minNum = i;
-						}
-					}
-					catch (const noway_exception& e)
-					{
-						std::cerr << "[noway_exception](DirectHide)Noway." << std::endl;
+						minDistance = Distance;
+						minNum = i;
 					}
 				}
 			}
@@ -2068,7 +2067,7 @@ int Geographer<IFooAPI>::EstimateTime(Cell Dest)
 template <typename IFooAPI>
 bool Geographer<IFooAPI>::IsViewable(Cell Src, Cell Dest, int ViewRange)
 {
-	//	std::cerr << "asking " << Src.x << ' ' << Src.y << ' ' << Dest.x << ' ' << Dest.y << std::endl;
+//	std::cerr << "asking " << Src.x << ' ' << Src.y << ' ' << Dest.x << ' ' << Dest.y << std::endl;
 	int deltaX = (Dest.x - Src.x) * 1000;
 	int deltaY = (Dest.y - Src.y) * 1000;
 	int Distance = deltaX * deltaX + deltaY * deltaY;
@@ -2822,6 +2821,8 @@ void AI::play(IStudentAPI& api)
 			break;
 		}
 
+		std::cerr << "CurrentState: " << ((CurrentState == sFleeing) ? ("sFleeing\n") : ("sDefault\n"));
+
 		switch (CurrentState)
 		{
 		case sDefault:
@@ -3547,7 +3548,6 @@ void AI::play(ITrickerAPI& api)
 						catch (const noway_exception& e)
 						{
 							std::cerr << "[noway_exception]Noway." << std::endl;
-							terminate();
 						}
 					}
 				}
