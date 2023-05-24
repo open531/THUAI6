@@ -434,6 +434,7 @@ public:
 	// Always return position with highest probility, even though the player was addicted (In this circumstance, chasing it results in a repetition of finding it addicted.) To chase it or not should be decided in stragety.
 	// TODO: CommandPost should save info of addiction & quit etc., should it be the responsibility of Predictor? Probably yes. Ask Predictor for info of players' status. This only works for Tricker.
 	void _display(int PlayerID);
+	Cell SmartRecommend();
 };
 
 class CommandPostStudent : public CommandPost<IStudentAPI>
@@ -565,6 +566,8 @@ void Predictor<IFooAPI>::AutoUpdate()
 			Cell pos = Grid(s->x, s->y).ToCell();
 			memset(MagicMap[s->playerID], 0, sizeof(double) * 50 * 50);
 			MagicMap[s->playerID][pos.x][pos.y] = TotalValue;
+			if (s->playerState == THUAI6::PlayerState::Addicted) PlayerStatus[s->playerID] = 3;
+			else PlayerStatus[s->playerID] = 1;
 		}
 	for (auto s : triinfo)
 		if (PlayerStatus[s->playerID])
@@ -572,6 +575,8 @@ void Predictor<IFooAPI>::AutoUpdate()
 			Cell pos = Grid(s->x, s->y).ToCell();
 			memset(MagicMap[s->playerID], 0, sizeof(double) * 50 * 50);
 			MagicMap[s->playerID][pos.x][pos.y] = TotalValue;
+			if (s->playerState == THUAI6::PlayerState::Addicted) PlayerStatus[s->playerID] = 3;
+			else PlayerStatus[s->playerID] = 1;
 		}
 }
 
@@ -651,6 +656,43 @@ void Predictor<IFooAPI>::SaveClassVolumeLog(int maxNum)
 		ClassVolumeLog.erase(ClassVolumeLog.begin());
 		ClassVolumeLog.push_back(this->API.GetSelfInfo()->classVolume);
 	}
+}
+
+template <typename IFooAPI>
+Cell Predictor<IFooAPI>::SmartRecommend()
+{
+	int x = this->API.GetSelfInfo()->x/1000;
+	int y = this->API.GetSelfInfo()->y/1000;
+	int dist[50][50];
+	Cell pos;
+	double value = -1;
+	this->Center.Alice.BackwardExpand(Cell(x, y), dist);
+
+	int i_, j_, k_;
+	for (int i = 0; i < 4; i++)
+	{
+		if (this->PlayerStatus[i])
+		{
+			for (int j = 0; j < 50; j++)
+				for (int k = 0; k < 50; k++)
+				{
+					double eval = 0;
+					if (PlayerStatus[i] == 3) eval = 1;
+					else eval = 10000;
+					eval = eval * MagicMap[i][j][k] / log(dist[j][k] + 2);
+					if (eval > value)
+					{
+						i_ = i;
+						j_ = j;
+						k_ = k;
+						pos = Cell(j, k);
+						value = eval;
+					}
+				}
+		}
+	}
+	std::cerr << "recommend " << j_ << ' ' << k_ << ' ' << MagicMap[i_][j_][k_] << ' ' << dist[j_][k_] << std::endl;
+	return pos;
 }
 
 //--------------------
@@ -3143,6 +3185,7 @@ void AI::play(IStudentAPI& api)
 		static Cell Bef_stu;
 		Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
 
+
 		switch (CurrentState)
 		{
 		case sDefault:
@@ -3338,6 +3381,8 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sRousing;
 			else if (Needhelp)
 				CurrentState = sEncouraging;
+			else
+				CurrentState = sDefault;
 			break;
 		case sDoClassroom:
 			if (haveAddictedStudent)
@@ -3346,17 +3391,15 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sEncouraging;
 			else if (haveTricker)
 				CurrentState = sInspiring;
+			else
+				CurrentState = sDefault;
 			break;
 		}
 		switch (CurrentState)
 		{
 		case sDefault:
-			std::cerr << "CurrentState: sDefault" << std::endl;//常规状态下，sunshine随学霸（playerID=1）运动
+			std::cerr << "CurrentState: sDefault" << std::endl;
 			Center.Gugu.sendRescue(2, false);
-			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
-			{
-				Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
-			}
 			break;
 		case sRousing:
 			std::cerr << "CurrentState: sRousing" << std::endl;
@@ -3450,8 +3493,12 @@ void AI::play(IStudentAPI& api)
 			//}
 			//break;
 		case sDoClassroom:
-			std::cerr << "CurrentState: sDoClassroom" << std::endl;
+			std::cerr << "CurrentState: sDoClassroom" << std::endl;//常规状态下，sunshine随学霸（playerID=1）运动
 			Center.Gugu.sendRescue(2, false);
+			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y)>=25000000)
+			{
+				Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
+			}
 			if (Center.CountFinishedClassroom() > 7)
 			{
 				if (!Center.CountOpenGate())
@@ -3604,6 +3651,30 @@ void AI::play(ITrickerAPI& api)
 		break;
 	case sFindPlayer:
 		std::cerr << "CurrentState: sFindPlayer" << std::endl;
+/*
+		for (int i = 0; i < 10; i++)
+			if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
+			{
+				visitClassroom[i] = true;
+				// countVisitedClassroom++;
+			}
+		for (int i = 0; i < 10; i++)
+		{
+			if (visitClassroom[i] && !visitClassroomUpdated[i])
+			{
+				countVisitedClassroom++;
+				visitClassroomUpdated[i] = true;
+			}
+		}
+		if (countVisitedClassroom == 10)
+		{
+			for (int i = 0; i < 10; i++)
+			{
+				visitClassroom[i] = false;
+				visitClassroomUpdated[i] = false;
+			}
+			countVisitedClassroom = 0;
+		}
 		{
 			int minDistance = INT_MAX;
 			int minNum = -1;
@@ -3637,7 +3708,8 @@ void AI::play(ITrickerAPI& api)
 				Center.MoveTo(Center.Classroom[minNum], 1);
 				break;
 			}
-		}
+		}*/
+		Center.MoveTo(Center.Bob.SmartRecommend(), 1);
 		break;
 	case sAttackPlayer:
 		std::cerr << "CurrentState: sAttackPlayer" << std::endl;
