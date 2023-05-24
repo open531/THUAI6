@@ -2769,6 +2769,7 @@ void AI::play(IStudentAPI& api)
 	static CommandPostStudent Center(api);
 	static int CurrentState = sDefault;
 
+
 	Center.AutoUpdate();
 	//	Center.Bob._display(4);
 
@@ -3100,6 +3101,8 @@ void AI::play(IStudentAPI& api)
 			haveTricker = true;
 		static bool ChaseIt = false;
 		static Grid ChaseDest;
+		static int CurrentState_Bef = sDefault;
+		static Cell Bef;
 
 		switch (CurrentState)
 		{
@@ -3124,7 +3127,7 @@ void AI::play(IStudentAPI& api)
 				ChaseIt = false;
 				CurrentState = sDefault;
 			}
-			if (!haveTricker)
+			if (!haveTricker )
 				CurrentState = sFindPlayer;
 			break;
 		case sChasePlayer:
@@ -3144,6 +3147,8 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
+			if (CurrentState_Bef == sAttackPlayer&&!haveTricker)
+				Center.MoveTo(Bef,true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			for (int i = 0; i < 10; i++)
 				if (Center.NearCell(Center.Classroom[i], 3))
@@ -3177,26 +3182,36 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sAttackPlayer:
 			if (!triinfo.empty())
-				if (Center.Alice.IsViewable(Grid(api.GetSelfInfo()->x, api.GetSelfInfo()->y).ToCell(), Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), api.GetSelfInfo()->viewRange) && triinfo[0]->playerState == THUAI6::PlayerState::Climbing || triinfo[0]->playerState == THUAI6::PlayerState::Locking || triinfo[0]->playerState == THUAI6::PlayerState::Attacking || triinfo[0]->playerState == THUAI6::PlayerState::Swinging)
+				if (Center.Alice.IsViewable(Grid(api.GetSelfInfo()->x, api.GetSelfInfo()->y).ToCell(), Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), api.GetSelfInfo()->viewRange) && (triinfo[0]->playerState == THUAI6::PlayerState::Climbing || triinfo[0]->playerState == THUAI6::PlayerState::Locking || triinfo[0]->playerState == THUAI6::PlayerState::Attacking || triinfo[0]->playerState == THUAI6::PlayerState::Swinging))
 				{
 					if (!Center.TeacherPunishCD())
 						Center.TeacherPunish();
 					else
 					{
-						for (int i = 0; i < 10; i++)
+						/*for (int i = 0; i < 10; i++)
 							if (!visitClassroom[i])
 							{
 								Center.MoveTo(Center.Classroom[i], 1);
 								break;
-							}
+							}*/
+						if (Center.NearCell(ChaseDest.ToCell(), 3))
+							Center.MoveTo(Cell(2*api.GetSelfInfo()->x / 1000-triinfo[0]->x / 1000, 2*api.GetSelfInfo()->y/1000-triinfo[0]->y / 1000),true);
+						else
+							Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 					}
 					//			api.Attack(atan2(-self->y + stuinfo[0]->y, -self->x + stuinfo[0]->x));
 				}
 				else
 				{
 					// api.EndAllAction();
-					Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
+					/*Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);*/
+					if (Center.NearCell(ChaseDest.ToCell(), 3))
+						Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);
+					else
+						Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 				}
+			CurrentState_Bef = CurrentState;
+			Bef = Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000);
 			break;
 		case sChasePlayer:
 			std::cerr << "CurrentState: sChasePlayer" << std::endl;
