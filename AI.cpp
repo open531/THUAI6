@@ -3140,14 +3140,9 @@ void AI::play(IStudentAPI& api)
 		static Grid ChaseDest;
 		static int CurrentState_Bef = sDefault;
 		static Cell Bef;
-<<<<<<< HEAD
 		static Cell Bef_stu;
-		
-=======
-		bool IsRescue;
-		IsRescue = Center.Gugu.receiveRescue();
+		Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
 
->>>>>>> 4c1925f55ab8fbccc5196b6ef352a186620a1b04
 		switch (CurrentState)
 		{
 		case sDefault:
@@ -3199,7 +3194,7 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
-			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 4))
+			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5)&&!Center.NearCell(Bef_stu,3))
 				Center.MoveTo(Bef, true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			for (int i = 0; i < 10; i++)
@@ -3231,6 +3226,7 @@ void AI::play(IStudentAPI& api)
 					Center.MoveTo(Center.Classroom[i], 1);
 					break;
 				}
+			
 			break;
 		case sAttackPlayer:
 			if (haveTricker)
@@ -3246,11 +3242,7 @@ void AI::play(IStudentAPI& api)
 								Center.MoveTo(Center.Classroom[i], 1);
 								break;
 							}*/
-<<<<<<< HEAD
 						if (Center.NearCell(ChaseDest.ToCell(), 5))
-=======
-						if (Center.NearCell(ChaseDest.ToCell(), 4))
->>>>>>> 4c1925f55ab8fbccc5196b6ef352a186620a1b04
 							Center.MoveTo(Cell(2 * api.GetSelfInfo()->x / 1000 - triinfo[0]->x / 1000, 2 * api.GetSelfInfo()->y / 1000 - triinfo[0]->y / 1000), true);
 						else
 							Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
@@ -3269,7 +3261,6 @@ void AI::play(IStudentAPI& api)
 				}
 			CurrentState_Bef = CurrentState;
 			Bef = Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000);
-			Bef_stu = Cell(api.GetSelfInfo()->x/1000,api.GetSelfInfo()->y/1000);
 			break;
 		case sRescuePlayer:
 			Center.MoveTo(Cell(stuinfo[3]->x / 1000, stuinfo[3]->y / 1000), true);
