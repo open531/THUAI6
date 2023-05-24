@@ -3545,15 +3545,12 @@ void AI::play(ITrickerAPI& api)
 		break;
 	case sFindPlayer:
 		std::cerr << "CurrentState: sFindPlayer" << std::endl;
-		if (Center.NearClassroom(false))
-		{
-			for (int i = 0; i < 10; i++)
-				if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
-				{
-					visitClassroom[i] = true;
-					// countVisitedClassroom++;
-				}
-		}
+		for (int i = 0; i < 10; i++)
+			if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
+			{
+				visitClassroom[i] = true;
+				// countVisitedClassroom++;
+			}
 		for (int i = 0; i < 10; i++)
 		{
 			if (visitClassroom[i] && !visitClassroomUpdated[i])
@@ -3611,7 +3608,7 @@ void AI::play(ITrickerAPI& api)
 		std::cerr << "See student " << stuinfo.size() << std::endl;
 		std::cerr << "Decide to attack " << stuinfo[nonAddictedId]->playerID << std::endl;
 		if (!Center.KleeSparksNSplashCD()) Center.KleeSparksNSplash(stuinfo[nonAddictedId]->playerID);
-		ChaseIt = true;
+		ChaseIt = 0;
 		//		ChaseDest = Grid(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
 		ChaseID = stuinfo[nonAddictedId]->playerID;
 		if (abs(api.GetSelfInfo()->x - stuinfo[nonAddictedId]->x) + abs(api.GetSelfInfo()->y - stuinfo[nonAddictedId]->y) < 2000)
@@ -3623,13 +3620,13 @@ void AI::play(ITrickerAPI& api)
 		else
 		{
 			// api.EndAllAction();
-			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), true);
+			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 0);
 		}
 		break;
 	case sChasePlayer:
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
-		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, true);
+		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, 0);
 		break;
 	}
 }
