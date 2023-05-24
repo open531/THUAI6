@@ -3322,6 +3322,8 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sRousing;
 			else if (Needhelp)
 				CurrentState = sEncouraging;
+			else
+				CurrentState = sDefault;
 			break;
 		case sDoClassroom:
 			if (haveAddictedStudent)
@@ -3330,17 +3332,15 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sEncouraging;
 			else if (haveTricker)
 				CurrentState = sInspiring;
+			else
+				CurrentState = sDefault;
 			break;
 		}
 		switch (CurrentState)
 		{
 		case sDefault:
-			std::cerr << "CurrentState: sDefault" << std::endl;//常规状态下，sunshine随学霸（playerID=1）运动
+			std::cerr << "CurrentState: sDefault" << std::endl;
 			Center.Gugu.sendRescue(2, false);
-			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
-			{
-				Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
-			}
 			break;
 		case sRousing:
 			std::cerr << "CurrentState: sRousing" << std::endl;
@@ -3434,8 +3434,12 @@ void AI::play(IStudentAPI& api)
 			//}
 			//break;
 		case sDoClassroom:
-			std::cerr << "CurrentState: sDoClassroom" << std::endl;
+			std::cerr << "CurrentState: sDoClassroom" << std::endl;//常规状态下，sunshine随学霸（playerID=1）运动
 			Center.Gugu.sendRescue(2, false);
+			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y)>=25000000)
+			{
+				Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
+			}
 			if (Center.CountFinishedClassroom() > 7)
 			{
 				if (!Center.CountOpenGate())
