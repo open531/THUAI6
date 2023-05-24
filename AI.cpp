@@ -396,11 +396,13 @@ public:
 	void sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val);
 	void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);
 	void sendNeedHelp(int64_t dest, NeedHelpInfo self);
+	void sendRescue(int64_t dest,bool rescue);
 
 	int receiveMessage(); // ���ؽ��յ�����Ϣ����
 	std::pair<int, MapUpdateInfo> receiveMapUpdate();
 	std::pair<int, TrickerInfo_t> receiveTrickerInfo();
 	std::pair<int, int> receiveNeedHelp();
+	bool receiveRescue();
 };
 
 template <typename IFooAPI>
@@ -669,6 +671,7 @@ WantProp �����ȡ���ߣ�������Ҫ�������
 #define TrickerInfo 0x02
 #define NeedHelp 0x03
 #define WantProp 0x04
+#define Rescue 0x05
 
 Encoder::Encoder() : Celler(0)
 {
@@ -815,6 +818,23 @@ std::pair<int, int> Pigeon<IFooAPI>::receiveNeedHelp()
 	return std::make_pair<int, int>(dec.ReadInfo<int>(), dec.ReadInfo<int>());
 }
 
+template <typename IFooAPI>
+void Pigeon<IFooAPI>::sendRescue(int64_t dest,bool rescue)
+{
+	Encoder enc;
+	enc.SetHeader(Rescue);
+	enc.PushInfo(rescue);
+	sendInfo(dest, enc.ToString());
+}
+
+template <typename IFooAPI>
+bool Pigeon<IFooAPI>::receiveRescue()
+{
+	Decoder dec(buf);
+	char header= dec.ReadInfo<char>();
+	assert(header == Rescue);
+	return bool(dec.ReadInfo());
+}
 std::string sendPropsMessage(std::vector<std::shared_ptr<const THUAI6::Prop>> prop)
 {
 	Encoder enc;
@@ -831,6 +851,8 @@ std::vector<std::shared_ptr<const THUAI6::Prop>> receivePropsMessage(std::string
 	std::vector<std::shared_ptr<const THUAI6::Prop>> p1 = dec.ReadInfo<std::vector<std::shared_ptr<const THUAI6::Prop>>>();
 	return p1;
 }
+
+
 // 道具信息的编码和解码函数
 // void send_Door(IStudentAPI& api1, int64_t playerID)
 //{
@@ -2771,6 +2793,7 @@ sPicking 去捡道具
 #define sAttackPlayer 0x21
 #define sChasePlayer 0x22
 
+
 void AI::play(IStudentAPI& api)
 {
 	api.PrintSelfInfo();
@@ -3158,7 +3181,7 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
-			if (CurrentState_Bef == sAttackPlayer&&!haveTricker)
+			if (CurrentState_Bef == sAttackPlayer&&!haveTricker&& !Center.NearCell(Bef, 4))
 				Center.MoveTo(Bef,true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			for (int i = 0; i < 10; i++)
@@ -3205,7 +3228,7 @@ void AI::play(IStudentAPI& api)
 								Center.MoveTo(Center.Classroom[i], 1);
 								break;
 							}*/
-						if (Center.NearCell(ChaseDest.ToCell(), 3))
+						if (Center.NearCell(ChaseDest.ToCell(), 4))
 							Center.MoveTo(Cell(2*api.GetSelfInfo()->x / 1000-triinfo[0]->x / 1000, 2*api.GetSelfInfo()->y/1000-triinfo[0]->y / 1000),true);
 						else
 							Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
@@ -3236,6 +3259,7 @@ void AI::play(IStudentAPI& api)
 		}
 		// 玩家2执行操作
 	}
+
 	else if (this->playerID == 3)
 	{
 		auto stuinfo = api.GetStudents();
@@ -3309,12 +3333,18 @@ void AI::play(IStudentAPI& api)
 		switch (CurrentState)
 		{
 		case sDefault:
-			std::cerr << "CurrentState: sDefault" << std::endl;
+			std::cerr << "CurrentState: sDefault" << std::endl;//常规状态下，sunshine随学霸（playerID=1）运动
+			Center.Gugu.sendRescue(2, false);
+			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
+				{
+					Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
+				}
 			break;
 		case sRousing:
 			std::cerr << "CurrentState: sRousing" << std::endl;
 			ChaseIt = true;
 			ChaseDest = Cell(stuinfo[AddictedId]->x, stuinfo[AddictedId]->y);
+			Center.Gugu.sendRescue(2, true);
 			if (!Center.SunshineRouseCD())
 			{
 				if (Center.Alice.IsViewable(Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000), Cell(stuinfo[AddictedId]->x / 1000, stuinfo[AddictedId]->y / 1000), api.GetSelfInfo()->viewRange))
@@ -3340,8 +3370,10 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sEncouraging:
 			std::cerr << "CurrentState: sEncouraging" << std::endl;
+
 			ChaseIt = true;
 			ChaseDest = Cell(stuinfo[NeedhelpID]->x, stuinfo[NeedhelpID]->y);
+			Center.Gugu.sendRescue(2, true);
 			if (!Center.SunshineEncourageCD())
 			{
 				if (Center.Alice.IsViewable(Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000), Cell(stuinfo[NeedhelpID]->x / 1000, stuinfo[NeedhelpID]->y / 1000), api.GetSelfInfo()->viewRange))
@@ -3369,26 +3401,39 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sinspiring" << std::endl;
 			if (!Center.SunshineInspireCD())
 				Center.SunshineInspire();
-			if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
+			//			std::cerr << "IMHERE";
+			if (!triinfo.empty())
 			{
-				Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
-			}
-			else if ((api.GetSelfInfo()->x - stuinfo[2]->x) * (api.GetSelfInfo()->x - stuinfo[2]->x) + (api.GetSelfInfo()->y - stuinfo[2]->y) * (api.GetSelfInfo()->y - stuinfo[2]->y) < 25000000)
-			{
-				Center.MoveTo(Cell(stuinfo[2]->x / 1000, stuinfo[2]->y / 1000), true);
+				//				std::cerr << "IMHERE1";
+				Center.DirectHide(Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), triinfo[0]->viewRange, Center.NearCell(Grid(triinfo[0]->x, triinfo[0]->y).ToCell(), 4) ? 1 : 0);
 			}
 			else
 			{
-				for (int i = 0; i < 10; i++)
-					if (!visitClassroom[i])
-					{
-						Center.MoveTo(Center.Classroom[i], 1);
-						break;
-					}
+				//				std::cerr << "IMHERE2";
+				Center.DirectGrass(1);
 			}
 			break;
+			//if ((api.GetSelfInfo()->x - stuinfo[1]->x) * (api.GetSelfInfo()->x - stuinfo[1]->x) + (api.GetSelfInfo()->y - stuinfo[1]->y) * (api.GetSelfInfo()->y - stuinfo[1]->y) < 25000000)
+			//{
+			//	Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
+			//}
+			//else if ((api.GetSelfInfo()->x - stuinfo[2]->x) * (api.GetSelfInfo()->x - stuinfo[2]->x) + (api.GetSelfInfo()->y - stuinfo[2]->y) * (api.GetSelfInfo()->y - stuinfo[2]->y) < 25000000)
+			//{
+			//	Center.MoveTo(Cell(stuinfo[2]->x / 1000, stuinfo[2]->y / 1000), true);
+			//}
+			//else
+			//{
+			//	for (int i = 0; i < 10; i++)
+			//		if (!visitClassroom[i])
+			//		{
+			//			Center.MoveTo(Center.Classroom[i], 1);
+			//			break;
+			//		}
+			//}
+			//break;
 		case sDoClassroom:
 			std::cerr << "CurrentState: sDoClassroom" << std::endl;
+			Center.Gugu.sendRescue(2, false);
 			if (Center.CountFinishedClassroom() > 7)
 			{
 				if (!Center.CountOpenGate())
@@ -3409,6 +3454,8 @@ void AI::play(IStudentAPI& api)
 			}
 			break;
 			// 玩家3执行操作
+		
+			
 		}
 	}
 	// 当然可以写成if (this->playerID == 2||this->playerID == 3)之类的操作
@@ -3508,15 +3555,12 @@ void AI::play(ITrickerAPI& api)
 		break;
 	case sFindPlayer:
 		std::cerr << "CurrentState: sFindPlayer" << std::endl;
-		if (Center.NearClassroom(false))
-		{
-			for (int i = 0; i < 10; i++)
-				if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
-				{
-					visitClassroom[i] = true;
-					// countVisitedClassroom++;
-				}
-		}
+		for (int i = 0; i < 10; i++)
+			if (Center.Alice.IsViewable(Cell(self->x / 1000, self->y / 1000), Cell(Center.Classroom[i].x, Center.Classroom[i].y), self->viewRange))
+			{
+				visitClassroom[i] = true;
+				// countVisitedClassroom++;
+			}
 		for (int i = 0; i < 10; i++)
 		{
 			if (visitClassroom[i] && !visitClassroomUpdated[i])
@@ -3574,7 +3618,7 @@ void AI::play(ITrickerAPI& api)
 		std::cerr << "See student " << stuinfo.size() << std::endl;
 		std::cerr << "Decide to attack " << stuinfo[nonAddictedId]->playerID << std::endl;
 		if (!Center.KleeSparksNSplashCD()) Center.KleeSparksNSplash(stuinfo[nonAddictedId]->playerID);
-		ChaseIt = true;
+		ChaseIt = 0;
 		//		ChaseDest = Grid(stuinfo[nonAddictedId]->x, stuinfo[nonAddictedId]->y);
 		ChaseID = stuinfo[nonAddictedId]->playerID;
 		if (abs(api.GetSelfInfo()->x - stuinfo[nonAddictedId]->x) + abs(api.GetSelfInfo()->y - stuinfo[nonAddictedId]->y) < 2000)
@@ -3586,13 +3630,13 @@ void AI::play(ITrickerAPI& api)
 		else
 		{
 			// api.EndAllAction();
-			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), true);
+			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 0);
 		}
 		break;
 	case sChasePlayer:
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
-		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, true);
+		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, 0);
 		break;
 	}
 }
