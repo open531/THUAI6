@@ -1212,9 +1212,10 @@ bool CommandPost<IFooAPI>::NearCell(Cell P, int level)
 	case 0:
 		return (P.x == Self.x && P.y == Self.y) ? true : false;
 	case 1:
-		return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 1) ? true : false;
-	case 2:
+		/*return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 1) ? true : false;*/
 		return (abs(P.x - Self.x) <= 1 && abs(P.y - Self.y) <= 1) ? true : false;
+	case 2:
+		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 5) ? true : false;
 	case 3: // Hide Tricker
 		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 9) ? true : false;
 	case 4: // Hide Tricker
@@ -2832,6 +2833,7 @@ sPicking 去捡道具
 #define sAttackPlayer 0x21
 #define sChasePlayer 0x22
 #define sRescuePlayer 0x23
+#define sRunnerPlayer 0x24
 
 
 void AI::play(IStudentAPI& api)
@@ -3203,8 +3205,8 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sAttackPlayer;
 			break;
 		case sAttackPlayer:
-			if (haveTricker && Bef_stu.x == api.GetSelfInfo()->x / 1000 && Bef_stu.y == api.GetSelfInfo()->y / 1000)
-				CurrentState = sFindPlayer;
+			if (haveTricker && Center.NearCell(Bef_stu, 0))
+				CurrentState = sRunnerPlayer;
 			/*ChaseIt = true;*/
 			if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
 				ChaseDest = Grid(triinfo[0]->x, triinfo[0]->y);
@@ -3219,6 +3221,12 @@ void AI::play(IStudentAPI& api)
 		case sRescuePlayer:
 			if (haveTricker)
 				CurrentState = sAttackPlayer;
+			break;
+		case sRunnerPlayer:
+			if (haveTricker && !Center.NearCell(Bef_stu, 3))
+				CurrentState = sAttackPlayer;
+			else if (!haveTricker)
+				CurrentState = sFindPlayer;
 			break;
 		//case sChasePlayer:
 		//	if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
@@ -3237,7 +3245,7 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
-			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5)&&!Center.NearCell(Bef_stu,3))
+			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5)&&!Center.NearCell(Bef_stu,1))
 				Center.MoveTo(Bef, true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			for (int i = 0; i < 10; i++)
@@ -3269,7 +3277,6 @@ void AI::play(IStudentAPI& api)
 					Center.MoveTo(Center.Classroom[i], 1);
 					break;
 				}
-			
 			break;
 		case sAttackPlayer:
 			if (haveTricker)
@@ -3307,6 +3314,38 @@ void AI::play(IStudentAPI& api)
 			break;
 		case sRescuePlayer:
 			Center.MoveTo(Cell(stuinfo[3]->x / 1000, stuinfo[3]->y / 1000), true);
+			break;
+		case sRunnerPlayer:
+			std::cerr << "CurrentState: sFindPlayer" << std::endl;
+			for (int i = 0; i < 10; i++)
+				if (Center.NearCell(Center.Classroom[i], 3))
+				{
+					visitClassroom[i] = true;
+					// countVisitedClassroom++;
+				}
+			for (int i = 0; i < 10; i++)
+			{
+				if (visitClassroom[i] && !visitClassroomUpdated[i])
+				{
+					countVisitedClassroom++;
+					visitClassroomUpdated[i] = true;
+				}
+			}
+			if (countVisitedClassroom == 10)
+			{
+				for (int i = 0; i < 10; i++)
+				{
+					visitClassroom[i] = false;
+					visitClassroomUpdated[i] = false;
+				}
+				countVisitedClassroom = 0;
+			}
+			for (int i = 0; i < 10; i++)
+				if (!visitClassroom[i])
+				{
+					Center.MoveTo(Center.Classroom[i], 1);
+					break;
+				}
 			break;
 		/*case sChasePlayer:
 			std::cerr << "CurrentState: sChasePlayer" << std::endl;
