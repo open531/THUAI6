@@ -3148,7 +3148,7 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
-			if (CurrentState_Bef == sAttackPlayer&&!haveTricker)
+			if (CurrentState_Bef == sAttackPlayer&&!haveTricker&& !Center.NearCell(Bef, 4))
 				Center.MoveTo(Bef,true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			for (int i = 0; i < 10; i++)
@@ -3195,7 +3195,7 @@ void AI::play(IStudentAPI& api)
 								Center.MoveTo(Center.Classroom[i], 1);
 								break;
 							}*/
-						if (Center.NearCell(ChaseDest.ToCell(), 3))
+						if (Center.NearCell(ChaseDest.ToCell(), 4))
 							Center.MoveTo(Cell(2*api.GetSelfInfo()->x / 1000-triinfo[0]->x / 1000, 2*api.GetSelfInfo()->y/1000-triinfo[0]->y / 1000),true);
 						else
 							Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
