@@ -833,7 +833,7 @@ bool Pigeon<IFooAPI>::receiveRescue()
 	Decoder dec(buf);
 	char header= dec.ReadInfo<char>();
 	assert(header == Rescue);
-	return bool(dec.ReadInfo());
+	return dec.ReadInfo<bool>();
 }
 std::string sendPropsMessage(std::vector<std::shared_ptr<const THUAI6::Prop>> prop)
 {
@@ -3127,6 +3127,8 @@ void AI::play(IStudentAPI& api)
 		static Grid ChaseDest;
 		static int CurrentState_Bef = sDefault;
 		static Cell Bef;
+		bool IsRescue;
+		IsRescue = Center.Gugu.receiveRescue();
 
 		switch (CurrentState)
 		{
