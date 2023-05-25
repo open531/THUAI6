@@ -218,6 +218,7 @@ public:
 	std::vector<Doors> Door;
 	int InfoMem[50][50];
 	int LastUpdateFrame[50][50];
+	bool IsStuck;
 
 	Geographer<IFooAPI> Alice;
 	Predictor<IFooAPI> Bob;
@@ -1080,7 +1081,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	std::cerr << "Destination is (" << Dest.x << ',' << Dest.y << ')' << std::endl;
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
-	bool IsStuck = (sx == TEMP.x && sy == TEMP.y);
+	IsStuck = (sx == TEMP.x && sy == TEMP.y);
 	std::vector<std::shared_ptr<const THUAI6::Student>> TempS = API.GetStudents();
 	std::vector<std::shared_ptr<const THUAI6::Tricker>> TempT = API.GetTrickers();
 	std::vector<unsigned char> AccessTempS;
@@ -3701,6 +3702,8 @@ void AI::play(ITrickerAPI& api)
 	static CommandPostTricker Center(api);
 	static int CurrentState = sDefault;
 
+	Cell TrickerTemp;
+
 	//	Center.MoveTo(Cell(41, 9), true);
 	//	return;
 	Center.AutoUpdate();
@@ -3894,10 +3897,9 @@ void AI::play(ITrickerAPI& api)
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
 
-		if (self->trickDesire >= 8 && Center.Map[Center.Bob.SmartRecommend().x][Center.Bob.SmartRecommend().y] == THUAI6::PlaceType::Grass && Center.NearCell(Center.Bob.SmartRecommend()))
+		if (self->trickDesire >= 8 && Center.IsStuck)
 		{
 			Center.KleeDefaultAttack(Center.Bob.SmartRecommend().x * 1000 + 500, Center.Bob.SmartRecommend().y * 1000 + 500);
-			CurrentState = sFindPlayer;
 		}
 		else
 		{
