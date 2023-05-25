@@ -3264,7 +3264,7 @@ void AI::play(IStudentAPI& api)
 		static int CurrentState_Bef = sDefault;
 		static Cell Bef;
 		static Cell Bef_stu;
-	
+
 
 
 		switch (CurrentState)
@@ -3409,7 +3409,7 @@ void AI::play(IStudentAPI& api)
 					else
 						Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 				}
-			
+
 			Bef = Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000);
 			Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
 			break;
@@ -3887,7 +3887,7 @@ void AI::play(ITrickerAPI& api)
 		else
 		{
 			// api.EndAllAction();
-			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 1);
+			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 0);
 		}
 		break;
 	case sChasePlayer:
@@ -3908,7 +3908,7 @@ void AI::play(ITrickerAPI& api)
 		}
 		else
 		{
-			Center.MoveTo(Center.Bob.SmartRecommend(), 1);
+			Center.MoveTo(Center.Bob.SmartRecommend(), 0);
 		}
 		break;
 	}
