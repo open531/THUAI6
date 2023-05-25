@@ -3896,15 +3896,8 @@ void AI::play(ITrickerAPI& api)
 
 		if (self->trickDesire >= 8 && Center.Map[Center.Bob.SmartRecommend().x][Center.Bob.SmartRecommend().y] == THUAI6::PlaceType::Grass && Center.NearCell(Center.Bob.SmartRecommend()))
 		{
-			if (countAttackGrass <= 3)
-			{
-				Center.KleeDefaultAttack(Center.Bob.SmartRecommend().x * 1000 + 500, Center.Bob.SmartRecommend().y * 1000 + 500);
-				countAttackGrass++;
-			}
-			else
-			{
-				CurrentState = sFindPlayer;
-			}
+			Center.KleeDefaultAttack(Center.Bob.SmartRecommend().x * 1000 + 500, Center.Bob.SmartRecommend().y * 1000 + 500);
+			CurrentState = sFindPlayer;
 		}
 		else
 		{
