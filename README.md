@@ -1,6 +1,24 @@
 # THUAI6_team_SingleFile
 
-> 以该版本为最终提交于<a href="https://eesast.com/contest/211b9ac2-f004-489d-bd71-4bdde335b597/codes">EESAST</a>的版本。
+> 该版本为最终提交于[EESAST](https://eesast.com/contest/211b9ac2-f004-489d-bd71-4bdde335b597/codes)的版本。
+
+> 清华大学第六届人工智能挑战赛电子系赛道（原电子系第 24 届队式程序设计大赛 teamstyle24）
+> 
+> GitHub 镜像地址：[THUAI6: GitHub Mirror](https://github.com/eesast/THUAI6)
+> 
+> Gitee 镜像地址：[THUAI6: Gitee Mirror](https://gitee.com/eesast/THUAI6)
+> 
+> GitLink 镜像地址：[THUAI6: GitLink Mirror](https://www.gitlink.org.cn/EESAST/THUAI6)
+> 
+> 项目主页：[THUAI6 Project Home Page](https://eesast.github.io/THUAI6)
+> 
+> 关于本届及历届清华大学人工智能挑战赛与队式程序设计大赛的更多内容参见：[THUAI6 Github Wiki](https://github.com/eesast/THUAI6/wiki)  
+
+> [\xfgg/](https://github.com/Timothy-Liuxf)
+> 
+> [\clgg/](https://github.com/TCL606)
+> 
+> [\yxgg/](https://github.com/DragonAura)
 
 ## 0 基本信息
 
@@ -322,15 +340,5 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 ## 8 Issues
 
-- [x] ~~开启完校门的角色不会自己毕业，没有开启校门的角色反而能够顺利毕业。~~
-- [x] ~~开启校门后没有直接毕业，而是折返，同时会报错。~~
-- [ ] 理论上已经判断了不能发给自己，但是没有成功，不过api也会判断所以不是大问题。
-- [ ] `AssassinDefaultAttackOver`判断的距离太小了，需要调整。
-- [ ] 救人可能存在偶发的解引用报错问题
-- [ ] MoveToNearest等函数中调用AStarWithWindows(AStarWithoutWindows)次数太多导致卡顿。考虑用Alice.BackwardExpand优化。可以选择在AutoUpdate中调用BackwardExpand得到预处理的EstimateTime。
-- [ ] AStarWithWindows(AStarWithoutWindows)出现单次运行卡顿的情况。
-- [ ] AStarWithWindows(AStarWithoutWindows)频繁报错。
-- [ ] AStarWithWindows(AStarWithoutWindows)可能没有处理找不到路的情况。建议用异常处理，在找不到通路时throw一个异常。
-- [ ] MoveTo系列的函数在调用MoveTo时没有利用其返回值。
-- [ ] CommandPost::Door的DoorStatus本应更新但未实现，且可以被Access替代。
-- [ ] MoveTo系列在判断是否需要走的时候依然使用了诸如`!Classroom.empty()`的方式，然而在目前的实现下，`Classroom`等数组不会变更内容。
+- [ ] `Teacher`仍然存在行为异常
+- [ ] `Klee`面对单格`Grass`无能为力
