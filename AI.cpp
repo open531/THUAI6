@@ -745,7 +745,7 @@ Encoder::Encoder() : Celler(0)
 {
 	memset(msg, 0, sizeof(msg));
 }
-#define NEW_ENDEC 1
+#define NEW_ENDEC 0
 template <typename T>
 void Encoder::PushInfo(T info)
 {
