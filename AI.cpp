@@ -3264,7 +3264,7 @@ void AI::play(IStudentAPI& api)
 		static int CurrentState_Bef = sDefault;
 		static Cell Bef;
 		static Cell Bef_stu;
-		Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
+	
 
 
 		switch (CurrentState)
@@ -3286,8 +3286,8 @@ void AI::play(IStudentAPI& api)
 		case sAttackPlayer:
 			if (haveTricker)
 			{
-				if (Center.NearCell(Bef_stu, 0))
-					CurrentState = sFindPlayer;
+				if (Center.NearCell(Bef_stu, 6))
+					CurrentState = sRunnerPlayer;
 				/*ChaseIt = true;*/
 				if (!Center.NearCell(ChaseDest.ToCell(), 4))
 					ChaseDest = Grid(triinfo[0]->x, triinfo[0]->y);
@@ -3334,9 +3334,10 @@ void AI::play(IStudentAPI& api)
 		{
 		case sDefault:
 			std::cerr << "CurrentState: sDefault" << std::endl;
+			Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
 			break;
 		case sFindPlayer:
-			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5) && !Center.NearCell(Bef_stu, 1))
+			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 4) && !Center.NearCell(Bef_stu, 6))
 				/*if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5) && !Center.NearCell(Bef_stu, 3))*/
 				Center.MoveTo(Bef, true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
@@ -3375,6 +3376,7 @@ void AI::play(IStudentAPI& api)
 					Center.MoveTo(Center.Classroom[i], 1);
 					break;
 				}
+			Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
 			break;
 		case sAttackPlayer:
 			if (haveTricker)
@@ -3407,11 +3409,13 @@ void AI::play(IStudentAPI& api)
 					else
 						Center.MoveTo(Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000), true);
 				}
-			CurrentState_Bef = CurrentState;
+			
 			Bef = Cell(triinfo[0]->x / 1000, triinfo[0]->y / 1000);
+			Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
 			break;
 		case sRescuePlayer:
 			Center.MoveTo(Cell(stuinfo[3]->x / 1000, stuinfo[3]->y / 1000), true);
+			Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
 			break;
 		case sRunnerPlayer:
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
@@ -3444,6 +3448,7 @@ void AI::play(IStudentAPI& api)
 					Center.MoveTo(Center.Classroom[i], 1);
 					break;
 				}
+			Bef_stu = Cell(api.GetSelfInfo()->x / 1000, api.GetSelfInfo()->y / 1000);
 			break;
 			/*case sChasePlayer:
 				std::cerr << "CurrentState: sChasePlayer" << std::endl;
@@ -3464,6 +3469,7 @@ void AI::play(IStudentAPI& api)
 					}
 					break;*/
 		}
+		CurrentState_Bef = CurrentState;
 		// 玩家2执行操作
 	}
 
