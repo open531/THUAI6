@@ -3896,10 +3896,9 @@ void AI::play(ITrickerAPI& api)
 	case sChasePlayer:
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
-
 		if (self->trickDesire >= 8 && Center.IsStuck)
 		{
-			Center.KleeDefaultAttack(Center.Bob.SmartRecommend().x * 1000 + 500, Center.Bob.SmartRecommend().y * 1000 + 500);
+			Center.KleeDefaultAttack(Center.Bob.Recommend(ChaseID).first.x * 1000 + 500, Center.Bob.Recommend(ChaseID).first.y * 1000 + 500);
 		}
 		else
 		{
