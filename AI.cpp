@@ -138,7 +138,17 @@ struct MapUpdateInfo
 	int x, y, val;
 };
 typedef std::shared_ptr<const THUAI6::Student> NeedHelpInfo;
-typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
+//typedef THUAI6::Tricker TrickerInfo_t;
+class TrickerInfo_t
+{
+public:
+	int64_t playerID;
+	int32_t x;
+	int32_t y;
+	THUAI6::PlayerState playerState;
+	TrickerInfo_t() {}
+	TrickerInfo_t(const THUAI6::Tricker& t) : playerID(t.playerID), x(t.x), y(t.y), playerState(t.playerState) {}
+};
 
 class Doors : public Cell
 {
@@ -222,6 +232,7 @@ public:
 	CommandPost(IFooAPI& api);
 
 	void Update(MapUpdateInfo upinfo, int t_);						   // 更新地图信息，比如门和隐藏校门，需要约定info的格式
+	void Update(TrickerInfo_t tri, int t_);                            // 更新Tricker信息
 	std::vector<THUAI6::PropType> GetInventory() { return Inventory; } // 查看背包
 	void OrganizeInventory(std::vector<unsigned char> Priority);	   // 整理背包
 
@@ -400,7 +411,7 @@ public:
 
 	int receiveMessage(); // ���ؽ��յ�����Ϣ����
 	std::pair<int, MapUpdateInfo> receiveMapUpdate();
-	std::pair<int, TrickerInfo_t> receiveTrickerInfo();
+	TrickerInfo_t receiveTrickerInfo();
 	std::pair<int, int> receiveNeedHelp();
 	bool receiveRescue();
 };
@@ -430,6 +441,7 @@ public:
 	void SaveClassVolumeLog(int maxNum);
 
 	void AutoUpdate();
+	void Update(const TrickerInfo_t& tri);
 	std::pair<Cell, double> Recommend(int PlayerID);
 	// Always return position with highest probility, even though the player was addicted (In this circumstance, chasing it results in a repetition of finding it addicted.) To chase it or not should be decided in stragety.
 	// TODO: CommandPost should save info of addiction & quit etc., should it be the responsibility of Predictor? Probably yes. Ask Predictor for info of players' status. This only works for Tricker.
@@ -517,7 +529,6 @@ void Predictor<IFooAPI>::DeduceMagicMap()
 {
 	auto selfinfo = this->API.GetSelfInfo();
 	bool deal[5];
-	const double ratio1 = 0.15;
 	double NextStatus[50][50];
 	for (int i = 0; i < 5; i++) deal[i] = (PlayerStatus[i] != 0);
 	auto vision = this->Center.Alice.GetViewableCells(Grid(selfinfo->x, selfinfo->y).ToCell());
@@ -530,6 +541,7 @@ void Predictor<IFooAPI>::DeduceMagicMap()
 				{
 					if (this->Center.Access[i][j])
 					{
+						double ratio1 = (PlayerStatus[id] == 3 ? 0.01 : 0.15);
 						int cnt = 0;
 						for (int ix = -1; ix <= 1; ix++)
 							for (int jx = -1; jx <= 1; jx++)
@@ -578,6 +590,19 @@ void Predictor<IFooAPI>::AutoUpdate()
 			if (s->playerState == THUAI6::PlayerState::Addicted) PlayerStatus[s->playerID] = 3;
 			else PlayerStatus[s->playerID] = 1;
 		}
+}
+
+template<typename IFooAPI>
+void Predictor<IFooAPI>::Update(const TrickerInfo_t& tri)
+{
+	if (PlayerStatus[tri.playerID])
+	{
+		Cell pos = Grid(tri.x, tri.y).ToCell();
+		memset(MagicMap[tri.playerID], 0, sizeof(double) * 50 * 50);
+		MagicMap[tri.playerID][pos.x][pos.y] = TotalValue;
+		if (tri.playerState == THUAI6::PlayerState::Addicted) PlayerStatus[tri.playerID] = 3;
+		else PlayerStatus[tri.playerID] = 1;
+	}
 }
 
 template<typename IFooAPI>
@@ -719,11 +744,13 @@ Encoder::Encoder() : Celler(0)
 {
 	memset(msg, 0, sizeof(msg));
 }
+#define NEW_ENDEC 1
 template <typename T>
 void Encoder::PushInfo(T info)
 {
 	size_t t = sizeof(T);
 	void* ptr = &info;
+#if !NEW_ENDEC
 	for (size_t i = 0; i < t; i++)
 	{
 		msg[Celler] = ((*((unsigned char*)ptr + i)) >> 4) + 'a';
@@ -731,6 +758,10 @@ void Encoder::PushInfo(T info)
 		msg[Celler] = ((*((unsigned char*)ptr + i)) & 0x0f) + 'a';
 		Celler++;
 	}
+#else
+	memcpy(msg + Celler, ptr, t);
+	Celler += t;
+#endif
 }
 void Encoder::SetHeader(char header)
 {
@@ -745,14 +776,21 @@ Decoder::Decoder(std::string code) : msg(code), Celler(0) {}
 template <typename T>
 T Decoder::ReadInfo()
 {
+	std::cerr << msg << std::endl;
 	T obj;
 	void* ptr = &obj;
 	size_t t = sizeof(T);
+	std::cerr << "sizeofT: " << t << std::endl;
+#if !NEW_ENDEC
 	for (size_t i = 0; i < t; i++)
 	{
 		*((unsigned char*)ptr + i) = ((((unsigned char)*(msg.c_str() + Celler) - 'a') << 4)) | (((unsigned char)*(msg.c_str() + Celler + 1)) - 'a');
 		Celler += 2;
 	}
+#else
+	memcpy(ptr, msg.c_str()+Celler, t);
+	Celler += t;
+#endif
 	return obj;
 }
 
@@ -808,18 +846,22 @@ void Pigeon<IFooAPI>::sendTrickerInfo(int64_t dest, TrickerInfo_t tricker)
 {
 	Encoder enc;
 	enc.SetHeader(TrickerInfo);
-	enc.PushInfo(this->API.GetFrameCount());
-	enc.PushInfo<std::vector<std::shared_ptr<const THUAI6::Tricker>>>(tricker);
+//	enc.PushInfo(this->API.GetFrameCount());
+	enc.PushInfo<TrickerInfo_t>(tricker);
 	sendInfo(dest, enc.ToString());
 }
 
 template <typename IFooAPI>
-std::pair<int, TrickerInfo_t> Pigeon<IFooAPI>::receiveTrickerInfo()
+TrickerInfo_t Pigeon<IFooAPI>::receiveTrickerInfo()
 {
+	std::cerr << "(receiveTrickerInfo)\n";
 	Decoder dec(buf);
+	std::cerr << "(receiveTrickerInfo)\n";
 	char header = dec.ReadInfo<char>();
+	std::cerr << "(receiveTrickerInfo)\n";
 	assert(header == TrickerInfo);
-	return std::make_pair<int, TrickerInfo_t>(dec.ReadInfo<int>(), dec.ReadInfo<TrickerInfo_t>());
+	std::cerr << "(receiveTrickerInfo)\n";
+	return dec.ReadInfo<TrickerInfo_t>();
 }
 // 捣蛋鬼信息的编码和解码函数
 std::string sendOneselfMessage(std::shared_ptr<const THUAI6::Student> self)
@@ -1046,6 +1088,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 #if ACCESS_TEMP
 	for (int i = 0; i < TempS.size(); i++)
 	{
+		if (TempS[i]->playerID == API.GetSelfInfo()->playerID) continue;
 		if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
 		{
 			AccessTempS.emplace_back(Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000]);
@@ -1054,6 +1097,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	}
 	for (int i = 0; i < TempT.size(); i++)
 	{
+		if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
 		if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
 		{
 			AccessTempT.emplace_back(Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000]);
@@ -1072,6 +1116,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 #if ACCESS_TEMP
 		for (int i = 0, j = 0; i < TempS.size(); i++)
 		{
+			if (TempS[i]->playerID == API.GetSelfInfo()->playerID) continue;
 			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
 			{
 				Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
@@ -1080,6 +1125,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		}
 		for (int i = 0, j = 0; i < TempT.size(); i++)
 		{
+			if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
 			if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
 			{
 				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
@@ -1098,6 +1144,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 #if ACCESS_TEMP
 		for (int i = 0, j = 0; i < TempS.size(); i++)
 		{
+			if (TempS[i]->playerID == API.GetSelfInfo()->playerID) continue;
 			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
 			{
 				Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
@@ -1106,6 +1153,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 		}
 		for (int i = 0, j = 0; i < TempT.size(); i++)
 		{
+			if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
 			if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
 			{
 				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
@@ -1152,6 +1200,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 #if ACCESS_TEMP
 			for (int i = 0, j = 0; i < TempS.size(); i++)
 			{
+				if (TempS[i]->playerID == API.GetSelfInfo()->playerID) continue;
 				if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
 				{
 					Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
@@ -1160,6 +1209,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			}
 			for (int i = 0, j = 0; i < TempT.size(); i++)
 			{
+			if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
 				if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
 				{
 					Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
@@ -1821,6 +1871,13 @@ void CommandPost<IFooAPI>::Update(MapUpdateInfo upinfo, int t_)
 	}
 }
 
+template<typename IFooAPI>
+void CommandPost<IFooAPI>::Update(TrickerInfo_t tri, int t_)
+{
+	std::cerr << "Update Tricker Info.\n";
+	Bob.Update(tri);
+}
+
 template <typename IFooAPI>
 bool CommandPost<IFooAPI>::IsAccessible(int x, int y, bool WithWindows)
 {
@@ -1909,6 +1966,15 @@ void CommandPostStudent::AutoUpdate()
 	}
 
 	Bob.AutoUpdate();
+
+	auto tris = this->API.GetTrickers();
+	for (auto t : tris)
+	{
+		Gugu.sendTrickerInfo(0, *t);
+		Gugu.sendTrickerInfo(1, *t);
+		Gugu.sendTrickerInfo(2, *t);
+		Gugu.sendTrickerInfo(3, *t);
+	}
 }
 
 void CommandPostStudent::AtheleteCanBeginToCharge()
@@ -2850,16 +2916,28 @@ void AI::play(IStudentAPI& api)
 	while ((MessageType = Center.Gugu.receiveMessage()) != NoMessage)
 	{
 		//		std::cerr << "MessageType = " << MessageType << std::endl;
-		if (MessageType == MapUpdate)
+		switch (MessageType)
 		{
-			auto ms = Center.Gugu.receiveMapUpdate();
-			//			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
-			//			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
-			Center.Update(ms.second, ms.first);
-		}
-		else if (MessageType == Rescue)
-		{
-			IsRescue = Center.Gugu.receiveRescue();
+		case MapUpdate:
+			{
+				auto ms = Center.Gugu.receiveMapUpdate();
+				//			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
+				//			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
+				Center.Update(ms.second, ms.first);
+			}
+			break;
+		case Rescue:
+			{
+				IsRescue = Center.Gugu.receiveRescue();
+			}
+			break;
+		case TrickerInfo:
+			{
+				std::cerr << "receive Tricker Info.\n";
+				auto triinfo = Center.Gugu.receiveTrickerInfo();
+				Center.Update(triinfo, 0);
+			}
+			break;
 		}
 	}
 	//	std::cerr << "[FinishedClassroom]" << Center.CountFinishedClassroom() << std::endl;
@@ -3201,17 +3279,20 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sAttackPlayer;
 			break;
 		case sAttackPlayer:
-			if (haveTricker && Bef_stu.x == api.GetSelfInfo()->x / 1000 && Bef_stu.y == api.GetSelfInfo()->y / 1000)
-				CurrentState = sFindPlayer;
-			/*ChaseIt = true;*/
-			if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
-				ChaseDest = Grid(triinfo[0]->x, triinfo[0]->y);
-			if (haveTricker && Center.NearCell(ChaseDest.ToCell(), 4))
+			if (haveTricker)
 			{
-				/*ChaseIt = false;*/
-				CurrentState = sDefault;
+				if (Bef_stu.x == api.GetSelfInfo()->x / 1000 && Bef_stu.y == api.GetSelfInfo()->y / 1000)
+					CurrentState = sFindPlayer;
+				/*ChaseIt = true;*/
+				if (!Center.NearCell(ChaseDest.ToCell(), 4))
+					ChaseDest = Grid(triinfo[0]->x, triinfo[0]->y);
+				else
+				{
+					/*ChaseIt = false;*/
+					CurrentState = sDefault;
+				}
 			}
-			if (!haveTricker)
+			else
 				CurrentState = sFindPlayer;
 			break;
 		case sRescuePlayer:
@@ -3235,9 +3316,13 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
-			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 4))
-				Center.MoveTo(Bef, true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
+			if (CurrentState_Bef == sAttackPlayer && !haveTricker)
+			{
+				if (Center.NearCell(Bef, 4)) CurrentState_Bef = sFindPlayer;
+				Center.MoveTo(Bef, true);
+				break;
+			}
 			for (int i = 0; i < 10; i++)
 				if (Center.NearCell(Center.Classroom[i], 3))
 				{
@@ -3523,6 +3608,12 @@ void AI::play(IStudentAPI& api)
 
 void AI::play(ITrickerAPI& api)
 {
+/*	Encoder enc;
+	enc.PushInfo((int)12345);
+	enc.PushInfo((int)67890);
+	std::string s = enc.ToString();
+	Decoder dec(s);
+	std::cerr << dec.ReadInfo<int>() << ' ' << dec.ReadInfo<int>() << std::endl;*/
 	//	int cnt1 = 0;
 	//	for (int i = 0; i < 10000000; i++)
 	//	{
@@ -3722,13 +3813,14 @@ void AI::play(ITrickerAPI& api)
 		else
 		{
 			// api.EndAllAction();
-			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 0);
+			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 1);
 		}
 		break;
 	case sChasePlayer:
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
-		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, 0);
+//		Center.MoveTo(Center.Bob.Recommend(ChaseID).first, 1);
+		Center.MoveTo(Center.Bob.SmartRecommend(), 1);
 		break;
 	}
 }
