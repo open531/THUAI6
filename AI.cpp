@@ -788,7 +788,7 @@ T Decoder::ReadInfo()
 		Celler += 2;
 	}
 #else
-	memcpy(ptr, msg.c_str()+Celler, t);
+	memcpy(ptr, msg.c_str() + Celler, t);
 	Celler += t;
 #endif
 	return obj;
@@ -846,7 +846,7 @@ void Pigeon<IFooAPI>::sendTrickerInfo(int64_t dest, TrickerInfo_t tricker)
 {
 	Encoder enc;
 	enc.SetHeader(TrickerInfo);
-//	enc.PushInfo(this->API.GetFrameCount());
+	//	enc.PushInfo(this->API.GetFrameCount());
 	enc.PushInfo<TrickerInfo_t>(tricker);
 	sendInfo(dest, enc.ToString());
 }
@@ -1209,7 +1209,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			}
 			for (int i = 0, j = 0; i < TempT.size(); i++)
 			{
-			if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
+				if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
 				if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
 				{
 					Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
@@ -1262,16 +1262,17 @@ bool CommandPost<IFooAPI>::NearCell(Cell P, int level)
 	case 0:
 		return (P.x == Self.x && P.y == Self.y) ? true : false;
 	case 1:
-		/*return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 1) ? true : false;*/
-		return (abs(P.x - Self.x) <= 1 && abs(P.y - Self.y) <= 1) ? true : false;
+		return (abs(P.x - Self.x) + abs(P.y - Self.y) <= 1) ? true : false;
 	case 2:
-		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 5) ? true : false;
+		return (abs(P.x - Self.x) <= 1 && abs(P.y - Self.y) <= 1) ? true : false;
 	case 3: // Hide Tricker
 		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 9) ? true : false;
 	case 4: // Hide Tricker
 		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 25) ? true : false;
 	case 5:
 		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 36) ? true : false;
+	case 6:
+		return ((P.x - Self.x) * (P.x - Self.x) + (P.y - Self.y) * (P.y - Self.y) <= 5) ? true : false;
 	}
 }
 
@@ -2921,25 +2922,25 @@ void AI::play(IStudentAPI& api)
 		switch (MessageType)
 		{
 		case MapUpdate:
-			{
-				auto ms = Center.Gugu.receiveMapUpdate();
-				//			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
-				//			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
-				Center.Update(ms.second, ms.first);
-			}
-			break;
+		{
+			auto ms = Center.Gugu.receiveMapUpdate();
+			//			std::cerr << "[custom]" << ms.second.x << ' ' << ms.second.y << std::endl;
+			//			api.Print(std::to_string(ms.second.x) + " " + std::to_string(ms.second.y));
+			Center.Update(ms.second, ms.first);
+		}
+		break;
 		case Rescue:
-			{
-				IsRescue = Center.Gugu.receiveRescue();
-			}
-			break;
+		{
+			IsRescue = Center.Gugu.receiveRescue();
+		}
+		break;
 		case TrickerInfo:
-			{
-				std::cerr << "receive Tricker Info.\n";
-				auto triinfo = Center.Gugu.receiveTrickerInfo();
-				Center.Update(triinfo, 0);
-			}
-			break;
+		{
+			std::cerr << "receive Tricker Info.\n";
+			auto triinfo = Center.Gugu.receiveTrickerInfo();
+			Center.Update(triinfo, 0);
+		}
+		break;
 		}
 	}
 	//	std::cerr << "[FinishedClassroom]" << Center.CountFinishedClassroom() << std::endl;
@@ -3309,15 +3310,6 @@ void AI::play(IStudentAPI& api)
 			else if (!haveTricker)
 				CurrentState = sFindPlayer;
 			break;
-		//case sChasePlayer:
-		//	if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
-		//		CurrentState = sAttackPlayer;
-		//	else
-		//	{
-		//		/*ChaseIt = false;*/
-		//		CurrentState = sDefault;
-		//	}
-		//	break;
 			//case sChasePlayer:
 			//	if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
 			//		CurrentState = sAttackPlayer;
@@ -3327,6 +3319,15 @@ void AI::play(IStudentAPI& api)
 			//		CurrentState = sDefault;
 			//	}
 			//	break;
+				//case sChasePlayer:
+				//	if (haveTricker && !Center.NearCell(ChaseDest.ToCell(), 4))
+				//		CurrentState = sAttackPlayer;
+				//	else
+				//	{
+				//		/*ChaseIt = false;*/
+				//		CurrentState = sDefault;
+				//	}
+				//	break;
 		}
 
 		switch (CurrentState)
@@ -3335,8 +3336,8 @@ void AI::play(IStudentAPI& api)
 			std::cerr << "CurrentState: sDefault" << std::endl;
 			break;
 		case sFindPlayer:
-			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5)&&!Center.NearCell(Bef_stu,1))
-			/*if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5) && !Center.NearCell(Bef_stu, 3))*/
+			if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5) && !Center.NearCell(Bef_stu, 1))
+				/*if (CurrentState_Bef == sAttackPlayer && !haveTricker && !Center.NearCell(Bef, 5) && !Center.NearCell(Bef_stu, 3))*/
 				Center.MoveTo(Bef, true);
 			std::cerr << "CurrentState: sFindPlayer" << std::endl;
 			if (CurrentState_Bef == sAttackPlayer && !haveTricker)
@@ -3444,15 +3445,6 @@ void AI::play(IStudentAPI& api)
 					break;
 				}
 			break;
-		/*case sChasePlayer:
-			std::cerr << "CurrentState: sChasePlayer" << std::endl;
-			Center.MoveTo(ChaseDest.ToCell(), true);
-			if (Center.NearCell(ChaseDest.ToCell(), 3))
-			{
-				ChaseIt = false;
-				CurrentState = sDefault;
-			}
-			break;*/
 			/*case sChasePlayer:
 				std::cerr << "CurrentState: sChasePlayer" << std::endl;
 				Center.MoveTo(ChaseDest.ToCell(), true);
@@ -3462,6 +3454,15 @@ void AI::play(IStudentAPI& api)
 					CurrentState = sDefault;
 				}
 				break;*/
+				/*case sChasePlayer:
+					std::cerr << "CurrentState: sChasePlayer" << std::endl;
+					Center.MoveTo(ChaseDest.ToCell(), true);
+					if (Center.NearCell(ChaseDest.ToCell(), 3))
+					{
+						ChaseIt = false;
+						CurrentState = sDefault;
+					}
+					break;*/
 		}
 		// 玩家2执行操作
 	}
@@ -3674,19 +3675,19 @@ void AI::play(IStudentAPI& api)
 
 void AI::play(ITrickerAPI& api)
 {
-/*	Encoder enc;
-	enc.PushInfo((int)12345);
-	enc.PushInfo((int)67890);
-	std::string s = enc.ToString();
-	Decoder dec(s);
-	std::cerr << dec.ReadInfo<int>() << ' ' << dec.ReadInfo<int>() << std::endl;*/
-	//	int cnt1 = 0;
-	//	for (int i = 0; i < 10000000; i++)
-	//	{
-	//		cnt1 += Intersect(GeometrySegment(GeometryCell(rand(), rand()), GeometryCell(rand(), rand())), GeometrySegment(GeometryCell(rand(), rand()), GeometryCell(rand(), rand())));
-	//	}
-	//	std::cerr << cnt1 << std::endl;
-	//	return;
+	/*	Encoder enc;
+		enc.PushInfo((int)12345);
+		enc.PushInfo((int)67890);
+		std::string s = enc.ToString();
+		Decoder dec(s);
+		std::cerr << dec.ReadInfo<int>() << ' ' << dec.ReadInfo<int>() << std::endl;*/
+		//	int cnt1 = 0;
+		//	for (int i = 0; i < 10000000; i++)
+		//	{
+		//		cnt1 += Intersect(GeometrySegment(GeometryCell(rand(), rand()), GeometryCell(rand(), rand())), GeometrySegment(GeometryCell(rand(), rand()), GeometryCell(rand(), rand())));
+		//	}
+		//	std::cerr << cnt1 << std::endl;
+		//	return;
 	auto self = api.GetSelfInfo();
 	api.PrintSelfInfo();
 
@@ -3887,11 +3888,11 @@ void AI::play(ITrickerAPI& api)
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
 
-		if (self->trickDesire >= 8 && Center.Map[Center.Bob.Recommend(ChaseID).first.x][Center.Bob.Recommend(ChaseID).first.y] == THUAI6::PlaceType::Grass && Center.NearCell(Center.Bob.Recommend(ChaseID).first))
+		if (self->trickDesire >= 8 && Center.Map[Center.Bob.SmartRecommend().x][Center.Bob.SmartRecommend().y] == THUAI6::PlaceType::Grass && Center.NearCell(Center.Bob.SmartRecommend()))
 		{
 			if (countAttackGrass <= 3)
 			{
-				Center.KleeDefaultAttack(Center.Bob.Recommend(ChaseID).first.x * 1000 + 500, Center.Bob.Recommend(ChaseID).first.y * 1000 + 500);
+				Center.KleeDefaultAttack(Center.Bob.SmartRecommend().x * 1000 + 500, Center.Bob.SmartRecommend().y * 1000 + 500);
 				countAttackGrass++;
 			}
 			else
