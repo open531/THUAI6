@@ -3050,7 +3050,7 @@ void AI::play(IStudentAPI& api)
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
 		bool haveTricker = false;
-		if (api.GetSelfInfo()->dangerAlert >= 1.3)
+		if (api.GetSelfInfo()->dangerAlert >= 1)
 			haveTricker = true;
 
 		switch (CurrentState)
@@ -3110,7 +3110,7 @@ void AI::play(IStudentAPI& api)
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
 		bool haveTricker = false;
-		if (api.GetSelfInfo()->dangerAlert >= 1.3)
+		if (api.GetSelfInfo()->dangerAlert >= 1)
 			haveTricker = true;
 
 		switch (CurrentState)
