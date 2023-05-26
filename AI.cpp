@@ -567,7 +567,7 @@ void Predictor<IFooAPI>::DeduceMagicMap()
 	NormalizeMagicMap();
 }
 
-template <typename IFooAPI>
+template<typename IFooAPI>
 void Predictor<IFooAPI>::AutoUpdate()
 {
 	DeduceMagicMap();
@@ -592,6 +592,80 @@ void Predictor<IFooAPI>::AutoUpdate()
 			else PlayerStatus[s->playerID] = 1;
 		}
 }
+
+/* AutoUpdate with bgm
+void Predictor<IStudentAPI>::AutoUpdate()
+{
+	DeduceMagicMap();
+	auto stuinfo = this->API.GetStudents();
+	auto triinfo = this->API.GetTrickers();
+	for (auto s : stuinfo)
+		if (PlayerStatus[s->playerID])
+		{
+			Cell pos = Grid(s->x, s->y).ToCell();
+			memset(MagicMap[s->playerID], 0, sizeof(double) * 50 * 50);
+			MagicMap[s->playerID][pos.x][pos.y] = TotalValue;
+			if (s->playerState == THUAI6::PlayerState::Addicted) PlayerStatus[s->playerID] = 3;
+			else PlayerStatus[s->playerID] = 1;
+		}
+	for (auto s : triinfo)
+		if (PlayerStatus[s->playerID])
+		{
+			Cell pos = Grid(s->x, s->y).ToCell();
+			memset(MagicMap[s->playerID], 0, sizeof(double) * 50 * 50);
+			MagicMap[s->playerID][pos.x][pos.y] = TotalValue;
+			if (s->playerState == THUAI6::PlayerState::Addicted) PlayerStatus[s->playerID] = 3;
+			else PlayerStatus[s->playerID] = 1;
+		}
+}
+
+void Predictor<ITrickerAPI>::AutoUpdate()
+{
+	DeduceMagicMap();
+	auto stuinfo = this->API.GetStudents();
+	auto triinfo = this->API.GetTrickers();
+	for (auto s : stuinfo)
+		if (PlayerStatus[s->playerID])
+		{
+			Cell pos = Grid(s->x, s->y).ToCell();
+			memset(MagicMap[s->playerID], 0, sizeof(double) * 50 * 50);
+			MagicMap[s->playerID][pos.x][pos.y] = TotalValue;
+			if (s->playerState == THUAI6::PlayerState::Addicted) PlayerStatus[s->playerID] = 3;
+			else PlayerStatus[s->playerID] = 1;
+		}
+	for (auto s : triinfo)
+		if (PlayerStatus[s->playerID])
+		{
+			Cell pos = Grid(s->x, s->y).ToCell();
+			memset(MagicMap[s->playerID], 0, sizeof(double) * 50 * 50);
+			MagicMap[s->playerID][pos.x][pos.y] = TotalValue;
+			if (s->playerState == THUAI6::PlayerState::Addicted) PlayerStatus[s->playerID] = 3;
+			else PlayerStatus[s->playerID] = 1;
+		}
+	if (this->API.GetSelfInfo()->trickDesire)
+	{
+		double cent = this->API.GetSelfInfo()->radius / this->API.GetSelfInfo()->trickDesire;
+		std::cerr << "cent = " << cent << std::endl;
+		int sx = this->API.GetSelfInfo()->x;
+		int sy = this->API.GetSelfInfo()->y;
+		for (int i = 0; i < 50; i++)
+			for (int j = 0; j < 50; j++)
+			{
+				if (this->Center.IsAccessible(i, j, true))
+				{
+					double dx = i * 1000 + 500 - sx;
+					double dy = j * 1000 + 500 - sy;
+					double dist = sqrt(dx * dx + dy * dy) / cent;
+//					std::cerr << "dist = " << dist << std::endl;;
+					double distrib = exp(-(dist - 1) * (dist - 1) / 0.18) * .1 + 1;
+					for (int k = 0; k < 4; k++)
+						if (PlayerStatus[k]) MagicMap[k][i][j] *= distrib;
+				}
+			}
+		for (int k = 0; k < 4; k++) if (PlayerStatus[k]) NormalizeMagicMap();
+	}
+}
+*/
 
 template<typename IFooAPI>
 void Predictor<IFooAPI>::Update(const TrickerInfo_t& tri)
@@ -637,7 +711,7 @@ std::pair<Cell, double> Predictor<IFooAPI>::Recommend(int PlayerID)
 				Maxc = Cell(i, j);
 				//				std::cerr << i << ' ' << j << std::endl;
 				//				assert(dist[i][j] > 999 && MagicMap[PlayerID][i][j] == 0 || dist[i][j] <= 999);
-				prob = MagicMap[PlayerID][i][j] / pow(dist[i][j] + 1, 0);
+				prob = MagicMap[PlayerID][i][j] / pow(dist[i][j] + 1, 0) * (1+.5*sin((i+j)/10.+this->API.GetFrameCount()/200.*3.14));;
 			}
 	return std::make_pair(Maxc, prob);
 }
@@ -694,7 +768,7 @@ Cell Predictor<IFooAPI>::SmartRecommend()
 	double value = -1;
 	this->Center.Alice.BackwardExpand(Cell(x, y), dist);
 
-	int i_, j_, k_;
+	int i_ = 0, j_ = 0, k_ = 0;
 	for (int i = 0; i < 4; i++)
 	{
 		if (this->PlayerStatus[i])
@@ -705,7 +779,7 @@ Cell Predictor<IFooAPI>::SmartRecommend()
 					double eval = 0;
 					if (PlayerStatus[i] == 3) eval = 1;
 					else eval = 10000;
-					eval = eval * MagicMap[i][j][k] / log(dist[j][k] + 2);
+					eval = eval * MagicMap[i][j][k] / log(dist[j][k] + 2) * (1+.5*sin((i+j)/10.+this->API.GetFrameCount()/200.*3.14));
 					if (eval > value)
 					{
 						i_ = i;
@@ -2803,7 +2877,7 @@ extern const bool asynchronous = false;
 
 // 选手需要依次将player0到player4的职业在这里定义
 
-#define HAPPY_HAPPY_HA_PPY 0
+#define HAPPY_HAPPY_HA_PPY 1
 
 #if HAPPY_HAPPY_HA_PPY
 extern const std::array<THUAI6::StudentType, 4> studentType = {
