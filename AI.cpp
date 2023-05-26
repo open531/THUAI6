@@ -711,7 +711,7 @@ std::pair<Cell, double> Predictor<IFooAPI>::Recommend(int PlayerID)
 				Maxc = Cell(i, j);
 				//				std::cerr << i << ' ' << j << std::endl;
 				//				assert(dist[i][j] > 999 && MagicMap[PlayerID][i][j] == 0 || dist[i][j] <= 999);
-				prob = MagicMap[PlayerID][i][j] / pow(dist[i][j] + 1, 0) * (1+.5*sin((i+j)/10.+this->API.GetFrameCount()/200.*3.14));;
+				prob = MagicMap[PlayerID][i][j] / pow(dist[i][j] + 1, 0) * (1 + .5 * sin((i + j) / 10. + this->API.GetFrameCount() / 200. * 3.14));;
 			}
 	return std::make_pair(Maxc, prob);
 }
@@ -779,7 +779,7 @@ Cell Predictor<IFooAPI>::SmartRecommend()
 					double eval = 0;
 					if (PlayerStatus[i] == 3) eval = 1;
 					else eval = 10000;
-					eval = eval * MagicMap[i][j][k] / log(dist[j][k] + 2) * (1+.5*sin((i+j)/10.+this->API.GetFrameCount()/200.*3.14));
+					eval = eval * MagicMap[i][j][k] / log(dist[j][k] + 2) * (1 + .5 * sin((i + j) / 10. + this->API.GetFrameCount() / 200. * 3.14));
 					if (eval > value)
 					{
 						i_ = i;
@@ -1159,8 +1159,8 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	int AccessBak[50][50];
 	std::vector<std::shared_ptr<const THUAI6::Student>> TempS = API.GetStudents();
 	std::vector<std::shared_ptr<const THUAI6::Tricker>> TempT = API.GetTrickers();
-//	std::vector<unsigned char> AccessTempS;
-//	std::vector<unsigned char> AccessTempT;
+	//	std::vector<unsigned char> AccessTempS;
+	//	std::vector<unsigned char> AccessTempT;
 #if ACCESS_TEMP
 	memcpy(AccessBak, Access, sizeof(Access));
 	for (int i = 0; i < TempS.size(); i++)
@@ -2877,7 +2877,7 @@ extern const bool asynchronous = false;
 
 // 选手需要依次将player0到player4的职业在这里定义
 
-#define HAPPY_HAPPY_HA_PPY 1
+#define HAPPY_HAPPY_HA_PPY 0
 
 #if HAPPY_HAPPY_HA_PPY
 extern const std::array<THUAI6::StudentType, 4> studentType = {
@@ -2971,7 +2971,7 @@ void AI::play(IStudentAPI& api)
 		api.EndAllAction();
 		api.UseSkill(1, ang[id]);
 	}
-	else if (api.GetFrameCount() <= 2*tick) api.StartOpenChest();
+	else if (api.GetFrameCount() <= 2 * tick) api.StartOpenChest();
 	else
 	{
 		if (!api.GetProps().empty())
@@ -3976,7 +3976,7 @@ void AI::play(ITrickerAPI& api)
 	case sChasePlayer:
 		std::cerr << "CurrentState: sChasePlayer" << std::endl;
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
-		if (self->trickDesire >= 8 && Center.IsStuck)
+		if (self->trickDesire >= 8 && Center.IsStuck && stuinfo.empty())
 		{
 			Center.KleeDefaultAttack(Center.Bob.Recommend(ChaseID).first.x * 1000 + 500, Center.Bob.Recommend(ChaseID).first.y * 1000 + 500);
 		}
@@ -3987,3 +3987,14 @@ void AI::play(ITrickerAPI& api)
 		break;
 	}
 }
+
+// 凑
+// 一
+// 个
+// ４
+// ０
+// ０
+// ０
+// 行
+// 代
+// 码
