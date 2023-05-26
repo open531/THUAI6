@@ -3623,8 +3623,6 @@ void AI::play(IStudentAPI& api)
 				CurrentState = sEncouraging;
 			else if (haveTricker)
 				CurrentState = sInspiring;
-			else
-				CurrentState = sDefault;
 			break;
 		}
 		switch (CurrentState)
