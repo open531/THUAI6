@@ -219,6 +219,8 @@ public:
 	int InfoMem[50][50];
 	int LastUpdateFrame[50][50];
 	bool IsStuck;
+	double LastStuckAngle;
+	Cell LastStuckDestinationGrid;
 
 	Geographer<IFooAPI> Alice;
 	Predictor<IFooAPI> Bob;
@@ -1229,6 +1231,9 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 				}
 				else
 				{
+					LastStuckAngle = atan2(dy, dx);
+					LastStuckDestinationGrid.x = tx;
+					LastStuckDestinationGrid.y = ty;
 					API.Move(200 * sqrt(dx * dx + dy * dy) / API.GetSelfInfo()->speed, atan2(dy, dx) + rand());
 				}
 			}
@@ -2877,7 +2882,7 @@ extern const bool asynchronous = false;
 
 // 选手需要依次将player0到player4的职业在这里定义
 
-#define HAPPY_HAPPY_HA_PPY 1
+#define HAPPY_HAPPY_HA_PPY 0
 
 #if HAPPY_HAPPY_HA_PPY
 extern const std::array<THUAI6::StudentType, 4> studentType = {
@@ -2966,21 +2971,21 @@ void AI::play(IStudentAPI& api)
 			}
 		}
 	}
-	//else if (api.GetFrameCount() == tick)
-	//{
-	//	api.EndAllAction();
-	//	api.UseSkill(1, ang[id]);
-	//}
-	//else if (api.GetFrameCount() <= 2 * tick) api.StartOpenChest();
-	//else
-	//{
-	//	if (!api.GetProps().empty())
-	//	{
-	//		auto pr = api.GetProps().front()->type;
-	//		api.PickProp(pr);
-	//		api.UseProp(pr);
-	//	}
-	//}
+	else if (api.GetFrameCount() == tick)
+	{
+		api.EndAllAction();
+		api.UseSkill(1, ang[id]);
+	}
+	else if (api.GetFrameCount() <= 2 * tick) api.StartOpenChest();
+	else
+	{
+		if (!api.GetProps().empty())
+		{
+			auto pr = api.GetProps().front()->type;
+			api.PickProp(pr);
+			api.UseProp(pr);
+		}
+	}
 }
 #else
 void AI::play(IStudentAPI& api)
@@ -3998,7 +4003,7 @@ void AI::play(ITrickerAPI& api)
 			}
 			if (api.GetFrameCount() - beginAttackGrass <= 250)
 			{
-				Center.KleeDefaultAttack(Center.Bob.Recommend(ChaseID).first.x * 1000 + 500, Center.Bob.Recommend(ChaseID).first.y * 1000 + 500);
+				Center.KleeDefaultAttack(Center.LastStuckDestinationGrid.x, Center.LastStuckDestinationGrid.y);
 			}
 			else
 			{
