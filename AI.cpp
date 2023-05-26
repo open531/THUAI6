@@ -2877,7 +2877,7 @@ extern const bool asynchronous = false;
 
 // 选手需要依次将player0到player4的职业在这里定义
 
-#define HAPPY_HAPPY_HA_PPY 0
+#define HAPPY_HAPPY_HA_PPY 1
 
 #if HAPPY_HAPPY_HA_PPY
 extern const std::array<THUAI6::StudentType, 4> studentType = {
@@ -2944,8 +2944,8 @@ void AI::play(IStudentAPI& api)
 
 	Center.AutoUpdate();
 
-	int x[4] = { 48500, 48500, 45500, 46379 };
-	int y[4] = { 16500, 22500, 19500, 21621 };
+	int x[4] = { 48500, 48500, 4500, 46379 };
+	int y[4] = { 16500, 22500, 27500, 21621 };
 	int ang[4] = { 1571, -1571, 0, -785 };
 
 	int id = api.GetSelfInfo()->playerID;
@@ -2966,21 +2966,21 @@ void AI::play(IStudentAPI& api)
 			}
 		}
 	}
-	else if (api.GetFrameCount() == tick)
-	{
-		api.EndAllAction();
-		api.UseSkill(1, ang[id]);
-	}
-	else if (api.GetFrameCount() <= 2 * tick) api.StartOpenChest();
-	else
-	{
-		if (!api.GetProps().empty())
-		{
-			auto pr = api.GetProps().front()->type;
-			api.PickProp(pr);
-			api.UseProp(pr);
-		}
-	}
+	//else if (api.GetFrameCount() == tick)
+	//{
+	//	api.EndAllAction();
+	//	api.UseSkill(1, ang[id]);
+	//}
+	//else if (api.GetFrameCount() <= 2 * tick) api.StartOpenChest();
+	//else
+	//{
+	//	if (!api.GetProps().empty())
+	//	{
+	//		auto pr = api.GetProps().front()->type;
+	//		api.PickProp(pr);
+	//		api.UseProp(pr);
+	//	}
+	//}
 }
 #else
 void AI::play(IStudentAPI& api)
@@ -3801,6 +3801,9 @@ void AI::play(ITrickerAPI& api)
 	static bool visitClassroomUpdated[10];
 	static int countVisitedClassroom = 0;
 	static int countAttackGrass = 0;
+	static long long beginAttackGrass = -1;
+	static bool attackingGrass = 0;
+	static bool daijoubu = 0;
 	std::cerr << "[visitClassroom]";
 	for (int i = 0; i < 10; i++)std::cerr << visitClassroom[i];
 	std::cerr << std::endl;
@@ -3848,6 +3851,10 @@ void AI::play(ITrickerAPI& api)
 	std::cerr << "UseSkillBegin" << std::endl;
 	std::cerr << "UseSkillEnd" << std::endl;
 
+	std::cerr << "[beginAttackGrass]" << beginAttackGrass << std::endl;
+	std::cerr << "[attackingGrass]" << attackingGrass << std::endl;
+	std::cerr << "[GetFrameCount]" << api.GetFrameCount() << std::endl;
+
 	switch (CurrentState)
 	{
 	case sDefault:
@@ -3884,6 +3891,12 @@ void AI::play(ITrickerAPI& api)
 			}
 		}
 		break;
+	}
+
+	if (CurrentState != sChasePlayer)
+	{
+		daijoubu = 0;
+		attackingGrass = 0;
 	}
 
 	switch (CurrentState)
@@ -3978,7 +3991,29 @@ void AI::play(ITrickerAPI& api)
 		//		Center.MoveTo(ChaseDest.ToCell(), true);
 		if (self->trickDesire >= 8 && Center.IsStuck && stuinfo.empty())
 		{
-			Center.KleeDefaultAttack(Center.Bob.Recommend(ChaseID).first.x * 1000 + 500, Center.Bob.Recommend(ChaseID).first.y * 1000 + 500);
+			if (!attackingGrass)
+			{
+				beginAttackGrass = api.GetFrameCount();
+				attackingGrass = 1;
+			}
+			if (api.GetFrameCount() - beginAttackGrass <= 250)
+			{
+				Center.KleeDefaultAttack(Center.Bob.Recommend(ChaseID).first.x * 1000 + 500, Center.Bob.Recommend(ChaseID).first.y * 1000 + 500);
+			}
+			else
+			{
+				Center.MoveToNearestClassroom(1);
+				daijoubu = 1;
+			}
+		}
+		else if (daijoubu)
+		{
+			Center.MoveToNearestClassroom(1);
+			if (Center.NearClassroom(0))
+			{
+				daijoubu = 0;
+				attackingGrass = 0;
+			}
 		}
 		else
 		{
@@ -3987,14 +4022,3 @@ void AI::play(ITrickerAPI& api)
 		break;
 	}
 }
-
-// 凑
-// 一
-// 个
-// ４
-// ０
-// ０
-// ０
-// 行
-// 代
-// 码
