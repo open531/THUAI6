@@ -1,4 +1,4 @@
-﻿#include <array>
+#include <array>
 #include <cmath>
 #include <queue>
 #include <stack>
@@ -1082,28 +1082,24 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	int sx = API.GetSelfInfo()->x;
 	int sy = API.GetSelfInfo()->y;
 	IsStuck = (sx == TEMP.x && sy == TEMP.y);
+	int AccessBak[50][50];
 	std::vector<std::shared_ptr<const THUAI6::Student>> TempS = API.GetStudents();
 	std::vector<std::shared_ptr<const THUAI6::Tricker>> TempT = API.GetTrickers();
-	std::vector<unsigned char> AccessTempS;
-	std::vector<unsigned char> AccessTempT;
+//	std::vector<unsigned char> AccessTempS;
+//	std::vector<unsigned char> AccessTempT;
 #if ACCESS_TEMP
+	memcpy(AccessBak, Access, sizeof(Access));
 	for (int i = 0; i < TempS.size(); i++)
 	{
 		if (TempS[i]->playerID == API.GetSelfInfo()->playerID) continue;
 		if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
-		{
-			AccessTempS.emplace_back(Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000]);
 			Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = 0U;
-		}
 	}
 	for (int i = 0; i < TempT.size(); i++)
 	{
 		if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
 		if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
-		{
-			AccessTempT.emplace_back(Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000]);
 			Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = 0U;
-		}
 	}
 #endif
 	std::vector<Node> UsablePath;
@@ -1115,24 +1111,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	{
 		std::cerr << "[noway_exception](MoveTo)Noway." << std::endl;
 #if ACCESS_TEMP
-		for (int i = 0, j = 0; i < TempS.size(); i++)
-		{
-			if (TempS[i]->playerID == API.GetSelfInfo()->playerID) continue;
-			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
-			{
-				Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
-				j++;
-			}
-		}
-		for (int i = 0, j = 0; i < TempT.size(); i++)
-		{
-			if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
-			if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
-			{
-				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
-				j++;
-			}
-		}
+		memcpy(Access, AccessBak, sizeof(Access));
 #endif
 		return false;
 	}
@@ -1143,24 +1122,7 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 	if (UsablePath.size() < 2)
 	{
 #if ACCESS_TEMP
-		for (int i = 0, j = 0; i < TempS.size(); i++)
-		{
-			if (TempS[i]->playerID == API.GetSelfInfo()->playerID) continue;
-			if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
-			{
-				Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
-				j++;
-			}
-		}
-		for (int i = 0, j = 0; i < TempT.size(); i++)
-		{
-			if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
-			if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
-			{
-				Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
-				j++;
-			}
-		}
+		memcpy(Access, AccessBak, sizeof(Access));
 #endif
 		return false;
 	}
@@ -1198,27 +1160,10 @@ bool CommandPost<IFooAPI>::MoveTo(Cell Dest, bool WithWindows)
 			}
 			TEMP.x = sx;
 			TEMP.y = sy;
-#if ACCESS_TEMP
-			for (int i = 0, j = 0; i < TempS.size(); i++)
-			{
-				if (TempS[i]->playerID == API.GetSelfInfo()->playerID) continue;
-				if ((TempS[i]->x / 1000 != sx / 1000) || (TempS[i]->y / 1000 != sy / 1000))
-				{
-					Access[(TempS[i]->x) / 1000][(TempS[i]->y) / 1000] = AccessTempS[j];
-					j++;
-				}
-			}
-			for (int i = 0, j = 0; i < TempT.size(); i++)
-			{
-				if (TempT[i]->playerID == API.GetSelfInfo()->playerID) continue;
-				if ((TempT[i]->x / 1000 != sx / 1000) || (TempT[i]->y / 1000 != sy / 1000))
-				{
-					Access[(TempT[i]->x) / 1000][(TempT[i]->y) / 1000] = AccessTempT[j];
-					j++;
-				}
-			}
-#endif
 		}
+#if ACCESS_TEMP
+		memcpy(Access, AccessBak, sizeof(Access));
+#endif
 		return true;
 	}
 }
@@ -2397,7 +2342,7 @@ std::vector<Node> Geographer<IFooAPI>::AStar(Node src, Node dest, bool WithWindo
 	{
 		for (int i = 0; i < 50; i++) {
 			for (int j = 0; j < 50; j++)
-				std::cerr << (ClosedList[i][j] ? 'X' : '.');
+				std::cerr << (this->Center.IsAccessible(i, j, true) ? 'X' : '.');
 			std::cerr << std::endl;
 		}
 		//		Sleep(1000000);
@@ -2858,14 +2803,24 @@ extern const bool asynchronous = false;
 
 // 选手需要依次将player0到player4的职业在这里定义
 
+#define HAPPY_HAPPY_HA_PPY 0
+
+#if HAPPY_HAPPY_HA_PPY
+extern const std::array<THUAI6::StudentType, 4> studentType = {
+	THUAI6::StudentType::Teacher,
+	THUAI6::StudentType::Teacher,
+	THUAI6::StudentType::Teacher,
+	THUAI6::StudentType::Teacher };
+#else
 extern const std::array<THUAI6::StudentType, 4> studentType = {
 	THUAI6::StudentType::StraightAStudent,
 	THUAI6::StudentType::StraightAStudent,
 	THUAI6::StudentType::Teacher,
 	THUAI6::StudentType::Sunshine };
+#endif
+
 
 extern const THUAI6::TrickerType trickerType = THUAI6::TrickerType::Klee;
-
 // 可以在AI.cpp内部声明变量与函数
 
 /* 人物状态
@@ -2904,6 +2859,56 @@ sPicking 去捡道具
 #define sRunnerPlayer 0x24
 
 
+#if HAPPY_HAPPY_HA_PPY
+void AI::play(IStudentAPI& api)
+{
+	api.PrintSelfInfo();
+	static std::vector<unsigned char> Priority = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
+	static CommandPostStudent Center(api);
+	static int CurrentState = sDefault;
+
+
+	Center.AutoUpdate();
+
+	int x[4] = { 48500, 48500, 45500, 46379 };
+	int y[4] = { 16500, 22500, 19500, 21621 };
+	int ang[4] = { 1571, -1571, 0, -785 };
+
+	int id = api.GetSelfInfo()->playerID;
+	int tick = 600;
+
+	if (api.GetFrameCount() < tick)
+	{
+		if (!Center.NearCell(Cell(x[id] / 1000, y[id] / 1000), 2)) Center.MoveTo(Cell(x[id] / 1000, y[id] / 1000), true);
+		else
+		{
+			int dx = api.GetSelfInfo()->x - x[id];
+			int dy = api.GetSelfInfo()->y - y[id];
+			if (std::abs(dx) >= 100 || std::abs(dy) >= 100)
+			{
+				int t = sqrt(dx * dx + dy * dy) * 1000 / api.GetSelfInfo()->speed;
+				std::cerr << "t = " << t << std::endl;
+				api.Move(t, atan2(-dy, -dx));
+			}
+		}
+	}
+	else if (api.GetFrameCount() == tick)
+	{
+		api.EndAllAction();
+		api.UseSkill(1, ang[id]);
+	}
+	else if (api.GetFrameCount() <= 2*tick) api.StartOpenChest();
+	else
+	{
+		if (!api.GetProps().empty())
+		{
+			auto pr = api.GetProps().front()->type;
+			api.PickProp(pr);
+			api.UseProp(pr);
+		}
+	}
+}
+#else
 void AI::play(IStudentAPI& api)
 {
 	api.PrintSelfInfo();
@@ -3679,6 +3684,7 @@ void AI::play(IStudentAPI& api)
 	// 当然可以写成if (this->playerID == 2||this->playerID == 3)之类的操作
 	//  公共操作
 }
+#endif
 
 void AI::play(ITrickerAPI& api)
 {
@@ -3890,7 +3896,7 @@ void AI::play(ITrickerAPI& api)
 		else
 		{
 			// api.EndAllAction();
-			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 0);
+			Center.MoveTo(Cell(stuinfo[nonAddictedId]->x / 1000, stuinfo[nonAddictedId]->y / 1000), 1);
 		}
 		break;
 	case sChasePlayer:
@@ -3902,7 +3908,7 @@ void AI::play(ITrickerAPI& api)
 		}
 		else
 		{
-			Center.MoveTo(Center.Bob.SmartRecommend(), 0);
+			Center.MoveTo(Center.Bob.SmartRecommend(), 1);
 		}
 		break;
 	}
