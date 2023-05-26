@@ -3050,7 +3050,7 @@ void AI::play(IStudentAPI& api)
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
 		bool haveTricker = false;
-		if (!triinfo.empty())
+		if (api.GetSelfInfo()->dangerAlert >= 1.3)
 			haveTricker = true;
 
 		switch (CurrentState)
@@ -3110,7 +3110,7 @@ void AI::play(IStudentAPI& api)
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
 		bool haveTricker = false;
-		if (!triinfo.empty())
+		if (api.GetSelfInfo()->dangerAlert >= 1.3)
 			haveTricker = true;
 
 		switch (CurrentState)
@@ -3566,7 +3566,7 @@ void AI::play(IStudentAPI& api)
 		static bool visitClassroomUpdated[10];
 		static int countVisitedClassroom = 0;
 		bool haveTricker = false;
-		if (!triinfo.empty())
+		if (api.GetSelfInfo()->dangerAlert >= 1.5)
 			haveTricker = true;
 		bool haveAddictedStudent = false;
 		int AddictedId = -1;
