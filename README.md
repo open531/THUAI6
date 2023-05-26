@@ -105,7 +105,7 @@
 
 - [x] `CommandPost(IFooAPI &api);`
 
-- [ ] `void Update(MapUpdateInfo upinfo, int t_);`			//更新地图信息，比如门和隐藏校门，需要约定info的格式
+- [x] `void Update(MapUpdateInfo upinfo, int t_);`			//更新地图信息，比如门和隐藏校门，需要约定info的格式
 - [ ] `std::vector<THUAI6::PropType> GetInventory() { return Inventory; }`	// 查看背包
 - [ ] `void OrganizeInventory(std::vector<unsigned char>Priority);`			// 整理背包
 
@@ -228,35 +228,35 @@
 
 ### CommandPostStudent: 继承自 `CommandPost<IStudentAPI>`
 
-- [ ] `CommandPostStudent(IStudentAPI& api) : CommandPost(api) {}`
-- [ ] `void AutoUpdate();`
+- [x] `CommandPostStudent(IStudentAPI& api) : CommandPost(api) {}`
+- [x] `void AutoUpdate();`
 
-- [ ] `void TeacherPunish();`
-- [ ] `double TeacherPunishCD();`
+- [x] `void TeacherPunish();`
+- [x] `double TeacherPunishCD();`
 
-- [ ] `void StraightAStudentWriteAnswers();`
-- [ ] `double StraightAStudentWriteAnswersCD();`
+- [x] `void StraightAStudentWriteAnswers();`
+- [x] `double StraightAStudentWriteAnswersCD();`
 
-- [ ] `void AtheleteCanBeginToCharge();`
-- [ ] `double AtheleteCanBeginToChargeCD();`
+- [x] `void AtheleteCanBeginToCharge();`
+- [x] `double AtheleteCanBeginToChargeCD();`
 
-- [ ] `void SunshineRouse();`
-- [ ] `void SunshineEncourage();`
-- [ ] `void SunshineInspire();`
-- [ ] `double SunshineRouseCD();`
-- [ ] `double SunshineEncourageCD();`
-- [ ] `double SunshineInspireCD();`
+- [x] `void SunshineRouse();`
+- [x] `void SunshineEncourage();`
+- [x] `void SunshineInspire();`
+- [x] `double SunshineRouseCD();`
+- [x] `double SunshineEncourageCD();`
+- [x] `double SunshineInspireCD();`
 
 ### CommandPostTricker: 继承自 `CommandPost<ITrickerAPI>`
 
-- [ ] `CommandPostTricker(ITrickerAPI& api) : CommandPost(api) {}`
-- [ ] `void AutoUpdate();`
+- [x] `CommandPostTricker(ITrickerAPI& api) : CommandPost(api) {}`
+- [x] `void AutoUpdate();`
 
-- [ ] `void AssassinDefaultAttack(int stux, int stuy);`	// 刺客普通攻击，传入学生坐标(stux,stuy)
-- [ ] `bool AssassinDefaultAttackOver(int rank);`//判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
-- [ ] `void AssassinBecomeInvisible();`
-- [ ] `void AssassinFlyingKnife(int stux, int stuy);`
-- [ ] `double AssassinFlyingKnifeCD();`
+- [x] `void AssassinDefaultAttack(int stux, int stuy);`	// 刺客普通攻击，传入学生坐标(stux,stuy)
+- [x] `bool AssassinDefaultAttackOver(int rank);`//判断能否稳定命中，传入目前能观察到的学生列表的第几个，从0开始计数
+- [x] `void AssassinBecomeInvisible();`
+- [x] `void AssassinFlyingKnife(int stux, int stuy);`
+- [x] `double AssassinFlyingKnifeCD();`
 
 ## 2 Pigeon 鸽子
 
@@ -280,8 +280,8 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 - [x] `void sendMapUpdate(int64_t dest, MapUpdateInfo muinfo);`
 - [x] `void sendMapUpdate(int64_t dest, THUAI6::PlaceType type, int x, int y, int val);`
-- [ ] `void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);`
-- [ ] `void sendNeedHelp(int64_t dest, NeedHelpInfo self);` // TODO: 由于队友信息透明，所以不用传数据
+- [x] `void sendTrickerInfo(int64_t dest, TrickerInfo_t tricker);`
+- [x] `void sendNeedHelp(int64_t dest, NeedHelpInfo self);` // TODO: 由于队友信息透明，所以不用传数据
 
 ### 接收信息
 
@@ -289,8 +289,8 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 - [x] `int receiveMessage();` // 返回接收到的信息类型
 - [x] `std::pair<int, MapUpdateInfo> receiveMapUpdate();`
-- [ ] `std::pair<int, TrickerInfo_t> receiveTrickerInfo();`
-- [ ] `std::pair<int, int> receiveNeedHelp();`
+- [x] `std::pair<int, TrickerInfo_t> receiveTrickerInfo();`
+- [x] `std::pair<int, int> receiveNeedHelp();`
 
 ## 3 Geographer 地理学家
 
@@ -298,19 +298,19 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 - [x] `Geographer(IFooAPI& api, CommandPost<IFooAPI>& Center_);`
 
-- [ ] `bool IsValidWithoutWindows(int x, int y);`
-- [ ] `bool IsValidWithWindows(int x, int y);`
-- [ ] `bool IsDestination(int x, int y, Node dest);`
-- [ ] `double CalculateH(int x, int y, Node dest);`
-- [ ] `std::vector<Node> MakePath(std::array<std::array<Node, 50>, 50> map, Node dest);`
-- [ ] `std::vector<Node> AStar(Node src, Node dest, bool WithWindows);`
-- [ ] `int EstimateTime(Cell Dest);`					// 去目的地的预估时间
+- [x] `bool IsValidWithoutWindows(int x, int y);`
+- [x] `bool IsValidWithWindows(int x, int y);`
+- [x] `bool IsDestination(int x, int y, Node dest);`
+- [x] `double CalculateH(int x, int y, Node dest);`
+- [x] `std::vector<Node> MakePath(std::array<std::array<Node, 50>, 50> map, Node dest);`
+- [x] `std::vector<Node> AStar(Node src, Node dest, bool WithWindows);`
+- [x] `int EstimateTime(Cell Dest);`					// 去目的地的预估时间
 
-- [ ] `bool IsViewable(Cell Src, Cell Dest, int ViewRange);`			// 判断两个位置是否可视
+- [x] `bool IsViewable(Cell Src, Cell Dest, int ViewRange);`			// 判断两个位置是否可视
 
-- [ ] `Cell GetNearestGate();`
-- [ ] `Cell GetNearestClassroom();` // 仅在没写完的作业中找
-- [ ] `Cell GetNearestOpenGate();`
+- [x] `Cell GetNearestGate();`
+- [x] `Cell GetNearestClassroom();` // 仅在没写完的作业中找
+- [x] `Cell GetNearestOpenGate();`
 
 ## 4 Predictor 预言家
 
@@ -340,5 +340,4 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 
 ## 8 Issues
 
-- [ ] `Teacher`仍然存在行为异常
-- [ ] `Klee`面对单格`Grass`无能为力
+- [ ] ~~`Student`太弱~~
