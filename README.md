@@ -1,24 +1,25 @@
-# THUAI6_team_SingleFile
+<h1><center>努力少女戏尔危</center></h1>
+<h4><center>清华大学第六届人工智能挑战赛深度“学习”——毕业吧少女</center></h4>
 
-> 该版本为最终提交于[EESAST](https://eesast.com/contest/211b9ac2-f004-489d-bd71-4bdde335b597/codes)的版本。
+<center><a href="https://github.com/Panxuc">潘徐成</a> <a href="https://github.com/always-del">孙宇琦</a> <a href="https://github.com/ytxytx">叶腾逊 [广告位招租]</a> <a href="https://github.com/DGFDIE">杜港枫</a></center>
+
+---
+
+> 该版本为“努力少女戏尔危”最终提交于[EESAST](https://eesast.com/contest/211b9ac2-f004-489d-bd71-4bdde335b597/codes)的版本。
+
+> “努力少女戏尔危”在清华大学第六届人工智能挑战赛深度“学习”——毕业吧少女中荣获**三等奖**。
 
 > 清华大学第六届人工智能挑战赛电子系赛道（原电子系第 24 届队式程序设计大赛 teamstyle24）
-> 
+>
 > GitHub 镜像地址：[THUAI6: GitHub Mirror](https://github.com/eesast/THUAI6)
-> 
+>
 > Gitee 镜像地址：[THUAI6: Gitee Mirror](https://gitee.com/eesast/THUAI6)
-> 
+>
 > GitLink 镜像地址：[THUAI6: GitLink Mirror](https://www.gitlink.org.cn/EESAST/THUAI6)
-> 
+>
 > 项目主页：[THUAI6 Project Home Page](https://eesast.github.io/THUAI6)
-> 
-> 关于本届及历届清华大学人工智能挑战赛与队式程序设计大赛的更多内容参见：[THUAI6 Github Wiki](https://github.com/eesast/THUAI6/wiki)  
-
-> [\xfgg/](https://github.com/Timothy-Liuxf)
-> 
-> [\clgg/](https://github.com/TCL606)
-> 
-> [\yxgg/](https://github.com/DragonAura)
+>
+> 关于本届及历届清华大学人工智能挑战赛与队式程序设计大赛的更多内容参见：[THUAI6 GitHub Wiki](https://github.com/eesast/THUAI6/wiki)
 
 ## 0 基本信息
 
@@ -65,7 +66,7 @@
 > - `0U` 表示不可进入的格子；
 > - `1U` 表示窗；
 > - `2U` 表示可进入的格子（非草地）；
-> - `3U` 表示草地。 
+> - `3U` 表示草地。
 >
 > 可能导致变化产生的更新内容包括：
 >
@@ -334,9 +335,6 @@ typedef std::vector<std::shared_ptr<const THUAI6::Tricker>> TrickerInfo_t;
 之后会加入使用道具这一步骤。
 
 ## 7 TODO List
-
-- 指挥所更新信息时需要告知三位小伙伴。需要本地广播的地图更新信息目前应该只有一种：玩家的实时位置被队友告知。其他地图更新信息由小伙伴自行调用api得知。这些应该对 `Center.AutoUpdate()` 等相关函数进行修改。
-- 制定预言家的基本策略，确定接口。
 
 ## 8 Issues
 

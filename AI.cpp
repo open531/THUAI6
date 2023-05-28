@@ -22,6 +22,8 @@ const double PI = acos(-1);
 // #Basic geometry
 //*****************************************************
 
+THUAI6::TrickerType trickerT=THUAI6::TrickerType::NullTrickerType;
+
 class Cell; // 格子 0~49
 class Grid; // 像素 0~49999
 #if USE_NEW_ASTAR
@@ -146,8 +148,9 @@ public:
 	int32_t x;
 	int32_t y;
 	THUAI6::PlayerState playerState;
+	THUAI6::TrickerType trickerType;
 	TrickerInfo_t() {}
-	TrickerInfo_t(const THUAI6::Tricker& t) : playerID(t.playerID), x(t.x), y(t.y), playerState(t.playerState) {}
+	TrickerInfo_t(const THUAI6::Tricker& t) : playerID(t.playerID), x(t.x), y(t.y), playerState(t.playerState), trickerType(t.trickerType) {}
 };
 
 class Doors : public Cell
@@ -1902,6 +1905,7 @@ template<typename IFooAPI>
 void CommandPost<IFooAPI>::Update(TrickerInfo_t tri, int t_)
 {
 	std::cerr << "Update Tricker Info.\n";
+	trickerT = tri.trickerType;
 	Bob.Update(tri);
 }
 
@@ -3050,8 +3054,12 @@ void AI::play(IStudentAPI& api)
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
 		bool haveTricker = false;
-		if (api.GetSelfInfo()->dangerAlert >= 1)
-			haveTricker = true;
+		if (trickerT != THUAI6::TrickerType::ANoisyPerson)
+		{
+			if (api.GetSelfInfo()->dangerAlert >= 1)
+				haveTricker = true;
+		}
+		else if (!triinfo.empty()) haveTricker = true;
 
 		switch (CurrentState)
 		{
@@ -3070,7 +3078,7 @@ void AI::play(IStudentAPI& api)
 		switch (CurrentState)
 		{
 		case sDefault:
-			if (Center.CountFinishedClassroom() > 7)
+			if (Center.CountFinishedClassroom() >= 7)
 			{
 				if (!Center.CountOpenGate())
 				{
@@ -3110,8 +3118,12 @@ void AI::play(IStudentAPI& api)
 		auto stuinfo = api.GetStudents();
 		auto triinfo = api.GetTrickers();
 		bool haveTricker = false;
-		if (api.GetSelfInfo()->dangerAlert >= 1)
-			haveTricker = true;
+		if (trickerT != THUAI6::TrickerType::ANoisyPerson)
+		{
+			if (api.GetSelfInfo()->dangerAlert >= 1)
+				haveTricker = true;
+		}
+		else if (!triinfo.empty()) haveTricker = true;
 
 		switch (CurrentState)
 		{
@@ -3128,7 +3140,7 @@ void AI::play(IStudentAPI& api)
 		switch (CurrentState)
 		{
 		case sDefault:
-			if (Center.CountFinishedClassroom() > 7)
+			if (Center.CountFinishedClassroom() >= 7)
 			{
 				if (!Center.CountOpenGate())
 				{
@@ -3566,8 +3578,12 @@ void AI::play(IStudentAPI& api)
 		static bool visitClassroomUpdated[10];
 		static int countVisitedClassroom = 0;
 		bool haveTricker = false;
-		if (api.GetSelfInfo()->dangerAlert >= 1.5)
-			haveTricker = true;
+		if (trickerT != THUAI6::TrickerType::ANoisyPerson)
+		{
+			if (api.GetSelfInfo()->dangerAlert >= 1.5)
+				haveTricker = true;
+		}
+		else if (!triinfo.empty()) haveTricker = true;
 		bool haveAddictedStudent = false;
 		int AddictedId = -1;
 		static bool ChaseIt = false;
@@ -3734,7 +3750,7 @@ void AI::play(IStudentAPI& api)
 			{
 				Center.MoveTo(Cell(stuinfo[1]->x / 1000, stuinfo[1]->y / 1000), true);
 			}
-			if (Center.CountFinishedClassroom() > 7)
+			if (Center.CountFinishedClassroom() >= 7)
 			{
 				if (!Center.CountOpenGate())
 				{
